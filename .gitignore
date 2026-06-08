@@ -1,0 +1,30 @@
+# Editors and IDEs
+.vscode/
+.idea/
+*.iml
+
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+main.js
+*.map
+.eslintcache
+
+# Local Obsidian state
+data.json
+
+# Local environment files
+.env
+.env.*
+
+# Local migration reference files
+# right-sidebar-hover.css is the user-provided migration reference source.
+# right-sidebar-hover.backup.css is the untouched local backup.
+# styles.css is the plugin stylesheet that should be committed.
+right-sidebar-hover.css
+right-sidebar-hover.backup.css
+
+# OS metadata
+.DS_Store
+Thumbs.db

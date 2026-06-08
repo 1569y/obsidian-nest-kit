@@ -1,0 +1,250 @@
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile) {
+  --nest-kit-sidebar-edge-trigger-width: 26px;
+  --nest-kit-sidebar-drawer-width: 340px;
+  --nest-kit-sidebar-drawer-right-offset: -5px;
+  --nest-kit-sidebar-drawer-top: 89px;
+  --nest-kit-sidebar-bottom-gap: 42px;
+  --nest-kit-sidebar-hidden-extra-offset: 24px;
+  --nest-kit-sidebar-transition-duration: 210ms;
+  --nest-kit-sidebar-collapse-delay: 550ms;
+  --nest-kit-sidebar-top-control-visual-offset: 125px;
+  --nest-kit-sidebar-border-radius: 14px;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split {
+  position: fixed !important;
+  top: var(--nest-kit-sidebar-drawer-top) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  z-index: 35 !important;
+  overflow: visible !important;
+  background: transparent !important;
+  border: none !important;
+  pointer-events: none !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split::before {
+  content: "" !important;
+  display: block !important;
+  position: fixed !important;
+  top: var(--nest-kit-sidebar-drawer-top) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: var(--nest-kit-sidebar-edge-trigger-width) !important;
+  z-index: 35 !important;
+  pointer-events: auto !important;
+  background: transparent !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  > .workspace-leaf-resize-handle,
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  .workspace-leaf-resize-handle {
+  display: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  > .workspace-ribbon,
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  .workspace-ribbon.side-dock-ribbon.mod-right,
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  .workspace-sidedock-empty-state {
+  display: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-root
+  > .workspace-tabs.mod-top
+  > .workspace-tab-header-container
+  > .workspace-tab-header-tab-list,
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-root
+  > .workspace-tabs.mod-top
+  > .workspace-tab-header-container
+  > .sidebar-toggle-button.mod-right {
+  transform: translateX(
+    calc(0px - var(--nest-kit-sidebar-control-offset, 125px))
+  ) !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  > .workspace-tabs {
+  position: fixed !important;
+  right: var(--nest-kit-sidebar-drawer-right-offset) !important;
+  top: var(--nest-kit-sidebar-drawer-top) !important;
+  height: calc(100vh - 96px - var(--nest-kit-sidebar-bottom-gap)) !important;
+  max-height: calc(
+    100vh - 96px - var(--nest-kit-sidebar-bottom-gap)
+  ) !important;
+  width: var(--nest-kit-sidebar-drawer-width) !important;
+  max-width: var(--nest-kit-sidebar-drawer-width) !important;
+  z-index: 36 !important;
+  background: var(--background-primary) !important;
+  opacity: 1 !important;
+  border: 1px solid var(--background-modifier-border) !important;
+  border-radius: var(--nest-kit-sidebar-border-radius) !important;
+  overflow: hidden !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
+  transform: translateX(
+    calc(100% + var(--nest-kit-sidebar-hidden-extra-offset))
+  );
+  transition-property: transform, box-shadow;
+  transition-duration: var(--nest-kit-sidebar-transition-duration);
+  transition-timing-function: ease;
+  transition-delay: var(--nest-kit-sidebar-collapse-delay);
+  pointer-events: auto !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split:hover
+  > .workspace-tabs,
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  > .workspace-tabs:hover {
+  transform: translateX(0);
+  transition-delay: 0ms;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open.nest-kit-sidebar-pinned
+  > .workspace-split.mod-right-split
+  > .workspace-tabs {
+  transform: translateX(0) !important;
+  transition-delay: 0ms !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16) !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  > .workspace-tabs,
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  > .workspace-tabs
+  .workspace-tab-container,
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  > .workspace-tabs
+  .workspace-leaf,
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  > .workspace-tabs
+  .workspace-leaf-content,
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  > .workspace-tabs
+  .workspace-tab-header-container {
+  background: var(--background-primary) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  > .workspace-tabs::before,
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split::after {
+  display: none !important;
+  content: none !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-root
+  > .workspace-tabs.mod-top
+  > .workspace-tab-header-container
+  > .workspace-tab-header-spacer {
+  pointer-events: none !important;
+  -webkit-app-region: no-drag !important;
+  app-region: no-drag !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-root
+  > .workspace-tabs.mod-top
+  > .workspace-tab-header-container {
+  -webkit-app-region: no-drag !important;
+  app-region: no-drag !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .workspace.is-right-sidedock-open
+  > .workspace-split.mod-right-split
+  > .workspace-tabs
+  > .workspace-tab-header-container {
+  position: relative !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .nest-kit-sidebar-pin-button {
+  position: absolute !important;
+  top: 6px !important;
+  right: 8px !important;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  cursor: pointer !important;
+  z-index: 100 !important;
+  -webkit-app-region: no-drag !important;
+  app-region: no-drag !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .nest-kit-sidebar-pin-button:hover {
+  color: var(--text-normal) !important;
+  background: var(--background-modifier-hover) !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .nest-kit-sidebar-pin-button.is-active {
+  color: var(--interactive-accent) !important;
+  background: var(--background-modifier-hover) !important;
+}
+
+body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
+  .nest-kit-sidebar-pin-button svg {
+  width: 16px;
+  height: 16px;
+}
