@@ -1,4 +1,5 @@
 import type { FeatureModule } from '../../core/feature-module';
+import { getDictionary } from '../../i18n';
 import type NestKitPlugin from '../../main';
 import { RightSidebarPinButtonController } from './pin-button';
 import {
@@ -11,13 +12,33 @@ import {
 } from './selectors';
 
 const REFRESH_DEBOUNCE_MS = 60;
+const CSS_VARIABLE_MAPPINGS = [
+	['--nest-kit-sidebar-drawer-top', 'rightSidebarDrawerTopPx', 'px'],
+	['--nest-kit-sidebar-bottom-gap', 'rightSidebarDrawerBottomGapPx', 'px'],
+	['--nest-kit-sidebar-drawer-right', 'rightSidebarDrawerRightOffsetPx', 'px'],
+	['--nest-kit-sidebar-drawer-width', 'rightSidebarDrawerWidthPx', 'px'],
+	['--nest-kit-sidebar-drawer-height', 'rightSidebarDrawerHeightVh', 'vh'],
+	['--nest-kit-sidebar-edge-trigger-width', 'rightSidebarEdgeTriggerWidthPx', 'px'],
+	['--nest-kit-sidebar-collapse-delay', 'rightSidebarCollapseDelayMs', 'ms'],
+	[
+		'--nest-kit-sidebar-animation-duration',
+		'rightSidebarAnimationDurationMs',
+		'ms',
+	],
+	['--nest-kit-sidebar-control-offset', 'rightSidebarTopControlOffsetPx', 'px'],
+	['--nest-kit-sidebar-pin-top', 'rightSidebarPinTopPx', 'px'],
+	['--nest-kit-sidebar-pin-right', 'rightSidebarPinRightPx', 'px'],
+] as const;
 
 export class RightSidebarDrawerFeature implements FeatureModule {
 	private enabled = false;
 	private refreshTimer: number | null = null;
 	private observer: MutationObserver | null = null;
 	private observedSplitEl: HTMLElement | null = null;
-	private readonly pinButton = new RightSidebarPinButtonController();
+	private previousRightSidebarOpen = false;
+	private readonly pinButton = new RightSidebarPinButtonController((pinned) =>
+		this.handlePinnedStateChange(pinned),
+	);
 
 	constructor(private readonly plugin: NestKitPlugin) {
 		this.plugin.registerEvent(
@@ -48,17 +69,21 @@ export class RightSidebarDrawerFeature implements FeatureModule {
 		}
 
 		this.enabled = true;
+		this.previousRightSidebarOpen = false;
 		activeDocument.body.classList.add(DRAWER_ENABLED_BODY_CLASS);
+		this.applyCssVariables();
 		this.refresh();
 	}
 
 	disable(): void {
 		this.enabled = false;
+		this.previousRightSidebarOpen = false;
 		this.stopObserving();
 		this.clearRefreshTimer();
 		this.clearWorkspaceState();
 		this.pinButton.destroy();
 		activeDocument.body.classList.remove(DRAWER_ENABLED_BODY_CLASS);
+		this.clearCssVariables();
 	}
 
 	refresh(): void {
@@ -67,6 +92,8 @@ export class RightSidebarDrawerFeature implements FeatureModule {
 		}
 
 		activeDocument.body.classList.add(DRAWER_ENABLED_BODY_CLASS);
+		this.applyCssVariables();
+		const dictionary = getDictionary(this.plugin.settings.uiLanguage);
 
 		const workspaceEl = getWorkspaceElement();
 		if (!workspaceEl) {
@@ -78,22 +105,34 @@ export class RightSidebarDrawerFeature implements FeatureModule {
 
 		const rightSplitEl = getRightSplitElement(workspaceEl);
 		if (!rightSplitEl) {
-			workspaceEl.classList.remove(PINNED_WORKSPACE_CLASS);
+			this.previousRightSidebarOpen = false;
+			this.clearRuntimePinnedState(workspaceEl);
 			this.pinButton.destroy();
 			this.stopObserving();
 			return;
 		}
 
 		this.observeRightSplit(rightSplitEl);
+		if (!this.previousRightSidebarOpen) {
+			this.applyPersistentPinnedStateOnOpen(workspaceEl);
+		}
+		this.previousRightSidebarOpen = true;
 
-		const headerEl = getRightHeaderElement(rightSplitEl);
-		if (!headerEl || !this.plugin.settings.rightSidebarPinButtonEnabled) {
-			workspaceEl.classList.remove(PINNED_WORKSPACE_CLASS);
+		if (!this.plugin.settings.rightSidebarPinButtonEnabled) {
+			void this.plugin.clearPinnedState({
+				clearRuntime: true,
+			});
 			this.pinButton.destroy();
 			return;
 		}
 
-		this.pinButton.sync(headerEl, workspaceEl, true);
+		const headerEl = getRightHeaderElement(rightSplitEl);
+		if (!headerEl) {
+			this.pinButton.destroy();
+			return;
+		}
+
+		this.pinButton.sync(headerEl, workspaceEl, true, dictionary.pinButton);
 	}
 
 	private scheduleRefresh(): void {
@@ -142,8 +181,51 @@ export class RightSidebarDrawerFeature implements FeatureModule {
 		this.observedSplitEl = null;
 	}
 
-	private clearWorkspaceState(): void {
-		const workspaceEl = getAnyWorkspaceElement();
+	isRuntimePinned(workspaceEl = getAnyWorkspaceElement()): boolean {
+		return workspaceEl?.classList.contains(PINNED_WORKSPACE_CLASS) ?? false;
+	}
+
+	clearRuntimePinnedState(workspaceEl = getAnyWorkspaceElement()): void {
 		workspaceEl?.classList.remove(PINNED_WORKSPACE_CLASS);
+	}
+
+	private clearWorkspaceState(): void {
+		this.previousRightSidebarOpen = false;
+		this.clearRuntimePinnedState();
+	}
+
+	private applyCssVariables(): void {
+		const { style } = activeDocument.body;
+
+		for (const [propertyName, settingKey, unit] of CSS_VARIABLE_MAPPINGS) {
+			style.setProperty(
+				propertyName,
+				`${this.plugin.settings[settingKey]}${unit}`,
+			);
+		}
+	}
+
+	private clearCssVariables(): void {
+		const { style } = activeDocument.body;
+
+		for (const [propertyName] of CSS_VARIABLE_MAPPINGS) {
+			style.removeProperty(propertyName);
+		}
+	}
+
+	private applyPersistentPinnedStateOnOpen(workspaceEl: HTMLElement): void {
+		if (
+			this.plugin.settings.rememberPinnedState &&
+			this.plugin.settings.rightSidebarPinned
+		) {
+			workspaceEl.classList.add(PINNED_WORKSPACE_CLASS);
+			return;
+		}
+
+		this.clearRuntimePinnedState(workspaceEl);
+	}
+
+	private async handlePinnedStateChange(pinned: boolean): Promise<void> {
+		await this.plugin.syncPersistentPinnedState(pinned);
 	}
 }

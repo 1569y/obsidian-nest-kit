@@ -7,6 +7,28 @@
 - The top control selector is intentionally widened to `.workspace-split.mod-root > .workspace-tabs.mod-top` while keeping the direct-child scope.
 - Top control offset must remain transform-based and must not switch to `margin-right`.
 - Pinned state now always uses the `pin` icon and relies on the active color state instead of `pin-off`.
+- Behaviour, positioning, and advanced sidebar tuning now flow through runtime CSS variables so settings apply immediately without reloading the plugin.
+- Positioning now includes a dedicated `Drawer height` setting with a default of `100%`.
+- `Drawer height` syncs to CSS as `vh` and is capped with `min()` so the real drawer height does not exceed the available space defined by the top offset and bottom gap.
+- NestKit now supports Simplified Chinese and English through a local TypeScript dictionary.
+- The default interface language is Simplified Chinese.
+- Changing language refreshes the settings tab immediately and updates the pin button tooltip plus `aria-label`.
+- Automatic Obsidian-language detection is not included in the current branch.
+- More languages can be added later by extending the local dictionaries.
+- `rememberPinnedState` is now implemented.
+- The pin button always supports temporary pinning for the current session.
+- `rightSidebarPinned` stores only the persisted preference, while the workspace class remains runtime-only.
+- When **Remember pinned state** is off, temporary pinning still survives pointer leave but is not restored after reopening the right sidebar or restarting Obsidian.
+- Disabling the drawer or unloading the plugin removes only the runtime pinned class and does not silently erase the stored pinned preference.
+- Turning off **Remember pinned state** or clicking **Restore all defaults** clears the stored pinned preference.
+- Turning off **Show pin button** also clears both the runtime pinned state and the stored pinned preference so the user is not left pinned without a visible way to unpin.
+- Each numeric slider now includes its own compact reset icon and restores only that one setting.
+- The `Drawer height` slider also has its own compact reset icon and restores only `rightSidebarDrawerHeightVh = 100`.
+- The top control offset default is now `110px`.
+- Existing `data.json` values are not auto-migrated from the old `125px` default.
+- If a vault was already tuned against the old `125px` default, use a single-setting reset or click **Restore all defaults** once to adopt the new `110px` baseline.
+- Default customization values intentionally match the `0.1.0` drawer behavior.
+- The current customization branch does not include background images, solid-color drawer backgrounds, or gradient appearance work.
 - The Windows titlebar click fix was retained after A/B testing `spacerOnly` against `spacerPlusRootHeader`.
 - `spacerOnly` was not sufficient on its own.
 - The root header container no-drag rule must remain alongside the spacer fix.

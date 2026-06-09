@@ -27,6 +27,12 @@ export default class NestKitPlugin extends Plugin {
 		key: K,
 		value: NestKitSettings[K],
 	): Promise<void> {
+		if (key === 'rightSidebarPinButtonEnabled' && value === false) {
+			await this.clearPinnedState({
+				clearRuntime: true,
+			});
+		}
+
 		this.settings = {
 			...this.settings,
 			[key]: value,
@@ -34,6 +40,81 @@ export default class NestKitPlugin extends Plugin {
 
 		await this.saveSettings();
 		this.applyFeatureSettings();
+	}
+
+	async updateRememberPinnedState(enabled: boolean): Promise<void> {
+		const runtimePinned =
+			enabled && this.rightSidebarDrawerFeature?.isRuntimePinned()
+				? true
+				: false;
+
+		this.settings = {
+			...this.settings,
+			rememberPinnedState: enabled,
+			rightSidebarPinned: runtimePinned,
+		};
+
+		await this.saveSettings();
+
+		if (!enabled) {
+			await this.clearPinnedState({
+				clearRuntime: true,
+			});
+		}
+
+		this.rightSidebarDrawerFeature?.refresh();
+	}
+
+	async syncPersistentPinnedState(runtimePinned: boolean): Promise<void> {
+		const nextPinned = this.settings.rememberPinnedState ? runtimePinned : false;
+
+		if (this.settings.rightSidebarPinned === nextPinned) {
+			return;
+		}
+
+		this.settings = {
+			...this.settings,
+			rightSidebarPinned: nextPinned,
+		};
+
+		await this.saveSettings();
+	}
+
+	async clearPinnedState(options?: {
+		clearRuntime?: boolean;
+	}): Promise<void> {
+		const shouldClearRuntime = options?.clearRuntime ?? false;
+		const nextPinned = false;
+		const settingsChanged = this.settings.rightSidebarPinned !== nextPinned;
+
+		if (shouldClearRuntime) {
+			this.rightSidebarDrawerFeature?.clearRuntimePinnedState();
+		}
+
+		if (!settingsChanged) {
+			return;
+		}
+
+		this.settings = {
+			...this.settings,
+			rightSidebarPinned: nextPinned,
+		};
+
+		await this.saveSettings();
+	}
+
+	async restoreAllDefaults(): Promise<void> {
+		this.settings = {
+			...DEFAULT_SETTINGS,
+		};
+
+		await this.saveSettings();
+		this.rightSidebarDrawerFeature?.clearRuntimePinnedState();
+		this.applyFeatureSettings();
+	}
+
+	refreshSidebarFeature(): void {
+		this.rightSidebarDrawerFeature?.refresh();
 	}
 
 	private applyFeatureSettings(): void {
@@ -56,7 +137,6 @@ export default class NestKitPlugin extends Plugin {
 		this.settings = {
 			...DEFAULT_SETTINGS,
 			...persistedSettings,
-			rememberPinnedState: false,
 		};
 	}
 

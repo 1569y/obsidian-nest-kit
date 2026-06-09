@@ -1,13 +1,16 @@
 body.nest-kit-sidebar-drawer-enabled:not(.is-mobile) {
   --nest-kit-sidebar-edge-trigger-width: 26px;
   --nest-kit-sidebar-drawer-width: 340px;
-  --nest-kit-sidebar-drawer-right-offset: -5px;
+  --nest-kit-sidebar-drawer-height: 100vh;
+  --nest-kit-sidebar-drawer-right: -5px;
   --nest-kit-sidebar-drawer-top: 89px;
   --nest-kit-sidebar-bottom-gap: 42px;
-  --nest-kit-sidebar-hidden-extra-offset: 24px;
-  --nest-kit-sidebar-transition-duration: 210ms;
+  --nest-kit-sidebar-hidden-extra: 24px;
+  --nest-kit-sidebar-animation-duration: 210ms;
   --nest-kit-sidebar-collapse-delay: 550ms;
-  --nest-kit-sidebar-top-control-visual-offset: 125px;
+  --nest-kit-sidebar-control-offset: 110px;
+  --nest-kit-sidebar-pin-top: 6px;
+  --nest-kit-sidebar-pin-right: 8px;
   --nest-kit-sidebar-border-radius: 14px;
 }
 
@@ -15,7 +18,7 @@ body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
   .workspace.is-right-sidedock-open
   > .workspace-split.mod-right-split {
   position: fixed !important;
-  top: var(--nest-kit-sidebar-drawer-top) !important;
+  top: var(--nest-kit-sidebar-drawer-top, 89px) !important;
   right: 0 !important;
   bottom: 0 !important;
   width: 0 !important;
@@ -34,10 +37,10 @@ body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
   content: "" !important;
   display: block !important;
   position: fixed !important;
-  top: var(--nest-kit-sidebar-drawer-top) !important;
+  top: var(--nest-kit-sidebar-drawer-top, 89px) !important;
   right: 0 !important;
   bottom: 0 !important;
-  width: var(--nest-kit-sidebar-edge-trigger-width) !important;
+  width: var(--nest-kit-sidebar-edge-trigger-width, 26px) !important;
   z-index: 35 !important;
   pointer-events: auto !important;
   background: transparent !important;
@@ -86,7 +89,7 @@ body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
   > .workspace-tab-header-container
   > .sidebar-toggle-button.mod-right {
   transform: translateX(
-    calc(0px - var(--nest-kit-sidebar-control-offset, 125px))
+    calc(0px - var(--nest-kit-sidebar-control-offset, 110px))
   ) !important;
 }
 
@@ -95,28 +98,40 @@ body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
   > .workspace-split.mod-right-split
   > .workspace-tabs {
   position: fixed !important;
-  right: var(--nest-kit-sidebar-drawer-right-offset) !important;
-  top: var(--nest-kit-sidebar-drawer-top) !important;
-  height: calc(100vh - 96px - var(--nest-kit-sidebar-bottom-gap)) !important;
-  max-height: calc(
-    100vh - 96px - var(--nest-kit-sidebar-bottom-gap)
+  right: var(--nest-kit-sidebar-drawer-right, -5px) !important;
+  top: var(--nest-kit-sidebar-drawer-top, 89px) !important;
+  height: min(
+    var(--nest-kit-sidebar-drawer-height, 100vh),
+    calc(
+      100vh
+      - var(--nest-kit-sidebar-drawer-top, 89px)
+      - var(--nest-kit-sidebar-bottom-gap, 42px)
+    )
   ) !important;
-  width: var(--nest-kit-sidebar-drawer-width) !important;
-  max-width: var(--nest-kit-sidebar-drawer-width) !important;
+  max-height: min(
+    var(--nest-kit-sidebar-drawer-height, 100vh),
+    calc(
+      100vh
+      - var(--nest-kit-sidebar-drawer-top, 89px)
+      - var(--nest-kit-sidebar-bottom-gap, 42px)
+    )
+  ) !important;
+  width: var(--nest-kit-sidebar-drawer-width, 340px) !important;
+  max-width: var(--nest-kit-sidebar-drawer-width, 340px) !important;
   z-index: 36 !important;
   background: var(--background-primary) !important;
   opacity: 1 !important;
   border: 1px solid var(--background-modifier-border) !important;
-  border-radius: var(--nest-kit-sidebar-border-radius) !important;
+  border-radius: var(--nest-kit-sidebar-border-radius, 14px) !important;
   overflow: hidden !important;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
   transform: translateX(
-    calc(100% + var(--nest-kit-sidebar-hidden-extra-offset))
+    calc(100% + var(--nest-kit-sidebar-hidden-extra, 24px))
   );
   transition-property: transform, box-shadow;
-  transition-duration: var(--nest-kit-sidebar-transition-duration);
+  transition-duration: var(--nest-kit-sidebar-animation-duration, 210ms);
   transition-timing-function: ease;
-  transition-delay: var(--nest-kit-sidebar-collapse-delay);
+  transition-delay: var(--nest-kit-sidebar-collapse-delay, 550ms);
   pointer-events: auto !important;
 }
 
@@ -213,8 +228,8 @@ body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
 body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
   .nest-kit-sidebar-pin-button {
   position: absolute !important;
-  top: 6px !important;
-  right: 8px !important;
+  top: var(--nest-kit-sidebar-pin-top, 6px) !important;
+  right: var(--nest-kit-sidebar-pin-right, 8px) !important;
   width: 28px !important;
   height: 28px !important;
   padding: 4px !important;

@@ -1,19 +1,33 @@
 import { setIcon } from 'obsidian';
 import { PIN_BUTTON_CLASS, PINNED_WORKSPACE_CLASS } from './selectors';
 
-const PIN_LABEL = '\u56fa\u5b9a\u53f3\u4fa7\u680f';
-const UNPIN_LABEL = '\u53d6\u6d88\u56fa\u5b9a\u53f3\u4fa7\u680f';
+export interface PinButtonLabels {
+	pin: string;
+	unpin: string;
+}
 
 export class RightSidebarPinButtonController {
 	private buttonEl: HTMLButtonElement | null = null;
 	private workspaceEl: HTMLElement | null = null;
+	private labels: PinButtonLabels = {
+		pin: '',
+		unpin: '',
+	};
+
+	constructor(
+		private readonly onPinnedStateChange: (
+			pinned: boolean,
+		) => void | Promise<void>,
+	) {}
 
 	sync(
 		headerEl: HTMLElement | null,
 		workspaceEl: HTMLElement | null,
 		visible: boolean,
+		labels: PinButtonLabels,
 	): void {
 		this.workspaceEl = workspaceEl;
+		this.labels = labels;
 
 		if (!visible || !headerEl || !workspaceEl) {
 			this.destroy();
@@ -58,7 +72,7 @@ export class RightSidebarPinButtonController {
 		}
 
 		const pinned = this.workspaceEl.classList.contains(PINNED_WORKSPACE_CLASS);
-		const label = pinned ? UNPIN_LABEL : PIN_LABEL;
+		const label = pinned ? this.labels.unpin : this.labels.pin;
 
 		setIcon(this.buttonEl, 'pin');
 		this.buttonEl.classList.toggle('is-active', pinned);
@@ -91,5 +105,6 @@ export class RightSidebarPinButtonController {
 
 		this.workspaceEl.classList.toggle(PINNED_WORKSPACE_CLASS, nextPinned);
 		this.updateState();
+		void this.onPinnedStateChange(nextPinned);
 	};
 }
