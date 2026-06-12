@@ -1,5 +1,16 @@
 # Migration notes
 
+- NestKit is now beginning its toolbox-core transition, but this phase does not change any user-visible drawer behavior.
+- A lightweight `FeatureRegistry` and `FeatureManager` now sit between `main.ts` and feature instances.
+- The existing right sidebar drawer is now registered under the stable feature id `workspace-panel-system`.
+- The source directory intentionally remains `src/features/right-sidebar-drawer/` during this phase.
+- Feature instances are now created lazily on first enable instead of eagerly during plugin load.
+- Disabling the feature still calls `disable()` immediately so body classes, CSS variables, observers, timers, and pin button UI are cleaned up.
+- Already-created feature instances are intentionally retained for reuse during the same plugin session.
+- This temporary retention avoids duplicate constructor listener registration while the current module still owns guarded `layout-change` and `onLayoutReady` listeners.
+- Module-level listener scoping will be addressed in a later phase.
+- This phase does not add settings tabs, does not add `schemaVersion`, and does not change any stored setting keys.
+- This phase does not change the plugin version and does not change release artifacts.
 - `right-sidebar-hover.css` is the user-provided, validated reference source and should remain unchanged.
 - `right-sidebar-hover.backup.css` is the untouched backup of the original reference file.
 - `styles.css` is the stylesheet the plugin actually loads.

@@ -41,6 +41,10 @@ export class RightSidebarDrawerFeature implements FeatureModule {
 	);
 
 	constructor(private readonly plugin: NestKitPlugin) {
+		// Phase 1 toolbox-core transition note:
+		// the feature manager now lazily creates this module on first enable and
+		// keeps the instance for later reuse, so these guarded listeners are
+		// registered at most once per plugin session.
 		this.plugin.registerEvent(
 			this.plugin.app.workspace.on('layout-change', () => {
 				if (!this.enabled) {

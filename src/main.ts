@@ -1,4 +1,6 @@
 import { Plugin } from 'obsidian';
+import { FeatureManager } from './core/feature-manager';
+import { FeatureRegistry } from './core/feature-registry';
 import { RightSidebarDrawerFeature } from './features/right-sidebar-drawer';
 import {
 	DEFAULT_SETTINGS,
@@ -6,21 +8,34 @@ import {
 	type NestKitSettings,
 } from './settings';
 
+export const WORKSPACE_PANEL_SYSTEM_FEATURE_ID = 'workspace-panel-system';
+
 export default class NestKitPlugin extends Plugin {
 	settings: NestKitSettings = DEFAULT_SETTINGS;
-	private rightSidebarDrawerFeature?: RightSidebarDrawerFeature;
+	private readonly featureRegistry = new FeatureRegistry<NestKitSettings>();
+	private readonly featureManager = new FeatureManager<NestKitSettings>(
+		this.featureRegistry,
+	);
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
 
-		this.rightSidebarDrawerFeature = new RightSidebarDrawerFeature(this);
+		this.featureManager.register({
+			id: WORKSPACE_PANEL_SYSTEM_FEATURE_ID,
+			isEnabled: (settings) => settings.rightSidebarDrawerEnabled,
+			create: () => new RightSidebarDrawerFeature(this),
+			order: 100,
+			nameKey: 'features.workspacePanelSystem.name',
+			descriptionKey: 'features.workspacePanelSystem.description',
+		});
+
 		this.addSettingTab(new NestKitSettingTab(this.app, this));
 
 		this.applyFeatureSettings();
 	}
 
 	onunload(): void {
-		this.rightSidebarDrawerFeature?.disable();
+		this.featureManager.disableAll();
 	}
 
 	async updateSetting<K extends keyof NestKitSettings>(
@@ -44,7 +59,7 @@ export default class NestKitPlugin extends Plugin {
 
 	async updateRememberPinnedState(enabled: boolean): Promise<void> {
 		const runtimePinned =
-			enabled && this.rightSidebarDrawerFeature?.isRuntimePinned()
+			enabled && this.getRightSidebarDrawerFeature()?.isRuntimePinned()
 				? true
 				: false;
 
@@ -62,7 +77,7 @@ export default class NestKitPlugin extends Plugin {
 			});
 		}
 
-		this.rightSidebarDrawerFeature?.refresh();
+		this.getRightSidebarDrawerFeature()?.refresh();
 	}
 
 	async syncPersistentPinnedState(runtimePinned: boolean): Promise<void> {
@@ -88,7 +103,7 @@ export default class NestKitPlugin extends Plugin {
 		const settingsChanged = this.settings.rightSidebarPinned !== nextPinned;
 
 		if (shouldClearRuntime) {
-			this.rightSidebarDrawerFeature?.clearRuntimePinnedState();
+			this.getRightSidebarDrawerFeature()?.clearRuntimePinnedState();
 		}
 
 		if (!settingsChanged) {
@@ -109,25 +124,16 @@ export default class NestKitPlugin extends Plugin {
 		};
 
 		await this.saveSettings();
-		this.rightSidebarDrawerFeature?.clearRuntimePinnedState();
+		this.getRightSidebarDrawerFeature()?.clearRuntimePinnedState();
 		this.applyFeatureSettings();
 	}
 
 	refreshSidebarFeature(): void {
-		this.rightSidebarDrawerFeature?.refresh();
+		this.getRightSidebarDrawerFeature()?.refresh();
 	}
 
 	private applyFeatureSettings(): void {
-		if (!this.rightSidebarDrawerFeature) {
-			return;
-		}
-
-		if (this.settings.rightSidebarDrawerEnabled) {
-			this.rightSidebarDrawerFeature.enable();
-			return;
-		}
-
-		this.rightSidebarDrawerFeature.disable();
+		this.featureManager.sync(this.settings);
 	}
 
 	private async loadSettings(): Promise<void> {
@@ -142,5 +148,13 @@ export default class NestKitPlugin extends Plugin {
 
 	private async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
+	}
+
+	private getRightSidebarDrawerFeature():
+		| RightSidebarDrawerFeature
+		| undefined {
+		return this.featureManager.get<RightSidebarDrawerFeature>(
+			WORKSPACE_PANEL_SYSTEM_FEATURE_ID,
+		);
 	}
 }

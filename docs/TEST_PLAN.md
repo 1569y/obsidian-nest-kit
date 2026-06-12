@@ -1,5 +1,15 @@
 # NestKit test plan
 
+## Phase 1 toolbox-core focus
+
+1. Enable the plugin but keep **Enable right sidebar hover drawer** off, then confirm the feature behaves exactly like the published `0.2.0` release.
+2. Turn the drawer on for the first time in the session and confirm the right sidebar drawer activates normally.
+3. Turn the drawer off and confirm all UI side effects are removed immediately.
+4. Turn the drawer on again in the same session and confirm the behavior is still correct, with no duplicated pin button and no duplicated refresh effects.
+5. Disable the plugin and confirm the default Obsidian right sidebar behavior is fully restored.
+6. Re-enable the plugin and confirm the drawer remains off by default unless the saved setting enables it.
+7. Confirm this phase introduces no settings-schema prompts, no migration UI, and no new user-facing settings sections.
+
 1. Disable the plugin and confirm the default Obsidian right sidebar behavior is fully restored.
 2. Enable the plugin but keep **Enable right sidebar hover drawer** off and confirm the default behavior is unchanged.
 3. Turn the drawer setting on while the right sidebar is logically closed and confirm the top header remains normal.
