@@ -25,6 +25,17 @@
 - Temporary pin, remembered pinned state, live slider updates, i18n refresh, and the Windows titlebar fix all remain unchanged.
 - `rightSidebarPinned` keeps its existing meaning as persisted pinned preference; this phase does not add any new cross-field normalization rule that changes current visible behavior when `rememberPinnedState = false`.
 - Spaced Review is still not implemented and this phase adds no Spaced Review settings keys.
+- Spaced Review Phase 1 adds only detached core modules under `src/features/spaced-review/`.
+- This phase does not change the plugin settings schema and does not add any `data.json` fields.
+- This phase does not register the `spaced-review` feature yet and does not connect it to plugin startup.
+- This phase does not add commands, modals, Daily Note writes, checkbox listeners, or any user-visible UI.
+- This phase does not write any real Vault data; store persistence is implemented only behind a storage-adapter boundary for later integration.
+- The planned Spaced Review store path is `.nestkit/spaced-review/tasks.json`, but this phase only prepares the pure core logic and test harness coverage.
+- Missing `tasks.json` is treated as a normal first-run state and does not immediately trigger file creation.
+- Invalid Spaced Review store JSON falls back to a default runtime store but does not auto-overwrite the damaged file.
+- Spaced Review store normalization now includes future-version write protection through `shouldPersist = false` and `hasUnsupportedFutureVersion = true` when a newer store schema is detected.
+- `completedSequenceIndexes` and `skippedSequenceIndexes` are normalized by filling missing values, filtering invalid entries, deduplicating, and sorting ascending.
+- When that normalization makes a real repair, `didNormalize = true`.
 - The blocked-persistence warning is emitted at most once per plugin session.
 - `null`, `undefined`, and invalid raw settings each use a fresh default-settings copy instead of returning the shared `DEFAULT_SETTINGS` object.
 - `right-sidebar-hover.css` is the user-provided, validated reference source and should remain unchanged.

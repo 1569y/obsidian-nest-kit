@@ -1,5 +1,72 @@
 # NestKit test plan
 
+## Spaced Review Phase 1 core focus
+
+1. Confirm there are exactly 3 built-in review presets.
+2. Confirm the default preset id is `standard-review`.
+3. Confirm all built-in preset intervals pass `validateReviewIntervals(...)`.
+4. Confirm `getBuiltInReviewPresets()` returns copies that do not mutate internal preset constants.
+5. Confirm `[1, 3, 7]` is a valid cumulative interval list.
+6. Confirm `[0, 1]` is invalid.
+7. Confirm `[-1, 1]` is invalid.
+8. Confirm `[1, 1, 3]` is invalid.
+9. Confirm `[3, 1, 7]` is invalid and is not auto-sorted.
+10. Confirm more than 32 intervals is invalid.
+11. Confirm an interval value above `3650` is invalid.
+12. Confirm `parseReviewIntervalsInput('1, 3, 7')` is valid.
+13. Confirm `parseReviewIntervalsInput('1 3 7')` is valid.
+14. Confirm `parseReviewIntervalsInput('1, x, 7')` is invalid.
+15. Confirm `isIsoDateString('2026-06-14')` is true.
+16. Confirm `isIsoDateString('2026-6-14')` is false.
+17. Confirm `isIsoDateString('2026-02-30')` is false.
+18. Confirm `addCalendarDays('2026-06-14', 1)` returns `2026-06-15`.
+19. Confirm `addCalendarDays('2026-12-31', 1)` returns `2027-01-01`.
+20. Confirm `compareIsoDates(...)` orders ISO dates correctly.
+21. Confirm fixed timeline with `startDate = 2026-06-14` and `[1, 3, 7]` plans `2026-06-15`, `2026-06-17`, and `2026-06-21`.
+22. Confirm `2026-06-15` returns sequence `0` as pending.
+23. Confirm `2026-06-16` with `carryOver` returns sequence `0` as overdue.
+24. Confirm `2026-06-16` with `skip` does not return sequence `0`.
+25. Confirm `2026-06-17` with `carryOver` still returns only sequence `0` by default, not sequence `0` plus sequence `1`.
+26. Confirm rolling gaps convert `[1, 3, 7]` into `[1, 2, 4]`.
+27. Confirm completing sequence `0` on `2026-06-16` in rolling mode updates `rollingAnchorDate` to `2026-06-16`.
+28. Confirm sequence `1` in rolling mode is then planned for `2026-06-18`.
+29. Confirm fixed-mode completion does not overwrite `rollingAnchorDate`.
+30. Confirm `completeOccurrence(...)` does not mutate the original task object.
+31. Confirm `completeOccurrence(...)` adds the completed sequence index.
+32. Confirm `completeOccurrence(...)` removes that index from `skippedSequenceIndexes`.
+33. Confirm `skipOccurrence(...)` adds the skipped sequence index.
+34. Confirm `skipOccurrence(...)` removes that index from `completedSequenceIndexes`.
+35. Confirm completed and skipped indexes are deduplicated and sorted.
+36. Confirm `createDefaultSpacedReviewStore()` uses `schemaVersion = 1`.
+37. Confirm reading a missing store returns the default store.
+38. Confirm invalid store JSON returns the default store plus a warning.
+39. Confirm invalid tasks are discarded during store normalization.
+40. Confirm `upsertReviewTask(...)` adds a task when the id is new.
+41. Confirm `upsertReviewTask(...)` replaces a task when the id already exists.
+42. Confirm `removeReviewTask(...)` removes the matching task id.
+43. Confirm `writeSpacedReviewStore(...)` calls `ensureFolder('.nestkit/spaced-review')`.
+44. Confirm `writeSpacedReviewStore(...)` writes pretty JSON.
+45. Confirm reading after writing through a memory adapter restores the same task data.
+46. Confirm reading a missing store returns `shouldPersist = false`.
+47. Confirm invalid store JSON returns `shouldPersist = false`.
+48. Confirm a non-object store returns `shouldPersist = true`.
+49. Confirm a missing or invalid `schemaVersion` returns `shouldPersist = true`.
+50. Confirm a clean `schemaVersion = 1` store returns `shouldPersist = false`.
+51. Confirm a `schemaVersion = 1` store with normalized fields returns `shouldPersist = true`.
+52. Confirm a future `schemaVersion` returns `hasUnsupportedFutureVersion = true`.
+53. Confirm a future `schemaVersion` returns `shouldPersist = false`.
+54. Confirm a future `schemaVersion` still exposes valid known tasks in the runtime store.
+55. Confirm invalid `completedSequenceIndexes` marks `didNormalize = true`.
+56. Confirm duplicate `completedSequenceIndexes` marks `didNormalize = true`.
+57. Confirm unsorted `completedSequenceIndexes` marks `didNormalize = true`.
+58. Confirm invalid `skippedSequenceIndexes` marks `didNormalize = true`.
+59. Confirm duplicate `skippedSequenceIndexes` marks `didNormalize = true`.
+60. Confirm unsorted `skippedSequenceIndexes` marks `didNormalize = true`.
+61. Confirm valid completed and skipped indexes leave `didNormalize = false`.
+62. Confirm `writeSpacedReviewStore(...)` still calls `ensureFolder('.nestkit/spaced-review')`.
+63. Confirm `writeSpacedReviewStore(...)` still writes pretty JSON.
+64. Confirm reading after writing still restores the same task data.
+
 ## Phase 3 settings-migration focus
 
 1. Confirm `undefined` raw settings return `DEFAULT_SETTINGS` without warnings and without forcing an immediate save.

@@ -16,6 +16,12 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/right-sidebar-drawer/index.ts`: feature lifecycle, workspace refresh logic, CSS variable application and cleanup, observer setup, and teardown
 - `src/features/right-sidebar-drawer/pin-button.ts`: pin button creation, icon updates, aria state, and click behavior
 - `src/features/right-sidebar-drawer/selectors.ts`: central selector and class constants for the feature
+- `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
+- `src/features/spaced-review/presets.ts`: built-in review presets and default preset lookup
+- `src/features/spaced-review/intervals.ts`: interval parsing and validation for cumulative review offsets
+- `src/features/spaced-review/dates.ts`: strict `YYYY-MM-DD` date-only helpers
+- `src/features/spaced-review/schedule.ts`: fixed-timeline, rolling-timeline, carry-over, skip, and task completion scheduling logic
+- `src/features/spaced-review/store.ts`: storage adapter boundary plus store normalization, read, write, and task upsert or removal helpers
 
 ## Current registration
 
@@ -58,6 +64,26 @@ The stable feature id is now future-facing and already reflects the intended top
 - While that persistence lock is active, settings UI changes, pin persistence updates, and **Restore all defaults** still affect the current session runtime state but do not write back to `data.json`.
 - A future nested feature namespace remains deferred to schema `2` or later.
 - Spaced Review is planned as a separate feature module, but this phase intentionally adds no Spaced Review settings keys or placeholder namespaces.
+
+## Spaced Review Phase 1
+
+- Planned stable feature id: `spaced-review`
+- Phase 1 intentionally implements only pure core modules and does not register the feature yet.
+- Phase 1 does not modify `main.ts`, `FeatureRegistry`, `FeatureManager`, settings UI, i18n, or the existing workspace panel system.
+- Phase 1 does not register commands, modals, Vault listeners, Daily Note sync, checkbox sync, or any plugin startup behavior.
+- Spaced Review tasks are designed to stay independent from the workspace panel system, even if a later workspace panel card links into review data.
+- The planned store root is `.nestkit/spaced-review/tasks.json`.
+- The Spaced Review store has its own `schemaVersion = 1`, separate from the plugin settings schema.
+- Reading a missing `.nestkit/spaced-review/tasks.json` returns a default runtime store without immediately creating the file.
+- Invalid Spaced Review store JSON falls back to a default runtime store but must not be auto-overwritten by older code paths.
+- The store read result now exposes `didNormalize`, `shouldPersist`, and `hasUnsupportedFutureVersion` so a later integration layer can decide whether it is safe to write back.
+- Older plugin versions may read known fields from a future Spaced Review store schema for runtime safety, but they must not persist that downgraded view when `shouldPersist = false`.
+- Future integration code must respect `shouldPersist` before calling the explicit `writeSpacedReviewStore(...)` API.
+- `ReviewTask.startDate` means the learning-complete date or task baseline date, not the first review date.
+- `ReviewTask.intervalsSnapshot` stores cumulative offsets from `startDate` and is the canonical schedule source for each task.
+- Built-in presets are only templates for new tasks; existing tasks must continue to use their own stored `intervalsSnapshot`.
+- Scheduling uses strict date-only `YYYY-MM-DD` strings and calendar-day math instead of millisecond deltas or `moment`.
+- `ReviewOccurrence` remains a runtime-derived object in Phase 1 and is not persisted as a full list in the store.
 
 ## Transition constraints
 
