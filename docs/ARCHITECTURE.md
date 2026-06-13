@@ -31,23 +31,26 @@ The stable feature id is now future-facing and already reflects the intended top
 2. `main.ts` registers the workspace panel feature with the `FeatureRegistry` through the stable id `workspace-panel-system`.
 3. `FeatureManager.sync(settings)` creates a feature instance only when its settings selector first evaluates to enabled.
 4. On first enable, `RightSidebarDrawerFeature` is created once, enabled, and then reused for later toggles during the same plugin session.
-5. Disabling the feature calls `disable()` and removes UI side effects, but the created instance is intentionally retained for later reuse.
-6. Settings updates save immediately and then re-sync feature state so CSS variables, pin labels, and DOM state update without reloading the plugin.
-7. Layout changes trigger a debounced refresh.
-8. A scoped `MutationObserver` watches the right split subtree only when the feature is active.
-9. Runtime pinned state is driven only by the workspace class `nest-kit-sidebar-pinned`, so the pin button can always keep the drawer open for the current session even when persistence is off.
-10. Persistent pinned restore uses the dedicated `rightSidebarPinned` setting and only applies when **Remember pinned state** is enabled and the right sidebar is opened again.
-11. Ordinary refresh work such as slider updates, language changes, tooltip updates, or CSS variable sync must not overwrite the current runtime pinned state.
-12. Disabling the feature or unloading the plugin removes the body class, pin button, observer, timer state, runtime pinned class, and NestKit-owned CSS variables without erasing the stored pinned preference.
-13. Turning off **Remember pinned state**, hiding the pin button, or restoring all defaults clears the stored pinned preference and immediately removes the runtime pinned state.
+5. Phase 2 moves runtime listener scope out of the feature constructor and into `enable()` / `disable()`, so disabled features keep only an inert cached instance.
+6. Disabling the feature calls `disable()`, unregisters the activation-scoped `layout-change` `EventRef` through `workspace.offref(...)`, and removes UI side effects while still retaining the created instance for later reuse.
+7. `onLayoutReady(...)` still has no cancellation handle, so the feature now guards that callback with an activation generation token before allowing a delayed `refresh()`.
+8. The `FeatureManager` cache model remains unchanged: first enable creates the instance lazily, later toggles reuse it, and the manager does not destroy cached feature instances in this phase.
+9. Settings updates save immediately and then re-sync feature state so CSS variables, pin labels, and DOM state update without reloading the plugin.
+10. Layout changes trigger a debounced refresh only while the feature is active.
+11. A scoped `MutationObserver` watches the right split subtree only when the feature is active.
+12. Runtime pinned state is driven only by the workspace class `nest-kit-sidebar-pinned`, so the pin button can always keep the drawer open for the current session even when persistence is off.
+13. Persistent pinned restore uses the dedicated `rightSidebarPinned` setting and only applies when **Remember pinned state** is enabled and the right sidebar is opened again.
+14. Ordinary refresh work such as slider updates, language changes, tooltip updates, or CSS variable sync must not overwrite the current runtime pinned state.
+15. Disabling the feature or unloading the plugin removes the body class, pin button, observer, timer state, runtime pinned class, and NestKit-owned CSS variables without erasing the stored pinned preference.
+16. Turning off **Remember pinned state**, hiding the pin button, or restoring all defaults clears the stored pinned preference and immediately removes the runtime pinned state.
 
 ## Transition constraints
 
 - This phase introduces no user-visible behavior changes.
 - This phase introduces no settings schema changes.
 - The manager intentionally performs lazy first-use instantiation so disabled features do not create instances at plugin startup.
-- Already-created instances are intentionally kept alive after disable to avoid duplicate listener registration from the current constructor-based listener setup.
-- The remaining guarded listener lifetime inside `RightSidebarDrawerFeature` is a known technical debt for the next phase; this phase does not attempt a component-scope rewrite.
+- Already-created instances are intentionally kept alive after disable, but disabled instances now remain inert instead of keeping an always-registered guarded `layout-change` listener alive for the rest of the session.
+- The feature now owns its activation-scoped listener lifecycle directly and invalidates stale `onLayoutReady(...)` callbacks with an activation generation guard instead of trying to cancel them.
 
 ## Styling strategy
 

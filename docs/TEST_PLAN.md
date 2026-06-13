@@ -1,5 +1,20 @@
 # NestKit test plan
 
+## Phase 2 listener-scope focus
+
+1. Enable the plugin but keep **Enable right sidebar hover drawer** off, then confirm the drawer stays inactive and the default Obsidian right sidebar behavior is unchanged.
+2. Turn the drawer on for the first time in the session and confirm hover-open behavior activates normally.
+3. Turn the drawer off and confirm the native right sidebar behavior returns immediately.
+4. Turn the drawer on again in the same session and confirm the drawer still behaves correctly after listener re-registration.
+5. Repeat the drawer on or off cycle several times and confirm there is still only one pin button, one refresh path, and no obvious duplicated listener behavior.
+6. With **Remember pinned state** off, pin the drawer temporarily and confirm pointer-leave collapse stays disabled for the current session only.
+7. With **Remember pinned state** on, pin the drawer, close and reopen the right sidebar, and confirm the pinned state is restored.
+8. Move Behaviour, Positioning, and Advanced sliders while the drawer is enabled and confirm updates still apply immediately.
+9. Switch between Simplified Chinese and English and confirm the settings tab and pin button labels still refresh correctly.
+10. Click **Restore all defaults** and confirm the drawer disables, runtime pinned state clears, and defaults are restored.
+11. On Windows, confirm minimize, maximize, and close remain clickable while the right sidebar is logically open.
+12. Disable the plugin and confirm all NestKit UI side effects are removed and the native right sidebar behavior is restored.
+
 ## Phase 1 toolbox-core focus
 
 1. Enable the plugin but keep **Enable right sidebar hover drawer** off, then confirm the feature behaves exactly like the published `0.2.0` release.

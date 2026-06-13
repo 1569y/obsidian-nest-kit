@@ -1,3 +1,4 @@
+import type { EventRef } from 'obsidian';
 import type { FeatureModule } from '../../core/feature-module';
 import { getDictionary } from '../../i18n';
 import type NestKitPlugin from '../../main';
@@ -32,6 +33,8 @@ const CSS_VARIABLE_MAPPINGS = [
 
 export class RightSidebarDrawerFeature implements FeatureModule {
 	private enabled = false;
+	private layoutChangeRef?: EventRef;
+	private activationGeneration = 0;
 	private refreshTimer: number | null = null;
 	private observer: MutationObserver | null = null;
 	private observedSplitEl: HTMLElement | null = null;
@@ -41,46 +44,39 @@ export class RightSidebarDrawerFeature implements FeatureModule {
 	);
 
 	constructor(private readonly plugin: NestKitPlugin) {
-		// Phase 1 toolbox-core transition note:
-		// the feature manager now lazily creates this module on first enable and
-		// keeps the instance for later reuse, so these guarded listeners are
-		// registered at most once per plugin session.
-		this.plugin.registerEvent(
-			this.plugin.app.workspace.on('layout-change', () => {
-				if (!this.enabled) {
-					return;
-				}
-
-				this.scheduleRefresh();
-			}),
-		);
-
-		this.plugin.app.workspace.onLayoutReady(() => {
-			if (!this.enabled) {
-				return;
-			}
-
-			this.refresh();
-		});
-
 		this.plugin.register(() => this.disable());
 	}
 
 	enable(): void {
 		if (this.enabled) {
-			this.refresh();
 			return;
 		}
 
 		this.enabled = true;
+		const generation = ++this.activationGeneration;
 		this.previousRightSidebarOpen = false;
+		this.registerRuntimeListeners(generation);
 		activeDocument.body.classList.add(DRAWER_ENABLED_BODY_CLASS);
 		this.applyCssVariables();
+
+		if (!this.plugin.app.workspace.layoutReady) {
+			this.plugin.app.workspace.onLayoutReady(() => {
+				if (!this.enabled || generation !== this.activationGeneration) {
+					return;
+				}
+
+				this.refresh();
+			});
+			return;
+		}
+
 		this.refresh();
 	}
 
 	disable(): void {
+		this.activationGeneration += 1;
 		this.enabled = false;
+		this.unregisterRuntimeListeners();
 		this.previousRightSidebarOpen = false;
 		this.stopObserving();
 		this.clearRefreshTimer();
@@ -88,6 +84,29 @@ export class RightSidebarDrawerFeature implements FeatureModule {
 		this.pinButton.destroy();
 		activeDocument.body.classList.remove(DRAWER_ENABLED_BODY_CLASS);
 		this.clearCssVariables();
+	}
+
+	private registerRuntimeListeners(generation: number): void {
+		if (this.layoutChangeRef) {
+			return;
+		}
+
+		this.layoutChangeRef = this.plugin.app.workspace.on('layout-change', () => {
+			if (!this.enabled || generation !== this.activationGeneration) {
+				return;
+			}
+
+			this.scheduleRefresh();
+		});
+	}
+
+	private unregisterRuntimeListeners(): void {
+		if (!this.layoutChangeRef) {
+			return;
+		}
+
+		this.plugin.app.workspace.offref(this.layoutChangeRef);
+		this.layoutChangeRef = undefined;
 	}
 
 	refresh(): void {

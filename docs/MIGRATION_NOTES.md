@@ -6,11 +6,15 @@
 - The source directory intentionally remains `src/features/right-sidebar-drawer/` during this phase.
 - Feature instances are now created lazily on first enable instead of eagerly during plugin load.
 - Disabling the feature still calls `disable()` immediately so body classes, CSS variables, observers, timers, and pin button UI are cleaned up.
-- Already-created feature instances are intentionally retained for reuse during the same plugin session.
-- This temporary retention avoids duplicate constructor listener registration while the current module still owns guarded `layout-change` and `onLayoutReady` listeners.
-- Module-level listener scoping will be addressed in a later phase.
+- Feature runtime listener scope now lives in `enable()` / `disable()` instead of the constructor.
+- The `layout-change` listener is now activation-scoped and is explicitly removed with `workspace.offref(...)` during `disable()`.
+- `onLayoutReady(...)` still has no cancellation handle, so delayed callbacks are now filtered by an activation generation guard.
+- Already-created feature instances are still intentionally retained for reuse during the same plugin session.
+- This phase does not change the `FeatureManager` cache model and does not destroy cached feature instances.
 - This phase does not add settings tabs, does not add `schemaVersion`, and does not change any stored setting keys.
 - This phase does not change the plugin version and does not change release artifacts.
+- This phase does not change any user-visible drawer behavior.
+- Temporary pin, remembered pinned state, live slider updates, i18n refresh, and the Windows titlebar fix all remain unchanged.
 - `right-sidebar-hover.css` is the user-provided, validated reference source and should remain unchanged.
 - `right-sidebar-hover.backup.css` is the untouched backup of the original reference file.
 - `styles.css` is the stylesheet the plugin actually loads.
