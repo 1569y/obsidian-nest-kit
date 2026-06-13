@@ -2,16 +2,17 @@
 
 ## Overview
 
-NestKit is evolving from a single-purpose right sidebar customization into a modular Obsidian toolbox. The current phase keeps the published `0.2.0` drawer behavior unchanged while introducing the smallest possible toolbox core: a `FeatureRegistry`, a `FeatureManager`, and a stable feature id for the existing workspace panel behavior.
+NestKit is evolving from a single-purpose right sidebar customization into a modular Obsidian toolbox. The current phase keeps the published `0.2.0` drawer behavior unchanged while adding the first safe settings-migration layer: a top-level `schemaVersion`, schema-aware normalization, and a future-proof boundary for later multi-feature settings work.
 
 ## Modules
 
 - `src/main.ts`: plugin lifecycle, settings loading, settings persistence, remember-pinned handling, feature registration, and feature-state synchronization
-- `src/settings.ts`: `NestKitSettings`, defaults, classic `PluginSettingTab` UI, grouped sliders, per-slider reset buttons, restore-all-defaults, and the language dropdown
+- `src/settings.ts`: `NestKitSettings`, `CURRENT_SETTINGS_SCHEMA_VERSION`, defaults, shared numeric slider limits, classic `PluginSettingTab` UI, grouped sliders, per-slider reset buttons, restore-all-defaults, and the language dropdown
 - `src/i18n/index.ts` and `src/i18n/locales/*`: lightweight local TypeScript dictionaries for Simplified Chinese and English
 - `src/core/feature-module.ts`: shared module lifecycle contract and registration shape
 - `src/core/feature-registry.ts`: lightweight feature registration store with duplicate-id protection and stable ordering
 - `src/core/feature-manager.ts`: lazy feature instantiation, settings-driven enable or disable, instance lookup, and unload cleanup
+- `src/core/settings-migration.ts`: settings schema parsing, field-by-field normalization, legacy schema `0` migration, and future-schema protection
 - `src/features/right-sidebar-drawer/index.ts`: feature lifecycle, workspace refresh logic, CSS variable application and cleanup, observer setup, and teardown
 - `src/features/right-sidebar-drawer/pin-button.ts`: pin button creation, icon updates, aria state, and click behavior
 - `src/features/right-sidebar-drawer/selectors.ts`: central selector and class constants for the feature
@@ -27,7 +28,7 @@ The stable feature id is now future-facing and already reflects the intended top
 
 ## Runtime behavior
 
-1. The plugin loads persisted settings and merges them with defaults.
+1. The plugin loads raw persisted settings through `migrateSettings(...)` instead of trusting `loadData()` output directly.
 2. `main.ts` registers the workspace panel feature with the `FeatureRegistry` through the stable id `workspace-panel-system`.
 3. `FeatureManager.sync(settings)` creates a feature instance only when its settings selector first evaluates to enabled.
 4. On first enable, `RightSidebarDrawerFeature` is created once, enabled, and then reused for later toggles during the same plugin session.
@@ -44,13 +45,28 @@ The stable feature id is now future-facing and already reflects the intended top
 15. Disabling the feature or unloading the plugin removes the body class, pin button, observer, timer state, runtime pinned class, and NestKit-owned CSS variables without erasing the stored pinned preference.
 16. Turning off **Remember pinned state**, hiding the pin button, or restoring all defaults clears the stored pinned preference and immediately removes the runtime pinned state.
 
+## Settings schema
+
+- Legacy `0.2.0` settings without `schemaVersion` are treated as schema `0`.
+- The current schema is `1`, stored in `settings.schemaVersion`.
+- Schema `1` intentionally keeps the existing flat settings keys so runtime logic, settings UI, and feature registration selectors do not need to change in this phase.
+- `src/core/settings-migration.ts` validates every known field by type and, for numeric slider-backed settings, by the same `min` / `max` ranges used by the current settings UI.
+- Missing fields are filled from `DEFAULT_SETTINGS`.
+- Invalid booleans, unknown languages, `NaN`, `Infinity`, and out-of-range numeric values fall back to defaults.
+- Unknown fields are dropped from the normalized runtime settings object.
+- Unsupported future schema versions are never overwritten by this branch: the plugin reads recognized fields for safe runtime use, logs warnings, keeps `shouldPersist = false`, and enables a session-level settings persistence lock for all later save paths.
+- While that persistence lock is active, settings UI changes, pin persistence updates, and **Restore all defaults** still affect the current session runtime state but do not write back to `data.json`.
+- A future nested feature namespace remains deferred to schema `2` or later.
+- Spaced Review is planned as a separate feature module, but this phase intentionally adds no Spaced Review settings keys or placeholder namespaces.
+
 ## Transition constraints
 
 - This phase introduces no user-visible behavior changes.
-- This phase introduces no settings schema changes.
+- This phase introduces the first settings schema change, but keeps the current flat keys and settings UI unchanged.
 - The manager intentionally performs lazy first-use instantiation so disabled features do not create instances at plugin startup.
 - Already-created instances are intentionally kept alive after disable, but disabled instances now remain inert instead of keeping an always-registered guarded `layout-change` listener alive for the rest of the session.
 - The feature now owns its activation-scoped listener lifecycle directly and invalidates stale `onLayoutReady(...)` callbacks with an activation generation guard instead of trying to cancel them.
+- Future multi-feature settings namespaces are intentionally postponed until a later dedicated migration phase.
 
 ## Styling strategy
 

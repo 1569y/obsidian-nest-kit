@@ -1,5 +1,42 @@
 # NestKit test plan
 
+## Phase 3 settings-migration focus
+
+1. Confirm `undefined` raw settings return `DEFAULT_SETTINGS` without warnings and without forcing an immediate save.
+2. Confirm `null` raw settings return `DEFAULT_SETTINGS` without warnings and without forcing an immediate save.
+3. Confirm an empty object is treated as legacy schema `0`, migrates to schema `1`, fills missing fields from defaults, and marks `shouldPersist = true`.
+4. Confirm primitive raw values such as a string or number fall back to `DEFAULT_SETTINGS`, log a warning, and mark `shouldPersist = true`.
+5. Confirm an array raw value falls back to `DEFAULT_SETTINGS`, log a warning, and mark `shouldPersist = true`.
+6. Confirm a complete legacy `0.2.0` flat settings object is preserved, upgraded to schema `1`, and marked `shouldPersist = true`.
+7. Confirm a partial legacy settings object preserves valid known fields and fills missing fields from defaults.
+8. Confirm legacy unknown fields are ignored by the normalized settings object.
+9. Confirm a valid schema `1` settings object round-trips without normalization and without forced persistence.
+10. Confirm a schema `1` settings object with missing fields is normalized and marked `shouldPersist = true`.
+11. Confirm a future schema version is recognized as unsupported, logs a warning, and keeps `shouldPersist = false`.
+12. Confirm an invalid `schemaVersion` such as a string, `NaN`, `Infinity`, a negative number, or a decimal normalizes safely to schema `1`.
+13. Confirm invalid boolean fields fall back to defaults.
+14. Confirm invalid numeric field types fall back to defaults.
+15. Confirm `NaN` and `Infinity` in numeric fields fall back to defaults.
+16. Confirm out-of-range numeric settings fall back to defaults using the same ranges as the current slider UI.
+17. Confirm an unknown `uiLanguage` falls back to `zh-CN`.
+18. Confirm `rightSidebarDrawerEnabled = true` survives migration.
+19. Confirm `rememberPinnedState = true` together with `rightSidebarPinned = true` survives migration.
+20. Confirm `rememberPinnedState = false` together with `rightSidebarPinned = true` is preserved as stored preference and still relies on existing runtime logic to decide whether pinned state is restored.
+21. Confirm `migrateSettings(migrateSettings(raw).settings)` is idempotent.
+22. Confirm **Restore all defaults** still resets the full settings object to `DEFAULT_SETTINGS`, including `schemaVersion = 1`.
+23. Confirm plugin reload after a migrated save does not trigger a second migration rewrite for already normalized schema `1` data.
+24. Confirm a future schema load does not call `saveData()` during `loadSettings()`.
+25. Confirm a future schema session blocks `updateSetting()` from calling `saveData()`.
+26. Confirm a future schema session blocks `updateRememberPinnedState()` from calling `saveData()`.
+27. Confirm a future schema session blocks `syncPersistentPinnedState()` from calling `saveData()`.
+28. Confirm a future schema session blocks `clearPinnedState()` from calling `saveData()`.
+29. Confirm a future schema session blocks `restoreAllDefaults()` from calling `saveData()`.
+30. Confirm the blocked-persistence warning is emitted at most once per future-schema session.
+31. Confirm schema `0` and schema `1` still allow ordinary `saveData()` writes after successful migration or user settings changes.
+32. Confirm `migrateSettings(undefined).settings !== DEFAULT_SETTINGS`.
+33. Confirm `migrateSettings(null).settings !== DEFAULT_SETTINGS`.
+34. Confirm mutating a default object returned by migration does not mutate `DEFAULT_SETTINGS`.
+
 ## Phase 2 listener-scope focus
 
 1. Enable the plugin but keep **Enable right sidebar hover drawer** off, then confirm the drawer stays inactive and the default Obsidian right sidebar behavior is unchanged.

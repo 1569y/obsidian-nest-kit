@@ -11,10 +11,22 @@
 - `onLayoutReady(...)` still has no cancellation handle, so delayed callbacks are now filtered by an activation generation guard.
 - Already-created feature instances are still intentionally retained for reuse during the same plugin session.
 - This phase does not change the `FeatureManager` cache model and does not destroy cached feature instances.
-- This phase does not add settings tabs, does not add `schemaVersion`, and does not change any stored setting keys.
+- This phase adds `settings.schemaVersion = 1`.
+- Valid legacy `0.2.0` flat settings without `schemaVersion` are treated as schema `0` and migrated forward automatically.
+- The current schema still keeps all existing flat settings keys; no nested feature namespace is introduced yet.
+- Missing settings fields fall back to defaults during normalization.
+- Invalid boolean fields, unknown languages, `NaN`, `Infinity`, and out-of-range numeric fields fall back to defaults during normalization.
+- Unsupported future schema versions are not downgraded and are not overwritten by this branch.
+- Unsupported future schema versions now also trigger a session-level persistence lock, so later slider, toggle, pin, language, and restore-defaults actions cannot overwrite newer stored data.
+- Unknown fields are ignored by the normalized runtime settings object.
+- This phase does not add settings tabs and does not change any user-facing settings sections.
 - This phase does not change the plugin version and does not change release artifacts.
 - This phase does not change any user-visible drawer behavior.
 - Temporary pin, remembered pinned state, live slider updates, i18n refresh, and the Windows titlebar fix all remain unchanged.
+- `rightSidebarPinned` keeps its existing meaning as persisted pinned preference; this phase does not add any new cross-field normalization rule that changes current visible behavior when `rememberPinnedState = false`.
+- Spaced Review is still not implemented and this phase adds no Spaced Review settings keys.
+- The blocked-persistence warning is emitted at most once per plugin session.
+- `null`, `undefined`, and invalid raw settings each use a fresh default-settings copy instead of returning the shared `DEFAULT_SETTINGS` object.
 - `right-sidebar-hover.css` is the user-provided, validated reference source and should remain unchanged.
 - `right-sidebar-hover.backup.css` is the untouched backup of the original reference file.
 - `styles.css` is the stylesheet the plugin actually loads.

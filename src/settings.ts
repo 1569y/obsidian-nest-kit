@@ -6,7 +6,102 @@ import {
 } from './i18n';
 import type NestKitPlugin from './main';
 
+export const CURRENT_SETTINGS_SCHEMA_VERSION = 1;
+
+type SliderSettingKey =
+	| 'rightSidebarDrawerTopPx'
+	| 'rightSidebarDrawerBottomGapPx'
+	| 'rightSidebarDrawerRightOffsetPx'
+	| 'rightSidebarDrawerWidthPx'
+	| 'rightSidebarDrawerHeightVh'
+	| 'rightSidebarEdgeTriggerWidthPx'
+	| 'rightSidebarCollapseDelayMs'
+	| 'rightSidebarAnimationDurationMs'
+	| 'rightSidebarTopControlOffsetPx'
+	| 'rightSidebarPinTopPx'
+	| 'rightSidebarPinRightPx';
+
+interface NumericSettingLimit {
+	min: number;
+	max: number;
+	step: number;
+	unit: 'px' | 'ms' | '%';
+}
+
+export const NUMERIC_SETTING_LIMITS: Record<
+	SliderSettingKey,
+	NumericSettingLimit
+> = {
+	rightSidebarEdgeTriggerWidthPx: {
+		min: 4,
+		max: 40,
+		step: 1,
+		unit: 'px',
+	},
+	rightSidebarCollapseDelayMs: {
+		min: 0,
+		max: 1000,
+		step: 50,
+		unit: 'ms',
+	},
+	rightSidebarAnimationDurationMs: {
+		min: 0,
+		max: 1000,
+		step: 10,
+		unit: 'ms',
+	},
+	rightSidebarDrawerWidthPx: {
+		min: 240,
+		max: 500,
+		step: 1,
+		unit: 'px',
+	},
+	rightSidebarDrawerHeightVh: {
+		min: 30,
+		max: 100,
+		step: 1,
+		unit: '%',
+	},
+	rightSidebarDrawerTopPx: {
+		min: 40,
+		max: 120,
+		step: 1,
+		unit: 'px',
+	},
+	rightSidebarDrawerBottomGapPx: {
+		min: 0,
+		max: 120,
+		step: 1,
+		unit: 'px',
+	},
+	rightSidebarDrawerRightOffsetPx: {
+		min: -40,
+		max: 0,
+		step: 1,
+		unit: 'px',
+	},
+	rightSidebarTopControlOffsetPx: {
+		min: 0,
+		max: 500,
+		step: 1,
+		unit: 'px',
+	},
+	rightSidebarPinTopPx: {
+		min: 0,
+		max: 20,
+		step: 1,
+		unit: 'px',
+	},
+	rightSidebarPinRightPx: {
+		min: 0,
+		max: 20,
+		step: 1,
+		unit: 'px',
+	},
+};
+
 export interface NestKitSettings {
+	schemaVersion: number;
 	uiLanguage: NestKitLanguage;
 	rightSidebarDrawerEnabled: boolean;
 	rightSidebarPinButtonEnabled: boolean;
@@ -26,6 +121,7 @@ export interface NestKitSettings {
 }
 
 export const DEFAULT_SETTINGS: NestKitSettings = {
+	schemaVersion: CURRENT_SETTINGS_SCHEMA_VERSION,
 	uiLanguage: 'zh-CN',
 	rightSidebarDrawerEnabled: false,
 	rightSidebarPinButtonEnabled: true,
@@ -44,19 +140,6 @@ export const DEFAULT_SETTINGS: NestKitSettings = {
 	rightSidebarPinRightPx: 8,
 };
 
-type SliderSettingKey =
-	| 'rightSidebarDrawerTopPx'
-	| 'rightSidebarDrawerBottomGapPx'
-	| 'rightSidebarDrawerRightOffsetPx'
-	| 'rightSidebarDrawerWidthPx'
-	| 'rightSidebarDrawerHeightVh'
-	| 'rightSidebarEdgeTriggerWidthPx'
-	| 'rightSidebarCollapseDelayMs'
-	| 'rightSidebarAnimationDurationMs'
-	| 'rightSidebarTopControlOffsetPx'
-	| 'rightSidebarPinTopPx'
-	| 'rightSidebarPinRightPx';
-
 interface SliderSettingConfig {
 	key: SliderSettingKey;
 	name: (dictionary: NestKitDictionary) => string;
@@ -73,20 +156,14 @@ const BEHAVIOUR_SLIDERS: SliderSettingConfig[] = [
 		name: (dictionary) => dictionary.settings.sliders.edgeTriggerWidth.name,
 		description: (dictionary) =>
 			dictionary.settings.sliders.edgeTriggerWidth.description,
-		min: 4,
-		max: 40,
-		step: 1,
-		unit: 'px',
+		...NUMERIC_SETTING_LIMITS.rightSidebarEdgeTriggerWidthPx,
 	},
 	{
 		key: 'rightSidebarCollapseDelayMs',
 		name: (dictionary) => dictionary.settings.sliders.collapseDelay.name,
 		description: (dictionary) =>
 			dictionary.settings.sliders.collapseDelay.description,
-		min: 0,
-		max: 1000,
-		step: 50,
-		unit: 'ms',
+		...NUMERIC_SETTING_LIMITS.rightSidebarCollapseDelayMs,
 	},
 	{
 		key: 'rightSidebarAnimationDurationMs',
@@ -94,10 +171,7 @@ const BEHAVIOUR_SLIDERS: SliderSettingConfig[] = [
 			dictionary.settings.sliders.animationDuration.name,
 		description: (dictionary) =>
 			dictionary.settings.sliders.animationDuration.description,
-		min: 0,
-		max: 1000,
-		step: 10,
-		unit: 'ms',
+		...NUMERIC_SETTING_LIMITS.rightSidebarAnimationDurationMs,
 	},
 ];
 
@@ -107,50 +181,35 @@ const POSITIONING_SLIDERS: SliderSettingConfig[] = [
 		name: (dictionary) => dictionary.settings.sliders.drawerWidth.name,
 		description: (dictionary) =>
 			dictionary.settings.sliders.drawerWidth.description,
-		min: 240,
-		max: 500,
-		step: 1,
-		unit: 'px',
+		...NUMERIC_SETTING_LIMITS.rightSidebarDrawerWidthPx,
 	},
 	{
 		key: 'rightSidebarDrawerHeightVh',
 		name: (dictionary) => dictionary.settings.sliders.drawerHeight.name,
 		description: (dictionary) =>
 			dictionary.settings.sliders.drawerHeight.description,
-		min: 30,
-		max: 100,
-		step: 1,
-		unit: '%',
+		...NUMERIC_SETTING_LIMITS.rightSidebarDrawerHeightVh,
 	},
 	{
 		key: 'rightSidebarDrawerTopPx',
 		name: (dictionary) => dictionary.settings.sliders.drawerTopOffset.name,
 		description: (dictionary) =>
 			dictionary.settings.sliders.drawerTopOffset.description,
-		min: 40,
-		max: 120,
-		step: 1,
-		unit: 'px',
+		...NUMERIC_SETTING_LIMITS.rightSidebarDrawerTopPx,
 	},
 	{
 		key: 'rightSidebarDrawerBottomGapPx',
 		name: (dictionary) => dictionary.settings.sliders.drawerBottomGap.name,
 		description: (dictionary) =>
 			dictionary.settings.sliders.drawerBottomGap.description,
-		min: 0,
-		max: 120,
-		step: 1,
-		unit: 'px',
+		...NUMERIC_SETTING_LIMITS.rightSidebarDrawerBottomGapPx,
 	},
 	{
 		key: 'rightSidebarDrawerRightOffsetPx',
 		name: (dictionary) => dictionary.settings.sliders.drawerRightOffset.name,
 		description: (dictionary) =>
 			dictionary.settings.sliders.drawerRightOffset.description,
-		min: -40,
-		max: 0,
-		step: 1,
-		unit: 'px',
+		...NUMERIC_SETTING_LIMITS.rightSidebarDrawerRightOffsetPx,
 	},
 ];
 
@@ -160,30 +219,21 @@ const ADVANCED_SLIDERS: SliderSettingConfig[] = [
 		name: (dictionary) => dictionary.settings.sliders.topControlOffset.name,
 		description: (dictionary) =>
 			dictionary.settings.sliders.topControlOffset.description,
-		min: 0,
-		max: 500,
-		step: 1,
-		unit: 'px',
+		...NUMERIC_SETTING_LIMITS.rightSidebarTopControlOffsetPx,
 	},
 	{
 		key: 'rightSidebarPinTopPx',
 		name: (dictionary) => dictionary.settings.sliders.pinTopOffset.name,
 		description: (dictionary) =>
 			dictionary.settings.sliders.pinTopOffset.description,
-		min: 0,
-		max: 20,
-		step: 1,
-		unit: 'px',
+		...NUMERIC_SETTING_LIMITS.rightSidebarPinTopPx,
 	},
 	{
 		key: 'rightSidebarPinRightPx',
 		name: (dictionary) => dictionary.settings.sliders.pinRightOffset.name,
 		description: (dictionary) =>
 			dictionary.settings.sliders.pinRightOffset.description,
-		min: 0,
-		max: 20,
-		step: 1,
-		unit: 'px',
+		...NUMERIC_SETTING_LIMITS.rightSidebarPinRightPx,
 	},
 ];
 

@@ -1,6 +1,7 @@
 import { Plugin } from 'obsidian';
 import { FeatureManager } from './core/feature-manager';
 import { FeatureRegistry } from './core/feature-registry';
+import { migrateSettings } from './core/settings-migration';
 import { RightSidebarDrawerFeature } from './features/right-sidebar-drawer';
 import {
 	DEFAULT_SETTINGS,
@@ -11,7 +12,11 @@ import {
 export const WORKSPACE_PANEL_SYSTEM_FEATURE_ID = 'workspace-panel-system';
 
 export default class NestKitPlugin extends Plugin {
-	settings: NestKitSettings = DEFAULT_SETTINGS;
+	settings: NestKitSettings = {
+		...DEFAULT_SETTINGS,
+	};
+	private settingsPersistenceAllowed = true;
+	private hasWarnedAboutBlockedSettingsPersistence = false;
 	private readonly featureRegistry = new FeatureRegistry<NestKitSettings>();
 	private readonly featureManager = new FeatureManager<NestKitSettings>(
 		this.featureRegistry,
@@ -137,16 +142,34 @@ export default class NestKitPlugin extends Plugin {
 	}
 
 	private async loadSettings(): Promise<void> {
-		const persistedSettings =
-			(await this.loadData()) as Partial<NestKitSettings> | null;
+		const migration = migrateSettings(await this.loadData());
 
-		this.settings = {
-			...DEFAULT_SETTINGS,
-			...persistedSettings,
-		};
+		this.settingsPersistenceAllowed =
+			!migration.hasUnsupportedFutureVersion;
+		this.hasWarnedAboutBlockedSettingsPersistence = false;
+		this.settings = migration.settings;
+
+		for (const warning of migration.warnings) {
+			console.warn(`[NestKit] ${warning}`);
+		}
+
+		if (migration.shouldPersist) {
+			await this.saveSettings();
+		}
 	}
 
 	private async saveSettings(): Promise<void> {
+		if (!this.settingsPersistenceAllowed) {
+			if (!this.hasWarnedAboutBlockedSettingsPersistence) {
+				console.warn(
+					'[NestKit] Settings persistence is disabled because the stored settings schema is newer than this plugin version.',
+				);
+				this.hasWarnedAboutBlockedSettingsPersistence = true;
+			}
+
+			return;
+		}
+
 		await this.saveData(this.settings);
 	}
 
