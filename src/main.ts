@@ -2,6 +2,10 @@ import { Plugin } from 'obsidian';
 import { FeatureManager } from './core/feature-manager';
 import { FeatureRegistry } from './core/feature-registry';
 import { migrateSettings } from './core/settings-migration';
+import {
+	registerSpacedReviewCommands,
+} from './features/spaced-review/commands';
+import { SpacedReviewFeature } from './features/spaced-review';
 import { RightSidebarDrawerFeature } from './features/right-sidebar-drawer';
 import {
 	DEFAULT_SETTINGS,
@@ -10,6 +14,7 @@ import {
 } from './settings';
 
 export const WORKSPACE_PANEL_SYSTEM_FEATURE_ID = 'workspace-panel-system';
+export const SPACED_REVIEW_FEATURE_ID = 'spaced-review';
 
 export default class NestKitPlugin extends Plugin {
 	settings: NestKitSettings = {
@@ -33,6 +38,20 @@ export default class NestKitPlugin extends Plugin {
 			nameKey: 'features.workspacePanelSystem.name',
 			descriptionKey: 'features.workspacePanelSystem.description',
 		});
+		this.featureManager.register({
+			id: SPACED_REVIEW_FEATURE_ID,
+			isEnabled: (settings) => settings.spacedReviewEnabled,
+			create: () => new SpacedReviewFeature(this, () => this.settings),
+			order: 200,
+			nameKey: 'features.spacedReview.name',
+			descriptionKey: 'features.spacedReview.description',
+		});
+
+		registerSpacedReviewCommands(
+			this,
+			() => this.settings,
+			() => this.getSpacedReviewFeature(),
+		);
 
 		this.addSettingTab(new NestKitSettingTab(this.app, this));
 
@@ -137,6 +156,19 @@ export default class NestKitPlugin extends Plugin {
 		this.getRightSidebarDrawerFeature()?.refresh();
 	}
 
+	async updateSpacedReviewPlan(plan: 'catchUp' | 'fixed'): Promise<void> {
+		this.settings = {
+			...this.settings,
+			spacedReviewOverduePolicy:
+				plan === 'fixed' ? 'skip' : 'carryOver',
+			spacedReviewScheduleMode:
+				plan === 'fixed' ? 'fixedTimeline' : 'rollingTimeline',
+		};
+
+		await this.saveSettings();
+		this.applyFeatureSettings();
+	}
+
 	private applyFeatureSettings(): void {
 		this.featureManager.sync(this.settings);
 	}
@@ -178,6 +210,14 @@ export default class NestKitPlugin extends Plugin {
 		| undefined {
 		return this.featureManager.get<RightSidebarDrawerFeature>(
 			WORKSPACE_PANEL_SYSTEM_FEATURE_ID,
+		);
+	}
+
+	private getSpacedReviewFeature():
+		| SpacedReviewFeature
+		| undefined {
+		return this.featureManager.get<SpacedReviewFeature>(
+			SPACED_REVIEW_FEATURE_ID,
 		);
 	}
 }

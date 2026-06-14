@@ -36,6 +36,13 @@
 - Spaced Review store normalization now includes future-version write protection through `shouldPersist = false` and `hasUnsupportedFutureVersion = true` when a newer store schema is detected.
 - `completedSequenceIndexes` and `skippedSequenceIndexes` are normalized by filling missing values, filtering invalid entries, deduplicating, and sorting ascending.
 - When that normalization makes a real repair, `didNormalize = true`.
+- Spaced Review Phase 2 adds flat settings fields under schema `1`; it does not introduce a nested feature namespace or a settings schema `2`.
+- Legacy settings and schema `1` settings that lack the new Spaced Review fields are normalized with defaults.
+- Invalid Spaced Review booleans, strings, preset ids, completed-display values, overdue policies, and schedule modes fall back to defaults during migration.
+- The command **NestKit: Create spaced review task** is always registered, but it shows a disabled notice until **Enable Spaced Review** is turned on.
+- Phase 2 creates tasks in `.nestkit/spaced-review/tasks.json` only when the command is used successfully.
+- Phase 2 still does not write Daily Notes, managed blocks, or checkbox state.
+- **Restore all defaults** resets the new Spaced Review settings but does not delete `tasks.json`.
 - The blocked-persistence warning is emitted at most once per plugin session.
 - `null`, `undefined`, and invalid raw settings each use a fresh default-settings copy instead of returning the shared `DEFAULT_SETTINGS` object.
 - `right-sidebar-hover.css` is the user-provided, validated reference source and should remain unchanged.

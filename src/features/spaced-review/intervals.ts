@@ -109,7 +109,9 @@ export function parseReviewIntervalsInput(
 		};
 	}
 
-	const tokens = trimmed.split(/[,\s]+/).filter((token) => token.length > 0);
+	const tokens = trimmed
+		.split(/[,\uFF0C\s]+/)
+		.filter((token) => token.length > 0);
 
 	if (tokens.length === 0) {
 		return {

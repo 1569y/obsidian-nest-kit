@@ -22,6 +22,11 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/spaced-review/dates.ts`: strict `YYYY-MM-DD` date-only helpers
 - `src/features/spaced-review/schedule.ts`: fixed-timeline, rolling-timeline, carry-over, skip, and task completion scheduling logic
 - `src/features/spaced-review/store.ts`: storage adapter boundary plus store normalization, read, write, and task upsert or removal helpers
+- `src/features/spaced-review/index.ts`: Phase 2 feature module, enable state, and task-creation entrypoint
+- `src/features/spaced-review/commands.ts`: command registration and enabled or disabled command flow
+- `src/features/spaced-review/create-task-modal.ts`: create-task modal UI and validation flow
+- `src/features/spaced-review/vault-storage-adapter.ts`: Obsidian Vault adapter for the Spaced Review store boundary
+- `src/features/spaced-review/task-factory.ts`: pure task creation and interval selection helpers
 
 ## Current registration
 
@@ -69,8 +74,10 @@ The stable feature id is now future-facing and already reflects the intended top
 
 - Planned stable feature id: `spaced-review`
 - Phase 1 intentionally implements only pure core modules and does not register the feature yet.
+- Phase 2 registers the stable feature id `spaced-review` after `workspace-panel-system`, but still keeps the feature separate from the workspace panel system.
 - Phase 1 does not modify `main.ts`, `FeatureRegistry`, `FeatureManager`, settings UI, i18n, or the existing workspace panel system.
-- Phase 1 does not register commands, modals, Vault listeners, Daily Note sync, checkbox sync, or any plugin startup behavior.
+- Phase 2 adds a settings-controlled feature module, a command, a modal, and Vault-backed store writes for task creation only.
+- Phase 2 still does not add Daily Note sync, managed block writes, checkbox sync, context-menu creation, or workspace panel shortcuts.
 - Spaced Review tasks are designed to stay independent from the workspace panel system, even if a later workspace panel card links into review data.
 - The planned store root is `.nestkit/spaced-review/tasks.json`.
 - The Spaced Review store has its own `schemaVersion = 1`, separate from the plugin settings schema.
@@ -79,11 +86,14 @@ The stable feature id is now future-facing and already reflects the intended top
 - The store read result now exposes `didNormalize`, `shouldPersist`, and `hasUnsupportedFutureVersion` so a later integration layer can decide whether it is safe to write back.
 - Older plugin versions may read known fields from a future Spaced Review store schema for runtime safety, but they must not persist that downgraded view when `shouldPersist = false`.
 - Future integration code must respect `shouldPersist` before calling the explicit `writeSpacedReviewStore(...)` API.
+- Phase 2 respects that same protection before creating tasks, so command-driven writes must stop when the current plugin version would otherwise overwrite a newer store schema or a damaged JSON file.
 - `ReviewTask.startDate` means the learning-complete date or task baseline date, not the first review date.
 - `ReviewTask.intervalsSnapshot` stores cumulative offsets from `startDate` and is the canonical schedule source for each task.
 - Built-in presets are only templates for new tasks; existing tasks must continue to use their own stored `intervalsSnapshot`.
 - Scheduling uses strict date-only `YYYY-MM-DD` strings and calendar-day math instead of millisecond deltas or `moment`.
 - `ReviewOccurrence` remains a runtime-derived object in Phase 1 and is not persisted as a full list in the store.
+- Phase 2 task creation uses a built-in preset by default, or validated custom cumulative intervals when the modal input is not empty.
+- The Phase 2 feature constructor remains side-effect free; enabling the feature does not create `.nestkit`, does not create `tasks.json`, and does not write Daily Notes.
 
 ## Transition constraints
 

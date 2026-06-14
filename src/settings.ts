@@ -4,6 +4,15 @@ import {
 	type NestKitDictionary,
 	type NestKitLanguage,
 } from './i18n';
+import {
+	DEFAULT_REVIEW_PRESET_ID,
+	getBuiltInReviewPresets,
+} from './features/spaced-review/presets';
+import type {
+	CompletedOccurrenceDisplay,
+	OverduePolicy,
+	ScheduleMode,
+} from './features/spaced-review/types';
 import type NestKitPlugin from './main';
 
 export const CURRENT_SETTINGS_SCHEMA_VERSION = 1;
@@ -26,6 +35,60 @@ interface NumericSettingLimit {
 	max: number;
 	step: number;
 	unit: 'px' | 'ms' | '%';
+}
+
+type ReviewPlanSettingValue = 'catchUp' | 'fixed';
+
+interface SpacedReviewSettingsDictionaryExtension {
+	settings: {
+		sections: {
+			spacedReview: string;
+		};
+		toggles: {
+			enableSpacedReviewName: string;
+			enableSpacedReviewDesc: string;
+		};
+		spacedReview: {
+			name: string;
+			dailyNoteFolder: {
+				name: string;
+				description: string;
+			};
+			dailyNoteDateFormat: {
+				name: string;
+				description: string;
+			};
+			managedBlockHeading: {
+				name: string;
+				description: string;
+			};
+			defaultPreset: {
+				name: string;
+				description: string;
+			};
+			completedDisplay: {
+				name: string;
+				description: string;
+				remove: string;
+				keepChecked: string;
+			};
+			reviewPlan: {
+				name: string;
+				description: string;
+				catchUp: string;
+				fixed: string;
+			};
+			showOverdueBadge: {
+				name: string;
+				description: string;
+			};
+			presetOptions: {
+				fastReview: string;
+				standardReview: string;
+				longTermMemory: string;
+			};
+		};
+	};
 }
 
 export const NUMERIC_SETTING_LIMITS: Record<
@@ -118,6 +181,15 @@ export interface NestKitSettings {
 	rightSidebarTopControlOffsetPx: number;
 	rightSidebarPinTopPx: number;
 	rightSidebarPinRightPx: number;
+	spacedReviewEnabled: boolean;
+	spacedReviewDailyNoteFolder: string;
+	spacedReviewDailyNoteDateFormat: string;
+	spacedReviewManagedBlockHeading: string;
+	spacedReviewDefaultPresetId: string;
+	spacedReviewCompletedOccurrenceDisplay: CompletedOccurrenceDisplay;
+	spacedReviewOverduePolicy: OverduePolicy;
+	spacedReviewScheduleMode: ScheduleMode;
+	spacedReviewShowOverdueBadge: boolean;
 }
 
 export const DEFAULT_SETTINGS: NestKitSettings = {
@@ -138,6 +210,15 @@ export const DEFAULT_SETTINGS: NestKitSettings = {
 	rightSidebarTopControlOffsetPx: 110,
 	rightSidebarPinTopPx: 6,
 	rightSidebarPinRightPx: 8,
+	spacedReviewEnabled: false,
+	spacedReviewDailyNoteFolder: '',
+	spacedReviewDailyNoteDateFormat: 'YYYY-MM-DD',
+	spacedReviewManagedBlockHeading: '\u4eca\u65e5\u590d\u4e60',
+	spacedReviewDefaultPresetId: DEFAULT_REVIEW_PRESET_ID,
+	spacedReviewCompletedOccurrenceDisplay: 'remove',
+	spacedReviewOverduePolicy: 'carryOver',
+	spacedReviewScheduleMode: 'rollingTimeline',
+	spacedReviewShowOverdueBadge: true,
 };
 
 interface SliderSettingConfig {
@@ -247,7 +328,9 @@ export class NestKitSettingTab extends PluginSettingTab {
 
 	display(): void {
 		const { containerEl } = this;
-		const dictionary = getDictionary(this.plugin.settings.uiLanguage);
+		const dictionary = getDictionary(
+			this.plugin.settings.uiLanguage,
+		) as NestKitDictionary & SpacedReviewSettingsDictionaryExtension;
 
 		containerEl.empty();
 
@@ -332,6 +415,150 @@ export class NestKitSettingTab extends PluginSettingTab {
 		this.addSliderGroup(containerEl, ADVANCED_SLIDERS, dictionary);
 
 		new Setting(containerEl)
+			.setName(dictionary.settings.sections.spacedReview)
+			.setHeading();
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.toggles.enableSpacedReviewName)
+			.setDesc(dictionary.settings.toggles.enableSpacedReviewDesc)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.spacedReviewEnabled)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting('spacedReviewEnabled', value);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.dailyNoteFolder.name)
+			.setDesc(dictionary.settings.spacedReview.dailyNoteFolder.description)
+			.addText((text) =>
+				text
+					.setPlaceholder('Daily')
+					.setValue(this.plugin.settings.spacedReviewDailyNoteFolder)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewDailyNoteFolder',
+							value,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.dailyNoteDateFormat.name)
+			.setDesc(
+				dictionary.settings.spacedReview.dailyNoteDateFormat.description,
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder('Example: YYYY-MM-DD')
+					.setValue(this.plugin.settings.spacedReviewDailyNoteDateFormat)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewDailyNoteDateFormat',
+							value,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.managedBlockHeading.name)
+			.setDesc(
+				dictionary.settings.spacedReview.managedBlockHeading.description,
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder(dictionary.settings.spacedReview.name)
+					.setValue(this.plugin.settings.spacedReviewManagedBlockHeading)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewManagedBlockHeading',
+							value,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.defaultPreset.name)
+			.setDesc(dictionary.settings.spacedReview.defaultPreset.description)
+			.addDropdown((dropdown) => {
+				for (const preset of getBuiltInReviewPresets()) {
+					dropdown.addOption(
+						preset.id,
+						this.getPresetLabel(preset.id, dictionary),
+					);
+				}
+
+				dropdown
+					.setValue(this.plugin.settings.spacedReviewDefaultPresetId)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewDefaultPresetId',
+							value,
+						);
+					});
+			});
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.completedDisplay.name)
+			.setDesc(dictionary.settings.spacedReview.completedDisplay.description)
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption(
+						'remove',
+						dictionary.settings.spacedReview.completedDisplay.remove,
+					)
+					.addOption(
+						'keepChecked',
+						dictionary.settings.spacedReview.completedDisplay.keepChecked,
+					)
+					.setValue(
+						this.plugin.settings.spacedReviewCompletedOccurrenceDisplay,
+					)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewCompletedOccurrenceDisplay',
+							value as CompletedOccurrenceDisplay,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.reviewPlan.name)
+			.setDesc(dictionary.settings.spacedReview.reviewPlan.description)
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption(
+						'catchUp',
+						dictionary.settings.spacedReview.reviewPlan.catchUp,
+					)
+					.addOption(
+						'fixed',
+						dictionary.settings.spacedReview.reviewPlan.fixed,
+					)
+					.setValue(this.getReviewPlanValue())
+					.onChange(async (value) => {
+						await this.plugin.updateSpacedReviewPlan(
+							value as ReviewPlanSettingValue,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.showOverdueBadge.name)
+			.setDesc(dictionary.settings.spacedReview.showOverdueBadge.description)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.spacedReviewShowOverdueBadge)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewShowOverdueBadge',
+							value,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
 			.setName(dictionary.settings.restoreAllDefaultsName)
 			.setDesc(dictionary.settings.restoreAllDefaultsDesc)
 			.addButton((button) =>
@@ -401,5 +628,28 @@ export class NestKitSettingTab extends PluginSettingTab {
 			value,
 			config.unit,
 		)}.`;
+	}
+
+	private getReviewPlanValue(): ReviewPlanSettingValue {
+		return this.plugin.settings.spacedReviewOverduePolicy === 'skip' &&
+			this.plugin.settings.spacedReviewScheduleMode === 'fixedTimeline'
+			? 'fixed'
+			: 'catchUp';
+	}
+
+	private getPresetLabel(
+		presetId: string,
+		dictionary: NestKitDictionary & SpacedReviewSettingsDictionaryExtension,
+	): string {
+		switch (presetId) {
+			case 'fast-review':
+				return dictionary.settings.spacedReview.presetOptions.fastReview;
+			case 'standard-review':
+				return dictionary.settings.spacedReview.presetOptions.standardReview;
+			case 'long-term-memory':
+				return dictionary.settings.spacedReview.presetOptions.longTermMemory;
+			default:
+				return presetId;
+		}
 	}
 }

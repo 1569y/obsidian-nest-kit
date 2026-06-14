@@ -12,6 +12,7 @@ export const zhCnDictionary = {
 			behaviour: '\u4ea4\u4e92\u884c\u4e3a',
 			positioning: '\u4f4d\u7f6e\u4e0e\u5c3a\u5bf8',
 			advanced: '\u9ad8\u7ea7\u8bbe\u7f6e',
+			spacedReview: '\u95f4\u9694\u590d\u4e60',
 		},
 		toggles: {
 			enableDrawerName:
@@ -25,6 +26,58 @@ export const zhCnDictionary = {
 				'\u8bb0\u4f4f\u56fa\u5b9a\u72b6\u6001',
 			rememberPinnedStateDesc:
 				'\u5f00\u542f\u540e\uff0c\u91cd\u542f Obsidian\u3001\u91cd\u65b0\u542f\u7528\u63d2\u4ef6\u6216\u91cd\u65b0\u6253\u5f00\u53f3\u4fa7\u680f\u65f6\uff0c\u5c06\u6062\u590d\u4e0a\u4e00\u6b21\u7684\u56fa\u5b9a\u72b6\u6001\u3002',
+			enableSpacedReviewName: '\u542f\u7528\u95f4\u9694\u590d\u4e60',
+			enableSpacedReviewDesc:
+				'\u5f00\u542f\u6216\u5173\u95ed NestKit \u7684\u95f4\u9694\u590d\u4e60\u6838\u5fc3\u529f\u80fd\u3002',
+		},
+		spacedReview: {
+			name: '\u95f4\u9694\u590d\u4e60',
+			description:
+				'\u5728\u672c\u9636\u6bb5\u4e2d\uff0c\u5141\u8bb8\u521b\u5efa\u5e76\u5b58\u50a8\u590d\u4e60\u4efb\u52a1\uff0c\u4f46\u6682\u4e0d\u96c6\u6210 Daily Note\u3002',
+			dailyNoteFolder: {
+				name: 'Daily Note \u6587\u4ef6\u5939',
+				description:
+					'\u9884\u5148\u914d\u7f6e\u540e\u7eed\u9636\u6bb5\u4f7f\u7528\u7684 Daily Note \u76ee\u5f55\u3002\u672c\u9636\u6bb5\u4e0d\u4f1a\u5199\u5165 Daily Note\u3002',
+			},
+			dailyNoteDateFormat: {
+				name: 'Daily Note \u65e5\u671f\u683c\u5f0f',
+				description:
+					'\u9884\u5148\u914d\u7f6e\u540e\u7eed\u9636\u6bb5\u4f7f\u7528\u7684 Daily Note \u6587\u4ef6\u540d\u65e5\u671f\u683c\u5f0f\u3002',
+			},
+			managedBlockHeading: {
+				name: '\u6258\u7ba1\u533a\u5757\u6807\u9898',
+				description:
+					'\u9884\u5148\u914d\u7f6e\u540e\u7eed\u9636\u6bb5\u7528\u4e8e\u590d\u4e60\u5217\u8868\u7684\u6807\u9898\u3002',
+			},
+			defaultPreset: {
+				name: '\u9ed8\u8ba4\u9884\u8bbe',
+				description:
+					'\u9009\u62e9\u521b\u5efa\u65b0\u590d\u4e60\u4efb\u52a1\u65f6\u9ed8\u8ba4\u4f7f\u7528\u7684\u5185\u7f6e\u9884\u8bbe\u3002',
+			},
+			completedDisplay: {
+				name: '\u5df2\u5b8c\u6210\u9879\u663e\u793a\u65b9\u5f0f',
+				description:
+					'\u63a7\u5236\u540e\u7eed\u9636\u6bb5\u4e2d\u5df2\u5b8c\u6210\u590d\u4e60\u9879\u7684\u663e\u793a\u65b9\u5f0f\u3002',
+				remove: '\u5b8c\u6210\u540e\u79fb\u9664',
+				keepChecked: '\u4fdd\u7559\u5df2\u52fe\u9009\u9879',
+			},
+			reviewPlan: {
+				name: '\u590d\u4e60\u8ba1\u5212',
+				description:
+					'\u9009\u62e9\u521b\u5efa\u65b0\u4efb\u52a1\u65f6\u9ed8\u8ba4\u4f7f\u7528\u7684\u590d\u4e60\u8ffd\u8d76\u7b56\u7565\u3002',
+				catchUp: '\u8ffd\u8d76\u8ba1\u5212',
+				fixed: '\u56fa\u5b9a\u8ba1\u5212',
+			},
+			showOverdueBadge: {
+				name: '\u663e\u793a\u8fc7\u671f\u6807\u8bb0',
+				description:
+					'\u9884\u5148\u914d\u7f6e\u540e\u7eed\u9636\u6bb5\u662f\u5426\u663e\u793a\u8fc7\u671f\u6807\u8bb0\u3002',
+			},
+			presetOptions: {
+				fastReview: '\u5feb\u901f\u590d\u4e60',
+				standardReview: '\u6807\u51c6\u590d\u4e60',
+				longTermMemory: '\u957f\u671f\u8bb0\u5fc6',
+			},
 		},
 		sliders: {
 			edgeTriggerWidth: {
@@ -97,5 +150,52 @@ export const zhCnDictionary = {
 	pinButton: {
 		pin: '\u56fa\u5b9a\u53f3\u4fa7\u680f',
 		unpin: '\u53d6\u6d88\u56fa\u5b9a\u53f3\u4fa7\u680f',
+	},
+	features: {
+		spacedReview: {
+			name: '\u95f4\u9694\u590d\u4e60',
+			description: '\u521b\u5efa\u95f4\u9694\u590d\u4e60\u4efb\u52a1\u5e76\u8bbf\u95ee\u4efb\u52a1 store\u3002',
+		},
+	},
+	commands: {
+		spacedReview: {
+			createTask: {
+				name: '\u521b\u5efa\u95f4\u9694\u590d\u4e60\u4efb\u52a1',
+			},
+			disabledNotice:
+				'\u8bf7\u5148\u5728 NestKit \u8bbe\u7f6e\u4e2d\u542f\u7528\u95f4\u9694\u590d\u4e60\uff0c\u518d\u521b\u5efa\u4efb\u52a1\u3002',
+			createdNotice: '\u95f4\u9694\u590d\u4e60\u4efb\u52a1\u5df2\u521b\u5efa\u3002',
+			createFailedNotice:
+				'\u521b\u5efa\u95f4\u9694\u590d\u4e60\u4efb\u52a1\u5931\u8d25\uff0c\u8bf7\u67e5\u770b\u63a7\u5236\u53f0\u3002',
+		},
+	},
+	modal: {
+		spacedReview: {
+			createTitle: '\u521b\u5efa\u95f4\u9694\u590d\u4e60\u4efb\u52a1',
+			title: {
+				name: '\u6807\u9898',
+				placeholder: '\u4f8b\u5982\uff1a\u590d\u4e60\u7b2c 3 \u7ae0\u7b14\u8bb0',
+			},
+			startDate: {
+				name: '\u5f00\u59cb\u65e5\u671f',
+			},
+			preset: {
+				name: '\u9884\u8bbe',
+			},
+			customIntervals: {
+				name: '\u81ea\u5b9a\u4e49\u95f4\u9694',
+				description:
+					'\u53ef\u9009\u3002\u8f93\u5165\u7528\u7a7a\u683c\u5206\u9694\u7684\u7d2f\u8ba1\u5929\u6570\uff0c\u4f8b\u5982 1 3 7\u3002',
+				placeholder: '1 3 7',
+			},
+			save: '\u4fdd\u5b58',
+			cancel: '\u53d6\u6d88',
+			validation: {
+				titleRequired: '\u8bf7\u5148\u8f93\u5165\u4efb\u52a1\u6807\u9898\u3002',
+				invalidDate: '\u8bf7\u8f93\u5165\u6709\u6548\u7684 YYYY-MM-DD \u65e5\u671f\u3002',
+				invalidIntervals:
+					'\u81ea\u5b9a\u4e49\u95f4\u9694\u65e0\u6548\uff0c\u8bf7\u4f7f\u7528\u6b63\u6574\u6570\u4e14\u4e25\u683c\u9012\u589e\u7684\u7d2f\u8ba1\u5929\u6570\u3002',
+			},
+		},
 	},
 } as const;

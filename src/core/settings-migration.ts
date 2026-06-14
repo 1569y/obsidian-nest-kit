@@ -1,4 +1,10 @@
 import type { NestKitLanguage } from '../i18n';
+import { DEFAULT_REVIEW_PRESET_ID } from '../features/spaced-review/presets';
+import type {
+	CompletedOccurrenceDisplay,
+	OverduePolicy,
+	ScheduleMode,
+} from '../features/spaced-review/types';
 import type { NestKitSettings } from '../settings';
 import {
 	CURRENT_SETTINGS_SCHEMA_VERSION,
@@ -46,6 +52,20 @@ interface NormalizationState {
 }
 
 const LANGUAGE_VALUES = new Set<NestKitLanguage>(['zh-CN', 'en']);
+const COMPLETED_DISPLAY_VALUES = new Set<CompletedOccurrenceDisplay>([
+	'remove',
+	'keepChecked',
+]);
+const OVERDUE_POLICY_VALUES = new Set<OverduePolicy>(['carryOver', 'skip']);
+const SCHEDULE_MODE_VALUES = new Set<ScheduleMode>([
+	'fixedTimeline',
+	'rollingTimeline',
+]);
+const BUILT_IN_PRESET_IDS = new Set<string>([
+	'fast-review',
+	'standard-review',
+	'long-term-memory',
+]);
 const KNOWN_SETTINGS_KEYS = new Set<KnownSettingsKey>(
 	Object.keys(DEFAULT_SETTINGS) as KnownSettingsKey[],
 );
@@ -284,6 +304,63 @@ function normalizeSettings(
 			DEFAULT_SETTINGS.rightSidebarPinRightPx,
 			invalidFieldWarnings,
 		),
+		spacedReviewEnabled: readBoolean(
+			raw,
+			'spacedReviewEnabled',
+			DEFAULT_SETTINGS.spacedReviewEnabled,
+			invalidFieldWarnings,
+		),
+		spacedReviewDailyNoteFolder: readString(
+			raw,
+			'spacedReviewDailyNoteFolder',
+			DEFAULT_SETTINGS.spacedReviewDailyNoteFolder,
+			invalidFieldWarnings,
+		),
+		spacedReviewDailyNoteDateFormat: readString(
+			raw,
+			'spacedReviewDailyNoteDateFormat',
+			DEFAULT_SETTINGS.spacedReviewDailyNoteDateFormat,
+			invalidFieldWarnings,
+		),
+		spacedReviewManagedBlockHeading: readString(
+			raw,
+			'spacedReviewManagedBlockHeading',
+			DEFAULT_SETTINGS.spacedReviewManagedBlockHeading,
+			invalidFieldWarnings,
+		),
+		spacedReviewDefaultPresetId: readBuiltInPresetId(
+			raw,
+			'spacedReviewDefaultPresetId',
+			DEFAULT_SETTINGS.spacedReviewDefaultPresetId,
+			invalidFieldWarnings,
+		),
+		spacedReviewCompletedOccurrenceDisplay: readEnumSetting(
+			raw,
+			'spacedReviewCompletedOccurrenceDisplay',
+			DEFAULT_SETTINGS.spacedReviewCompletedOccurrenceDisplay,
+			COMPLETED_DISPLAY_VALUES,
+			invalidFieldWarnings,
+		),
+		spacedReviewOverduePolicy: readEnumSetting(
+			raw,
+			'spacedReviewOverduePolicy',
+			DEFAULT_SETTINGS.spacedReviewOverduePolicy,
+			OVERDUE_POLICY_VALUES,
+			invalidFieldWarnings,
+		),
+		spacedReviewScheduleMode: readEnumSetting(
+			raw,
+			'spacedReviewScheduleMode',
+			DEFAULT_SETTINGS.spacedReviewScheduleMode,
+			SCHEDULE_MODE_VALUES,
+			invalidFieldWarnings,
+		),
+		spacedReviewShowOverdueBadge: readBoolean(
+			raw,
+			'spacedReviewShowOverdueBadge',
+			DEFAULT_SETTINGS.spacedReviewShowOverdueBadge,
+			invalidFieldWarnings,
+		),
 	};
 
 	if (raw.schemaVersion !== schemaVersion) {
@@ -386,6 +463,73 @@ function readLanguage(
 
 	warnings.push(
 		`Settings field "${key}" is not a supported language; falling back to default.`,
+	);
+	return defaultValue;
+}
+
+function readString(
+	raw: SettingsRecord,
+	key: KnownSettingsKey,
+	defaultValue: string,
+	warnings: string[],
+): string {
+	const value = raw[key];
+
+	if (value === undefined) {
+		return defaultValue;
+	}
+
+	if (typeof value === 'string') {
+		return value;
+	}
+
+	warnings.push(
+		`Settings field "${key}" must be a string; falling back to default.`,
+	);
+	return defaultValue;
+}
+
+function readBuiltInPresetId(
+	raw: SettingsRecord,
+	key: KnownSettingsKey,
+	defaultValue: string,
+	warnings: string[],
+): string {
+	const value = raw[key];
+
+	if (value === undefined) {
+		return defaultValue;
+	}
+
+	if (typeof value === 'string' && BUILT_IN_PRESET_IDS.has(value)) {
+		return value;
+	}
+
+	warnings.push(
+		`Settings field "${key}" must be a supported built-in preset id; falling back to default.`,
+	);
+	return DEFAULT_REVIEW_PRESET_ID;
+}
+
+function readEnumSetting<T extends string>(
+	raw: SettingsRecord,
+	key: KnownSettingsKey,
+	defaultValue: T,
+	allowedValues: ReadonlySet<T>,
+	warnings: string[],
+): T {
+	const value = raw[key];
+
+	if (value === undefined) {
+		return defaultValue;
+	}
+
+	if (typeof value === 'string' && allowedValues.has(value as T)) {
+		return value as T;
+	}
+
+	warnings.push(
+		`Settings field "${key}" must use a supported value; falling back to default.`,
 	);
 	return defaultValue;
 }

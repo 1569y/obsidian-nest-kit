@@ -67,6 +67,42 @@
 63. Confirm `writeSpacedReviewStore(...)` still writes pretty JSON.
 64. Confirm reading after writing still restores the same task data.
 
+## Spaced Review Phase 2 create-task focus
+
+1. Confirm Spaced Review is disabled by default in settings.
+2. Confirm the command palette contains `NestKit: Create spaced review task`.
+3. Confirm running the command while Spaced Review is disabled shows an enable notice.
+4. Confirm the disabled command path does not create `.nestkit/spaced-review/tasks.json`.
+5. Confirm enabling Spaced Review in settings immediately activates the feature through `FeatureManager.sync(...)`.
+6. Confirm running the command while enabled opens the create-task modal.
+7. Confirm the modal includes title, start date, preset, and custom intervals fields.
+8. Confirm the modal defaults `startDate` to today.
+9. Confirm the modal defaults the preset to the configured default preset setting.
+10. Confirm saving with an empty title is rejected.
+11. Confirm saving with an invalid `YYYY-MM-DD` date is rejected.
+12. Confirm saving with invalid custom intervals is rejected.
+13. Confirm saving with a built-in preset creates `.nestkit/spaced-review/tasks.json`.
+14. Confirm the saved task uses the entered title, start date, preset id, and preset interval snapshot.
+15. Confirm saving with custom intervals overrides the preset interval snapshot.
+16. Confirm new tasks start with `status = active`.
+17. Confirm new tasks start with empty completed and skipped index arrays.
+18. Confirm new tasks do not set `rollingAnchorDate` initially.
+19. Confirm disabling Spaced Review after creating tasks does not delete `tasks.json`.
+20. Confirm **Restore all defaults** resets Spaced Review settings but does not delete `tasks.json`.
+21. Confirm the existing right-sidebar drawer behavior remains unchanged after enabling, disabling, and using Spaced Review.
+22. Confirm `DEFAULT_SETTINGS.spacedReviewManagedBlockHeading` equals `\u4eca\u65e5\u590d\u4e60` at runtime and does not contain mojibake text.
+23. Confirm the command palette does not show a duplicate `NestKit:` prefix.
+24. Confirm creating a second task after `.nestkit/spaced-review` already exists still succeeds.
+25. Confirm `ensureFolder('.nestkit/spaced-review')` is idempotent.
+26. Confirm `.nestkit` hidden folders do not need to be visible through the Vault file tree for store read/write to succeed.
+27. Confirm the vault storage adapter uses path-based `DataAdapter` read, write, exists, and mkdir calls for the store path.
+28. Confirm creating a second task in real DevVault after `.nestkit/spaced-review` already exists still succeeds.
+29. Confirm `Folder already exists` does not surface when parent folders already exist.
+30. Confirm create-task failures show a Notice, log the error, and do not leave an unhandled promise rejection.
+31. Confirm the custom intervals UI recommends space-separated input such as `1 3 7`.
+32. Confirm the parser still accepts comma-separated input for compatibility.
+33. Confirm the parser accepts full-width comma input such as `1\uFF0C3\uFF0C7`.
+
 ## Phase 3 settings-migration focus
 
 1. Confirm `undefined` raw settings return `DEFAULT_SETTINGS` without warnings and without forcing an immediate save.
