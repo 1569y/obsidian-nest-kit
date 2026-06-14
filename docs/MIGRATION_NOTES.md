@@ -19,7 +19,8 @@
 - Unsupported future schema versions are not downgraded and are not overwritten by this branch.
 - Unsupported future schema versions now also trigger a session-level persistence lock, so later slider, toggle, pin, language, and restore-defaults actions cannot overwrite newer stored data.
 - Unknown fields are ignored by the normalized runtime settings object.
-- This phase does not add settings tabs and does not change any user-facing settings sections.
+- Phase 2.5 replaces the single long settings page with `General`, `Workspace Panel`, `Spaced Review`, and `About` tabs.
+- Phase 2.5 moves **What's New**, **Language**, and **Restore defaults** into a top-right action group.
 - This phase does not change the plugin version and does not change release artifacts.
 - This phase does not change any user-visible drawer behavior.
 - Temporary pin, remembered pinned state, live slider updates, i18n refresh, and the Windows titlebar fix all remain unchanged.
@@ -43,6 +44,15 @@
 - Phase 2 creates tasks in `.nestkit/spaced-review/tasks.json` only when the command is used successfully.
 - Phase 2 still does not write Daily Notes, managed blocks, or checkbox state.
 - **Restore all defaults** resets the new Spaced Review settings but does not delete `tasks.json`.
+- Opening the settings page does not read `.nestkit/spaced-review/tasks.json`.
+- Opening the settings page does not create `.nestkit` or `.nestkit/spaced-review`.
+- The Spaced Review store remains lazy and is only read during create-task or future user-triggered review flows.
+- The Phase 2.5 **What's New** content is local static text only and does not fetch GitHub.
+- The existing language setting is reused by the Phase 2.5 top action; no new language schema field is added.
+- Phase 2.5 does not change the settings schema version.
+- Phase 2.5 does not change the Spaced Review store schema version.
+- Phase 2.5 does not add Daily Note writes, checkbox listeners, right-click menus, or workspace panel task cards.
+- Phase 2.5 keeps a single global **Restore defaults** action; scoped per-tab reset remains deferred.
 - The blocked-persistence warning is emitted at most once per plugin session.
 - `null`, `undefined`, and invalid raw settings each use a fresh default-settings copy instead of returning the shared `DEFAULT_SETTINGS` object.
 - `right-sidebar-hover.css` is the user-provided, validated reference source and should remain unchanged.

@@ -1,5 +1,45 @@
 export const zhCnDictionary = {
 	settings: {
+		tabs: {
+			general: '\u5e38\u89c4',
+			workspacePanel: '\u5de5\u4f5c\u533a\u9762\u677f',
+			spacedReview: '\u95f4\u9694\u590d\u4e60',
+			about: '\u5173\u4e8e',
+		},
+		actions: {
+			whatsNew: '\u66f4\u65b0\u8bb0\u5f55',
+			language: '\u8bed\u8a00',
+			restoreDefaults: '\u6062\u590d\u9ed8\u8ba4',
+		},
+		general: {
+			title: '\u5e38\u89c4',
+			description: '\u7ba1\u7406 NestKit \u7684\u529f\u80fd\u5f00\u5173\u3002',
+		},
+		workspacePanel: {
+			description:
+				'\u8c03\u6574 Workspace Panel \u62bd\u5c49\u7684\u884c\u4e3a\u4e0e\u5e03\u5c40\u3002',
+		},
+		whatsNew: {
+			title: '\u66f4\u65b0\u8bb0\u5f55',
+			phase2:
+				'\u5df2\u52a0\u5165\u95f4\u9694\u590d\u4e60\u4efb\u52a1\u521b\u5efa\u6d41\u7a0b\u3002',
+			phase25:
+				'\u5df2\u52a0\u5165\u8bbe\u7f6e\u9875\u5206\u7ec4\u4e0e\u8f7b\u91cf\u5316\u7ea6\u675f\u3002',
+			later:
+				'\u4efb\u52a1\u603b\u89c8\u4e0e Daily Note \u6e32\u67d3\u5c06\u5728\u540e\u7eed\u9636\u6bb5\u52a0\u5165\u3002',
+		},
+		about: {
+			title: '\u5173\u4e8e',
+			version: '\u7248\u672c',
+			description:
+				'NestKit \u662f\u4e00\u4e2a\u4ee5\u672c\u5730\u4f18\u5148\u4e3a\u539f\u5219\u7684 Obsidian \u5de5\u5177\u7bb1\u3002',
+			performance:
+				'\u672c\u9636\u6bb5\u4f1a\u4fdd\u6301\u8bbe\u7f6e\u9875\u6253\u5f00\u8fc5\u901f\u4e14\u5168\u7a0b\u79bb\u7ebf\u3002',
+		},
+		notices: {
+			languageComingSoon:
+				'\u4e2d\u82f1\u6587\u5207\u6362\u5c06\u5728\u540e\u7eed\u8bbe\u7f6e\u9875\u9636\u6bb5\u52a0\u5165\u3002',
+		},
 		interfaceLanguageName: '\u754c\u9762\u8bed\u8a00',
 		interfaceLanguageDesc:
 			'\u9009\u62e9 NestKit \u8bbe\u7f6e\u9875\u4e0e\u56fa\u5b9a\u6309\u94ae\u63d0\u793a\u6240\u4f7f\u7528\u7684\u8bed\u8a00\u3002',
@@ -33,7 +73,7 @@ export const zhCnDictionary = {
 		spacedReview: {
 			name: '\u95f4\u9694\u590d\u4e60',
 			description:
-				'\u5728\u672c\u9636\u6bb5\u4e2d\uff0c\u5141\u8bb8\u521b\u5efa\u5e76\u5b58\u50a8\u590d\u4e60\u4efb\u52a1\uff0c\u4f46\u6682\u4e0d\u96c6\u6210 Daily Note\u3002',
+				'\u4e3a\u540e\u7eed\u7684\u603b\u89c8\u4e0e Daily Note \u529f\u80fd\u914d\u7f6e\u9ed8\u8ba4\u590d\u4e60\u9009\u9879\u3002',
 			dailyNoteFolder: {
 				name: 'Daily Note \u6587\u4ef6\u5939',
 				description:

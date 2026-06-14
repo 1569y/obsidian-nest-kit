@@ -1,5 +1,41 @@
 export const enDictionary = {
 	settings: {
+		tabs: {
+			general: 'General',
+			workspacePanel: 'Workspace Panel',
+			spacedReview: 'Spaced Review',
+			about: 'About',
+		},
+		actions: {
+			whatsNew: "What's New",
+			language: 'Language',
+			restoreDefaults: 'Restore defaults',
+		},
+		general: {
+			title: 'General',
+			description: 'Manage NestKit feature toggles.',
+		},
+		workspacePanel: {
+			description:
+				'Adjust the Workspace Panel drawer behavior and layout.',
+		},
+		whatsNew: {
+			title: "What's New",
+			phase2: 'Spaced Review create-task workflow added.',
+			phase25: 'Settings tabs and performance guardrails added.',
+			later: 'Overview and Daily Note rendering will come later.',
+		},
+		about: {
+			title: 'About',
+			version: 'Version',
+			description: 'NestKit is a local-first Obsidian toolbox.',
+			performance:
+				'This phase keeps settings opening fast and offline.',
+		},
+		notices: {
+			languageComingSoon:
+				'Language toggle will be added in a later settings phase.',
+		},
 		interfaceLanguageName: 'Interface language',
 		interfaceLanguageDesc:
 			'Choose the language used by the NestKit settings tab and pin button labels.',
@@ -31,7 +67,7 @@ export const enDictionary = {
 		spacedReview: {
 			name: 'Spaced Review',
 			description:
-				'Create and store spaced review tasks without Daily Note integration in this phase.',
+				'Configure default review options for later overview and Daily Note features.',
 			dailyNoteFolder: {
 				name: 'Daily note folder',
 				description:

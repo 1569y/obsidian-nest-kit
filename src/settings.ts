@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { App, Modal, PluginSettingTab, Setting } from 'obsidian';
 import {
 	getDictionary,
 	type NestKitDictionary,
@@ -39,6 +39,46 @@ interface NumericSettingLimit {
 
 type ReviewPlanSettingValue = 'catchUp' | 'fixed';
 
+type SettingsTabId = 'general' | 'workspace-panel' | 'spaced-review' | 'about';
+
+interface SettingsTabDictionaryExtension {
+	settings: {
+		tabs: {
+			general: string;
+			workspacePanel: string;
+			spacedReview: string;
+			about: string;
+		};
+		actions: {
+			whatsNew: string;
+			language: string;
+			restoreDefaults: string;
+		};
+		general: {
+			title: string;
+			description: string;
+		};
+		workspacePanel: {
+			description: string;
+		};
+		whatsNew: {
+			title: string;
+			phase2: string;
+			phase25: string;
+			later: string;
+		};
+		about: {
+			title: string;
+			version: string;
+			description: string;
+			performance: string;
+		};
+		notices: {
+			languageComingSoon: string;
+		};
+	};
+}
+
 interface SpacedReviewSettingsDictionaryExtension {
 	settings: {
 		sections: {
@@ -50,6 +90,7 @@ interface SpacedReviewSettingsDictionaryExtension {
 		};
 		spacedReview: {
 			name: string;
+			description: string;
 			dailyNoteFolder: {
 				name: string;
 				description: string;
@@ -90,6 +131,10 @@ interface SpacedReviewSettingsDictionaryExtension {
 		};
 	};
 }
+
+type SettingsPageDictionary = NestKitDictionary &
+	SettingsTabDictionaryExtension &
+	SpacedReviewSettingsDictionaryExtension;
 
 export const NUMERIC_SETTING_LIMITS: Record<
 	SliderSettingKey,
@@ -320,6 +365,7 @@ const ADVANCED_SLIDERS: SliderSettingConfig[] = [
 
 export class NestKitSettingTab extends PluginSettingTab {
 	plugin: NestKitPlugin;
+	private activeTab: SettingsTabId = 'general';
 
 	constructor(app: App, plugin: NestKitPlugin) {
 		super(app, plugin);
@@ -328,36 +374,171 @@ export class NestKitSettingTab extends PluginSettingTab {
 
 	display(): void {
 		const { containerEl } = this;
-		const dictionary = getDictionary(
-			this.plugin.settings.uiLanguage,
-		) as NestKitDictionary & SpacedReviewSettingsDictionaryExtension;
+		const dictionary = getDictionary(this.plugin.settings.uiLanguage) as SettingsPageDictionary;
 
 		containerEl.empty();
+		containerEl.addClass('nest-kit-settings');
+		this.renderTopActions(containerEl, dictionary);
+		this.renderDivider(containerEl);
+		this.renderTabs(containerEl, dictionary);
+
+		this.renderActiveTab(containerEl, dictionary);
+	}
+
+	private renderTopActions(
+		containerEl: HTMLElement,
+		dictionary: SettingsPageDictionary,
+	): void {
+		const actionsEl = containerEl.createDiv({
+			cls: 'nest-kit-settings__actions',
+		});
+
+		this.createActionButton(
+			actionsEl,
+			dictionary.settings.actions.whatsNew,
+			async () => {
+				new WhatsNewModal(this.app, dictionary).open();
+			},
+		);
+
+		this.createActionButton(
+			actionsEl,
+			dictionary.settings.actions.language,
+			async () => {
+				await this.plugin.updateSetting(
+					'uiLanguage',
+					this.plugin.settings.uiLanguage === 'zh-CN' ? 'en' : 'zh-CN',
+				);
+				this.display();
+			},
+		);
+
+		this.createActionButton(
+			actionsEl,
+			dictionary.settings.actions.restoreDefaults,
+			async () => {
+				await this.plugin.restoreAllDefaults();
+				this.display();
+			},
+			true,
+		);
+	}
+
+	private renderDivider(containerEl: HTMLElement): void {
+		containerEl.createDiv({
+			cls: 'nest-kit-settings__divider',
+		});
+	}
+
+	private renderTabs(
+		containerEl: HTMLElement,
+		dictionary: SettingsPageDictionary,
+	): void {
+		const tabsEl = containerEl.createDiv({
+			cls: 'nest-kit-settings__tabs',
+		});
+		const tabs: Array<{ id: SettingsTabId; label: string }> = [
+			{ id: 'general', label: dictionary.settings.tabs.general },
+			{
+				id: 'workspace-panel',
+				label: dictionary.settings.tabs.workspacePanel,
+			},
+			{ id: 'spaced-review', label: dictionary.settings.tabs.spacedReview },
+			{ id: 'about', label: dictionary.settings.tabs.about },
+		];
+
+		for (const tab of tabs) {
+			const buttonEl = tabsEl.createEl('button', {
+				cls: 'nest-kit-settings__tab',
+				text: tab.label,
+			});
+			buttonEl.type = 'button';
+
+			if (tab.id === this.activeTab) {
+				buttonEl.addClass('is-active');
+				buttonEl.setAttribute('aria-current', 'page');
+			}
+
+			buttonEl.addEventListener('click', () => {
+				if (this.activeTab === tab.id) {
+					return;
+				}
+
+				this.activeTab = tab.id;
+				this.display();
+			});
+		}
+	}
+
+	private renderActiveTab(
+		containerEl: HTMLElement,
+		dictionary: SettingsPageDictionary,
+	): void {
+		const contentEl = containerEl.createDiv({
+			cls: 'nest-kit-settings__content',
+		});
+
+		switch (this.activeTab) {
+			case 'general':
+				this.renderGeneralTab(contentEl, dictionary);
+				break;
+			case 'workspace-panel':
+				this.renderWorkspacePanelTab(contentEl, dictionary);
+				break;
+			case 'spaced-review':
+				this.renderSpacedReviewTab(contentEl, dictionary);
+				break;
+			case 'about':
+				this.renderAboutTab(contentEl, dictionary);
+				break;
+		}
+	}
+
+	private renderGeneralTab(
+		containerEl: HTMLElement,
+		dictionary: SettingsPageDictionary,
+	): void {
+		this.renderTabDescription(
+			containerEl,
+			dictionary.settings.general.description,
+		);
 
 		new Setting(containerEl)
-			.setName(dictionary.settings.interfaceLanguageName)
-			.setDesc(dictionary.settings.interfaceLanguageDesc)
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption(
-						'zh-CN',
-						dictionary.settings.languageOptions['zh-CN'],
-					)
-					.addOption('en', dictionary.settings.languageOptions.en)
-					.setValue(this.plugin.settings.uiLanguage)
+			.setName(dictionary.settings.toggles.enableDrawerName)
+			.setDesc(dictionary.settings.toggles.enableDrawerDesc)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.rightSidebarDrawerEnabled)
 					.onChange(async (value) => {
 						await this.plugin.updateSetting(
-							'uiLanguage',
-							value as NestKitLanguage,
+							'rightSidebarDrawerEnabled',
+							value,
 						);
-						this.plugin.refreshSidebarFeature();
 						this.display();
 					}),
 			);
 
 		new Setting(containerEl)
-			.setName(dictionary.settings.sections.rightSidebarDrawer)
-			.setHeading();
+			.setName(dictionary.settings.toggles.enableSpacedReviewName)
+			.setDesc(dictionary.settings.toggles.enableSpacedReviewDesc)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.spacedReviewEnabled)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting('spacedReviewEnabled', value);
+						this.display();
+					}),
+			);
+	}
+
+	private renderWorkspacePanelTab(
+		containerEl: HTMLElement,
+		dictionary: SettingsPageDictionary,
+	): void {
+		this.renderTabDescription(
+			containerEl,
+			dictionary.settings.workspacePanel.description,
+		);
 
 		new Setting(containerEl)
 			.setName(dictionary.settings.toggles.enableDrawerName)
@@ -413,10 +594,16 @@ export class NestKitSettingTab extends PluginSettingTab {
 			.setName(dictionary.settings.sections.advanced)
 			.setHeading();
 		this.addSliderGroup(containerEl, ADVANCED_SLIDERS, dictionary);
+	}
 
-		new Setting(containerEl)
-			.setName(dictionary.settings.sections.spacedReview)
-			.setHeading();
+	private renderSpacedReviewTab(
+		containerEl: HTMLElement,
+		dictionary: SettingsPageDictionary,
+	): void {
+		this.renderTabDescription(
+			containerEl,
+			dictionary.settings.spacedReview.description,
+		);
 
 		new Setting(containerEl)
 			.setName(dictionary.settings.toggles.enableSpacedReviewName)
@@ -557,20 +744,44 @@ export class NestKitSettingTab extends PluginSettingTab {
 						);
 					}),
 			);
+	}
+
+	private renderAboutTab(
+		containerEl: HTMLElement,
+		dictionary: SettingsPageDictionary,
+	): void {
+		this.renderTabDescription(
+			containerEl,
+			dictionary.settings.about.description,
+		);
+
+		const manifestVersion =
+			this.plugin.manifest?.version ?? 'unknown';
+		const detailsListEl = containerEl.createEl('ul', {
+			cls: 'nest-kit-settings__info-list',
+		});
+		detailsListEl.createEl('li', {
+			text: `${dictionary.settings.about.version}: ${manifestVersion}`,
+		});
+		detailsListEl.createEl('li', {
+			text: dictionary.settings.about.performance,
+		});
 
 		new Setting(containerEl)
-			.setName(dictionary.settings.restoreAllDefaultsName)
-			.setDesc(dictionary.settings.restoreAllDefaultsDesc)
-			.addButton((button) =>
-				button
-					.setIcon('rotate-ccw')
-					.setWarning()
-					.setButtonText(dictionary.settings.restoreAllDefaultsButton)
-					.onClick(async () => {
-						await this.plugin.restoreAllDefaults();
-						this.display();
-					}),
-			);
+			.setName(dictionary.settings.whatsNew.title)
+			.setHeading();
+		const changelogListEl = containerEl.createEl('ul', {
+			cls: 'nest-kit-settings__info-list',
+		});
+		changelogListEl.createEl('li', {
+			text: dictionary.settings.whatsNew.phase2,
+		});
+		changelogListEl.createEl('li', {
+			text: dictionary.settings.whatsNew.phase25,
+		});
+		changelogListEl.createEl('li', {
+			text: dictionary.settings.whatsNew.later,
+		});
 	}
 
 	private addSliderGroup(
@@ -581,6 +792,37 @@ export class NestKitSettingTab extends PluginSettingTab {
 		for (const config of configs) {
 			this.addSliderSetting(containerEl, config, dictionary);
 		}
+	}
+
+	private createActionButton(
+		containerEl: HTMLElement,
+		label: string,
+		onClick: () => Promise<void>,
+		isWarning = false,
+	): void {
+		const buttonEl = containerEl.createEl('button', {
+			cls: 'nest-kit-settings__action-button',
+			text: label,
+		});
+		buttonEl.type = 'button';
+
+		if (isWarning) {
+			buttonEl.addClass('mod-warning');
+		}
+
+		buttonEl.addEventListener('click', () => {
+			void onClick();
+		});
+	}
+
+	private renderTabDescription(
+		containerEl: HTMLElement,
+		description: string,
+	): void {
+		containerEl.createEl('p', {
+			cls: 'nest-kit-settings-tab-description',
+			text: description,
+		});
 	}
 
 	private addSliderSetting(
@@ -651,5 +893,40 @@ export class NestKitSettingTab extends PluginSettingTab {
 			default:
 				return presetId;
 		}
+	}
+}
+
+class WhatsNewModal extends Modal {
+	constructor(
+		app: App,
+		private readonly dictionary: SettingsPageDictionary,
+	) {
+		super(app);
+	}
+
+	onOpen(): void {
+		const { contentEl } = this;
+		contentEl.empty();
+		contentEl.addClass('nest-kit-settings__whats-new');
+		contentEl.createEl('h2', {
+			text: this.dictionary.settings.whatsNew.title,
+		});
+
+		const listEl = contentEl.createEl('ul', {
+			cls: 'nest-kit-settings__info-list',
+		});
+		listEl.createEl('li', {
+			text: this.dictionary.settings.whatsNew.phase2,
+		});
+		listEl.createEl('li', {
+			text: this.dictionary.settings.whatsNew.phase25,
+		});
+		listEl.createEl('li', {
+			text: this.dictionary.settings.whatsNew.later,
+		});
+	}
+
+	onClose(): void {
+		this.contentEl.empty();
 	}
 }

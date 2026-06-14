@@ -263,3 +263,73 @@ body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
   width: 16px;
   height: 16px;
 }
+
+.nest-kit-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.nest-kit-settings .nest-kit-settings__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.nest-kit-settings .nest-kit-settings__divider {
+  border-top: 1px solid var(--background-modifier-border);
+  margin: 2px 0 0;
+}
+
+.nest-kit-settings .nest-kit-settings__action-button,
+.nest-kit-settings .nest-kit-settings__tab {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.nest-kit-settings .nest-kit-settings__action-button.mod-warning {
+  color: var(--text-on-accent);
+  background: var(--text-error);
+  border-color: var(--text-error);
+}
+
+.nest-kit-settings .nest-kit-settings__tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.nest-kit-settings .nest-kit-settings__tab.is-active {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
+}
+
+.nest-kit-settings .nest-kit-settings__content {
+  margin-top: 12px;
+  padding: 4px 0 8px;
+}
+
+.nest-kit-settings .nest-kit-settings-tab-description {
+  margin: 0 16px 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.nest-kit-settings .nest-kit-settings__info-list {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  color: var(--text-muted);
+}
+
+.nest-kit-settings .nest-kit-settings__whats-new {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

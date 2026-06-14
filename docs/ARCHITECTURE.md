@@ -7,8 +7,8 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 ## Modules
 
 - `src/main.ts`: plugin lifecycle, settings loading, settings persistence, remember-pinned handling, feature registration, and feature-state synchronization
-- `src/settings.ts`: `NestKitSettings`, `CURRENT_SETTINGS_SCHEMA_VERSION`, defaults, shared numeric slider limits, classic `PluginSettingTab` UI, grouped sliders, per-slider reset buttons, restore-all-defaults, and the language dropdown
-- `src/i18n/index.ts` and `src/i18n/locales/*`: lightweight local TypeScript dictionaries for Simplified Chinese and English
+- `src/settings.ts`: `NestKitSettings`, `CURRENT_SETTINGS_SCHEMA_VERSION`, defaults, shared numeric slider limits, tabbed `PluginSettingTab` UI, top-right actions, grouped sliders, per-slider reset buttons, restore-all-defaults, and the language switch
+- `src/i18n/*`: lightweight local TypeScript dictionaries and lookup helpers for Simplified Chinese and English
 - `src/core/feature-module.ts`: shared module lifecycle contract and registration shape
 - `src/core/feature-registry.ts`: lightweight feature registration store with duplicate-id protection and stable ordering
 - `src/core/feature-manager.ts`: lazy feature instantiation, settings-driven enable or disable, instance lookup, and unload cleanup
@@ -95,14 +95,34 @@ The stable feature id is now future-facing and already reflects the intended top
 - Phase 2 task creation uses a built-in preset by default, or validated custom cumulative intervals when the modal input is not empty.
 - The Phase 2 feature constructor remains side-effect free; enabling the feature does not create `.nestkit`, does not create `tasks.json`, and does not write Daily Notes.
 
+## Settings UI
+
+- The settings page is split into `General`, `Workspace Panel`, `Spaced Review`, and `About` tabs.
+- The top-right action group contains **What's New**, **Language**, and **Restore defaults**.
+- Only the active tab is rendered; inactive tab content is not created until selected.
+- The General tab keeps user-facing Workspace Panel and Spaced Review enable toggles without exposing internal performance wording.
+- The Workspace Panel tab keeps the drawer controls and slider groups.
+- The Spaced Review tab keeps review settings only and intentionally avoids reading `.nestkit/spaced-review/tasks.json` when the settings page opens.
+- The About tab shows local static version and phase 2.5 text without any network requests.
+- Opening settings does not create `.nestkit` and does not scan the vault.
+
 ## Transition constraints
 
-- This phase introduces no user-visible behavior changes.
-- This phase introduces the first settings schema change, but keeps the current flat keys and settings UI unchanged.
+- This phase introduces no settings schema change.
+- This phase updates the settings UI to a tabbed layout while keeping the current flat keys unchanged.
 - The manager intentionally performs lazy first-use instantiation so disabled features do not create instances at plugin startup.
 - Already-created instances are intentionally kept alive after disable, but disabled instances now remain inert instead of keeping an always-registered guarded `layout-change` listener alive for the rest of the session.
 - The feature now owns its activation-scoped listener lifecycle directly and invalidates stale `onLayoutReady(...)` callbacks with an activation generation guard instead of trying to cancel them.
 - Future multi-feature settings namespaces are intentionally postponed until a later dedicated migration phase.
+
+## Performance guardrails
+
+- `onload()` still avoids reading `.nestkit/spaced-review/tasks.json`, scanning the vault, or opening modals.
+- The Spaced Review store is only touched from user-driven task creation or future review actions.
+- The settings page only renders the active tab and does not pre-render the other tabs.
+- The What's New action is local static copy only and does not fetch GitHub or any remote changelog.
+- The Language action only flips the existing plugin-owned language setting; it does not add a new schema field.
+- Restore defaults resets settings only and leaves `tasks.json` and other vault data alone.
 
 ## Styling strategy
 

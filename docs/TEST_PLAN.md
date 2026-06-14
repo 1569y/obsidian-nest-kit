@@ -155,6 +155,39 @@
 11. On Windows, confirm minimize, maximize, and close remain clickable while the right sidebar is logically open.
 12. Disable the plugin and confirm all NestKit UI side effects are removed and the native right sidebar behavior is restored.
 
+## Phase 2.5 settings tabs and performance guardrails
+
+1. Confirm the settings page has `General`, `Workspace Panel`, `Spaced Review`, and `About` tabs.
+2. Confirm the default active tab is `General`.
+3. Confirm the top-right actions include **What's New**, **Language**, and **Restore defaults**.
+4. Confirm only the active tab content renders at a time.
+5. Confirm the top active tab title is not duplicated above the tabs.
+6. Confirm the Workspace Panel tab contains the existing drawer controls and sliders.
+7. Confirm the Spaced Review tab contains the existing review settings.
+8. Confirm the About tab shows local static version and phase 2.5 text.
+9. Confirm **What's New** opens local static content and does not call `fetch()`.
+10. Confirm **Language** reuses the existing plugin language setting and does not add a new schema field.
+11. Confirm **Restore defaults** resets settings only and does not delete `tasks.json`.
+12. Confirm opening settings does not read `.nestkit/spaced-review/tasks.json`.
+13. Confirm opening settings does not create `.nestkit`.
+14. Confirm opening settings does not create `.nestkit/spaced-review`.
+15. Confirm top actions and tabs are visually separated.
+16. Confirm General tab does not show duplicate status bullets or internal performance wording.
+17. Confirm no Daily Note write path is invoked.
+18. Confirm no checkbox listener is added.
+19. Confirm no network request is made.
+20. Confirm settings schema version remains unchanged.
+21. Confirm store schema version remains unchanged.
+22. Confirm the Spaced Review tab does not expose internal task-store wording.
+23. Confirm task overview remains intentionally deferred to Phase 3A.
+24. Confirm tab content does not duplicate the active tab title.
+25. Confirm General tab does not render an extra General heading inside content.
+26. Confirm Workspace Panel tab does not render an extra Workspace Panel heading inside content.
+27. Confirm Spaced Review tab does not render an extra Spaced Review heading inside content.
+28. Confirm About tab does not render an extra About heading inside content.
+29. Confirm tab descriptions align visually with the setting cards below them.
+30. Confirm per-tab restore defaults remains intentionally deferred and only one global **Restore defaults** action is shown.
+
 ## Phase 1 toolbox-core focus
 
 1. Enable the plugin but keep **Enable right sidebar hover drawer** off, then confirm the feature behaves exactly like the published `0.2.0` release.
