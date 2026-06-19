@@ -11,6 +11,7 @@ import {
 import {
 	createDefaultSpacedReviewStore,
 	readSpacedReviewStore,
+	removeReviewTask,
 	upsertReviewTask,
 	writeSpacedReviewStore,
 	type SpacedReviewStoreNormalizationResult,
@@ -24,6 +25,7 @@ import {
 	normalizeReviewTaskNote,
 	normalizeReviewTaskTargetLink,
 	normalizeReviewTaskText,
+	resolveReviewTaskIntervalsInput,
 	type CreateReviewTaskInput,
 	type UpdateReviewTaskDetailsInput,
 } from './task-factory';
@@ -35,6 +37,31 @@ import type {
 	ReviewTask,
 	ScheduleMode,
 } from './types';
+
+function pruneSequenceIndexes(
+	indexes: readonly number[],
+	maxLength: number,
+): number[] {
+	return indexes.filter((index) => index < maxLength);
+}
+
+function pruneSequenceDateMap(
+	dateMap: Record<string, string> | undefined,
+	allowedIndexes: readonly number[],
+): Record<string, string> | undefined {
+	if (!dateMap) {
+		return undefined;
+	}
+
+	const allowedIndexSet = new Set(allowedIndexes.map(String));
+	const nextEntries = Object.entries(dateMap).filter(([key]) =>
+		allowedIndexSet.has(key),
+	);
+	if (nextEntries.length === 0) {
+		return undefined;
+	}
+	return Object.fromEntries(nextEntries);
+}
 
 export class SpacedReviewFeature implements FeatureModule {
 	private enabled = false;
@@ -203,6 +230,22 @@ export class SpacedReviewFeature implements FeatureModule {
 		}));
 	}
 
+	async deleteOverviewTask(taskId: string): Promise<boolean> {
+		const adapter = this.getStorageAdapter();
+		const readResult = await readSpacedReviewStore(adapter);
+		this.assertWritableStore(readResult);
+
+		const currentStore = readResult.store ?? createDefaultSpacedReviewStore();
+		const taskExists = currentStore.tasks.some((entry) => entry.id === taskId);
+		if (!taskExists) {
+			return false;
+		}
+
+		const nextStore = removeReviewTask(currentStore, taskId);
+		await writeSpacedReviewStore(adapter, nextStore);
+		return true;
+	}
+
 	async updateOverviewTaskDetails(
 		taskId: string,
 		input: UpdateReviewTaskDetailsInput,
@@ -222,6 +265,12 @@ export class SpacedReviewFeature implements FeatureModule {
 		if (title.length === 0) {
 			throw new Error('Task title is required.');
 		}
+		const resolvedIntervals = resolveReviewTaskIntervalsInput({
+			presetId: input.presetId,
+			customIntervalsText: input.customIntervalsText,
+			customPresetsText: input.customPresetsText,
+			includeTodayAsFirstReview: input.includeTodayAsFirstReview,
+		});
 
 		const groupPath = normalizeReviewTaskGroupPath(input.groupPath);
 		if (
@@ -234,6 +283,14 @@ export class SpacedReviewFeature implements FeatureModule {
 		) {
 			throw new DuplicateReviewTaskTitleError();
 		}
+		const completedSequenceIndexes = pruneSequenceIndexes(
+			task.completedSequenceIndexes,
+			resolvedIntervals.intervalsSnapshot.length,
+		);
+		const skippedSequenceIndexes = pruneSequenceIndexes(
+			task.skippedSequenceIndexes,
+			resolvedIntervals.intervalsSnapshot.length,
+		).filter((index) => !completedSequenceIndexes.includes(index));
 
 		const nextTask: ReviewTask = {
 			...task,
@@ -241,6 +298,18 @@ export class SpacedReviewFeature implements FeatureModule {
 			groupPath,
 			note: normalizeReviewTaskNote(input.note),
 			targetLink: normalizeReviewTaskTargetLink(input.targetLink),
+			presetId: resolvedIntervals.presetId,
+			intervalsSnapshot: [...resolvedIntervals.intervalsSnapshot],
+			completedSequenceIndexes,
+			skippedSequenceIndexes,
+			completedDatesBySequenceIndex: pruneSequenceDateMap(
+				task.completedDatesBySequenceIndex,
+				completedSequenceIndexes,
+			),
+			skippedDatesBySequenceIndex: pruneSequenceDateMap(
+				task.skippedDatesBySequenceIndex,
+				skippedSequenceIndexes,
+			),
 			updatedAt: new Date().toISOString(),
 		};
 		const nextStore = upsertReviewTask(currentStore, nextTask);

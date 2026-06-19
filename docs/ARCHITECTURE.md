@@ -230,6 +230,11 @@ The stable feature id is now future-facing and already reflects the intended top
 - Custom presets are stored only in plugin settings as a textarea string, parsed on demand, and compiled into modal dropdown options at runtime. They do not add a new task-store schema field.
 - New tasks may persist a custom preset id such as `custom:...`, but scheduling still relies on the saved `intervalsSnapshot`, so later deleting that settings preset does not break existing tasks.
 - The create-task modal initializes group and subgroup combo defaults once per modal session, then preserves in-progress title, group, subgroup, date, note, target-link, and manual-interval state across preset-triggered rerenders.
+- The edit-task modal now reuses the same preset and manual-interval controls as create mode, initializing them from the persisted `intervalsSnapshot` instead of forcing the current default preset.
+- Edit-mode interval changes update `intervalsSnapshot` immediately after save, while the scheduling algorithm itself remains unchanged and still reads the snapshot as the source of truth.
+- If an edited task already has completed or skipped history, the modal shows a confirmation warning before saving interval changes.
+- Interval-history reconciliation is bounded to index validity only: completed and skipped sequence indexes that remain within the new interval length are preserved, while out-of-range indexes and matching date-map entries are pruned.
+- The edit-task modal now exposes a destructive hard-delete action with confirmation. Deleting a task removes it from the Spaced Review store only, refreshes the overview immediately, and leaves Daily Note content untouched until the next sync.
 - Target-link open mode is scoped to plugin-rendered `Open` actions such as Today, All tasks, and Archived; those actions prefer the active Markdown file path as `sourcePath` and fall back to `''`.
 - Earlier 3N and 3O experiments tried click interception for Daily Note review links, but that approach is no longer the current runtime behavior.
 - The 3P follow-up replaced Daily Note click interception with generated link output: when `spacedReviewDailyNoteLinksUseOpenMode` is disabled, Daily Note review items emit regular Obsidian wiki links; when it is enabled, they emit Obsidian URI Markdown links.

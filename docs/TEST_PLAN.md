@@ -904,3 +904,24 @@
 9. Confirm checkbox import can match newly generated URI-link lines.
 10. Confirm there is no longer a Daily Note review-link click intercept registration in plugin runtime.
 11. Confirm the Daily Note output stays clean and does not reintroduce START or END markers, metadata blocks, or inline identity markers.
+
+## Spaced Review 0.3.1 hotfix edit modal delete and intervals
+
+1. Create a task, open Edit, and confirm the `Delete task` button appears only in edit mode.
+2. Click `Delete task`, then cancel the confirmation; confirm the task remains in All tasks.
+3. Click `Delete task` again, confirm delete, and confirm the task is removed from All tasks.
+4. Confirm a deleted actionable task also disappears from Today after the overview refresh.
+5. Confirm deleting a task does not rewrite the Daily Note until the next manual or overview-driven sync.
+6. Confirm deleting a task does not remove the target note itself.
+7. Confirm the edit modal closes after a successful delete and shows the deleted notice.
+8. Edit a task with no progress, switch to a built-in preset, save, and confirm the review track updates immediately.
+9. Edit a task with no progress, switch to a settings custom preset, save, and confirm the review track updates immediately.
+10. Edit a task with no progress, switch to manual custom intervals, save, and confirm the review track updates immediately.
+11. Confirm edit mode initializes the interval UI from the task `intervalsSnapshot` instead of forcing the default preset.
+12. Confirm switching preset in edit mode does not clear title, group, subgroup, note, target link, or manual custom interval text.
+13. Edit a task with completed or skipped history, change intervals, and confirm the warning modal appears before save.
+14. Confirm cancelling that warning leaves the task unchanged.
+15. Confirm accepting that warning preserves valid completed/skipped sequence indexes within the new interval length.
+16. Confirm completed/skipped sequence indexes beyond the new interval length are pruned.
+17. Confirm completed/skipped date maps are pruned in the same way as their sequence indexes.
+18. Confirm invalid manual intervals in edit mode do not save and keep the modal open.

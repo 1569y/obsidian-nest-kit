@@ -31,6 +31,22 @@ export interface UpdateReviewTaskDetailsInput {
 	groupPath?: string[];
 	note?: string;
 	targetLink?: string;
+	presetId: string;
+	customIntervalsText?: string;
+	customPresetsText?: string;
+	includeTodayAsFirstReview?: boolean;
+}
+
+export interface ReviewTaskIntervalsInput {
+	presetId: string;
+	customIntervalsText?: string;
+	customPresetsText?: string;
+	includeTodayAsFirstReview?: boolean;
+}
+
+export interface ResolveReviewTaskIntervalsResult {
+	presetId: string;
+	intervalsSnapshot: number[];
 }
 
 export interface CreateReviewTaskResult {
@@ -136,17 +152,49 @@ export function createReviewTask(
 		throw new Error('Task startDate must be a valid ISO date string.');
 	}
 
+	const resolvedIntervals = resolveReviewTaskIntervalsInput(input);
+
+	const timestamp = new Date().toISOString();
+	const id = `task_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+	const groupPath = normalizeReviewTaskGroupPath(input.groupPath);
+	const note = normalizeReviewTaskNote(input.note);
+	const targetLink = normalizeReviewTaskTargetLink(input.targetLink);
+
+	return {
+		title,
+		task: {
+			id,
+			title,
+			createdAt: timestamp,
+			updatedAt: timestamp,
+			groupPath,
+			note,
+			targetLink,
+			startDate: input.startDate,
+			presetId: resolvedIntervals.presetId,
+			intervalsSnapshot: [...resolvedIntervals.intervalsSnapshot],
+			status: 'active',
+			completedSequenceIndexes: [],
+			skippedSequenceIndexes: [],
+		},
+	};
+}
+
+export function resolveReviewTaskIntervalsInput(
+	input: ReviewTaskIntervalsInput,
+): ResolveReviewTaskIntervalsResult {
 	const preset = getBuiltInReviewPreset(input.presetId);
 	const customPreset = input.customPresetsText
 		? parseCustomReviewPresets(input.customPresetsText).presets.find(
 				(entry) => entry.id === input.presetId,
 			)
 		: undefined;
-	if (!preset && !customPreset) {
+	const customIntervalsText = input.customIntervalsText?.trim() ?? '';
+
+	if (customIntervalsText.length === 0 && !preset && !customPreset) {
 		throw new Error(`Unsupported preset id: ${input.presetId}`);
 	}
 
-	const customIntervalsText = input.customIntervalsText?.trim() ?? '';
 	const parsedManualIntervals =
 		customIntervalsText.length > 0
 			? parseReviewIntervalsInput(customIntervalsText)
@@ -174,28 +222,8 @@ export function createReviewTask(
 		);
 	}
 
-	const timestamp = new Date().toISOString();
-	const id = `task_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-	const groupPath = normalizeReviewTaskGroupPath(input.groupPath);
-	const note = normalizeReviewTaskNote(input.note);
-	const targetLink = normalizeReviewTaskTargetLink(input.targetLink);
-
 	return {
-		title,
-		task: {
-			id,
-			title,
-			createdAt: timestamp,
-			updatedAt: timestamp,
-			groupPath,
-			note,
-			targetLink,
-			startDate: input.startDate,
-			presetId: customPreset?.id ?? preset?.id ?? input.presetId,
-			intervalsSnapshot: [...intervalSource.intervals],
-			status: 'active',
-			completedSequenceIndexes: [],
-			skippedSequenceIndexes: [],
-		},
+		presetId: customPreset?.id ?? preset?.id ?? input.presetId,
+		intervalsSnapshot: [...intervalSource.intervals],
 	};
 }

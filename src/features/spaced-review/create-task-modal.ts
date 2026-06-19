@@ -11,7 +11,6 @@ import {
 import { getDictionary, type NestKitDictionary } from '../../i18n';
 import type { NestKitSettings } from '../../settings';
 import { isIsoDateString, todayIsoDate } from './dates';
-import { parseReviewIntervalsInput } from './intervals';
 import {
 	getBuiltInReviewPresetName,
 	getBuiltInReviewPresets,
@@ -23,6 +22,7 @@ import {
 } from './presets';
 import {
 	hasDuplicateReviewTaskTitle,
+	resolveReviewTaskIntervalsInput,
 	type CreateReviewTaskInput,
 	type UpdateReviewTaskDetailsInput,
 } from './task-factory';
@@ -71,6 +71,7 @@ interface SpacedReviewModalDictionaryExtension {
 				description: string;
 				placeholder: string;
 			};
+			reviewIntervals: string;
 			note: {
 				name: string;
 				placeholder: string;
@@ -83,6 +84,15 @@ interface SpacedReviewModalDictionaryExtension {
 			save: string;
 			saveChanges: string;
 			cancel: string;
+			deleteTask: string;
+			deleteTaskTitle: string;
+			deleteTaskMessage: string;
+			deleteTaskConfirm: string;
+			deleteTaskCancel: string;
+			taskDeleted: string;
+			editIntervalsWarningTitle: string;
+			editIntervalsWarningMessage: string;
+			editIntervalsConfirm: string;
 			validation: {
 				titleRequired: string;
 				invalidDate: string;
@@ -108,6 +118,7 @@ interface EditSpacedReviewTaskModalOptions {
 	onEditSubmit: (
 		input: UpdateReviewTaskDetailsInput,
 	) => Promise<ReviewTask | null>;
+	onDelete?: () => Promise<boolean>;
 }
 
 interface CreateSpacedReviewTaskModalInitialValues {
@@ -124,6 +135,77 @@ type SpacedReviewTaskModalOptions =
 	| EditSpacedReviewTaskModalOptions
 	| CreateSpacedReviewTaskModalCreateOptions
 	| undefined;
+
+interface SpacedReviewConfirmModalOptions {
+	title: string;
+	message: string;
+	confirmText: string;
+	cancelText: string;
+	confirmClassName?: string;
+}
+
+class SpacedReviewConfirmModal extends Modal {
+	private resolver?: (confirmed: boolean) => void;
+	private settled = false;
+
+	constructor(
+		app: Modal['app'],
+		private readonly options: SpacedReviewConfirmModalOptions,
+	) {
+		super(app);
+	}
+
+	static async open(
+		app: Modal['app'],
+		options: SpacedReviewConfirmModalOptions,
+	): Promise<boolean> {
+		const modal = new SpacedReviewConfirmModal(app, options);
+		return new Promise<boolean>((resolve) => {
+			modal.resolver = resolve;
+			modal.open();
+		});
+	}
+
+	onOpen(): void {
+		this.modalEl.addClass('nest-kit-spaced-review-confirm-modal');
+		this.titleEl.setText(this.options.title);
+		this.contentEl.empty();
+		this.contentEl.createEl('p', {
+			cls: 'nest-kit-spaced-review-confirm-modal__message',
+			text: this.options.message,
+		});
+		const footerEl = this.contentEl.createDiv({
+			cls: 'nest-kit-spaced-review-modal__footer nest-kit-spaced-review-confirm-modal__footer',
+		});
+		new ButtonComponent(footerEl)
+			.setButtonText(this.options.cancelText)
+			.onClick(() => this.resolveAndClose(false));
+		const confirmButton = new ButtonComponent(footerEl)
+			.setButtonText(this.options.confirmText)
+			.setCta()
+			.onClick(() => this.resolveAndClose(true));
+		if (this.options.confirmClassName) {
+			confirmButton.buttonEl.addClass(this.options.confirmClassName);
+		}
+	}
+
+	onClose(): void {
+		this.modalEl.removeClass('nest-kit-spaced-review-confirm-modal');
+		this.contentEl.empty();
+		if (!this.settled) {
+			this.resolver?.(false);
+		}
+	}
+
+	private resolveAndClose(confirmed: boolean): void {
+		if (this.settled) {
+			return;
+		}
+		this.settled = true;
+		this.resolver?.(confirmed);
+		this.close();
+	}
+}
 
 class MarkdownFilePathSuggest extends AbstractInputSuggest<TFile> {
 	private readonly markdownFiles: TFile[];
@@ -171,13 +253,14 @@ export class CreateSpacedReviewTaskModal extends Modal {
 	private readonly onEditSubmit?: (
 		input: UpdateReviewTaskDetailsInput,
 	) => Promise<ReviewTask | null>;
+	private readonly onDelete?: () => Promise<boolean>;
 	private titleValue = '';
 	private groupValue = '';
 	private subgroupValue = '';
 	private noteValue = '';
 	private targetLinkValue = '';
 	private startDateValue = todayIsoDate();
-	private presetIdValue: string;
+	private presetIdValue = '';
 	private customIntervalsValue = '';
 	private readonly presetOptions: PresetOption[];
 	private groupSuggestions: string[] = [];
@@ -186,6 +269,7 @@ export class CreateSpacedReviewTaskModal extends Modal {
 	private groupInput?: TextComponent;
 	private subgroupInput?: TextComponent;
 	private saveButton?: ButtonComponent;
+	private deleteButton?: ButtonComponent;
 	private duplicateErrorEl?: HTMLDivElement;
 	private groupDropdown?: DropdownComponent;
 	private subgroupDropdown?: DropdownComponent;
@@ -209,8 +293,7 @@ export class CreateSpacedReviewTaskModal extends Modal {
 		this.editingTask = options?.mode === 'edit' ? options.task : undefined;
 		this.onEditSubmit =
 			options?.mode === 'edit' ? options.onEditSubmit : undefined;
-		this.presetIdValue =
-			this.editingTask?.presetId ?? settings.spacedReviewDefaultPresetId;
+		this.onDelete = options?.mode === 'edit' ? options.onDelete : undefined;
 		this.startDateValue = this.editingTask?.startDate ?? todayIsoDate();
 		this.titleValue = this.editingTask?.title ?? '';
 		this.groupValue = this.editingTask?.groupPath?.[0] ?? '';
@@ -222,6 +305,10 @@ export class CreateSpacedReviewTaskModal extends Modal {
 			this.targetLinkValue = options?.initialValues?.targetLink?.trim() ?? '';
 		}
 		this.presetOptions = this.buildPresetOptions();
+		this.presetIdValue = settings.spacedReviewDefaultPresetId;
+		if (this.mode === 'edit' && this.editingTask) {
+			this.initializeEditIntervalValues(this.editingTask);
+		}
 		if (!this.presetOptions.some((option) => option.id === this.presetIdValue)) {
 			this.presetIdValue = settings.spacedReviewDefaultPresetId;
 		}
@@ -234,11 +321,13 @@ export class CreateSpacedReviewTaskModal extends Modal {
 		onEditSubmit: (
 			input: UpdateReviewTaskDetailsInput,
 		) => Promise<ReviewTask | null>,
+		onDelete?: () => Promise<boolean>,
 	): CreateSpacedReviewTaskModal {
 		return new CreateSpacedReviewTaskModal(app, settings, undefined, {
 			mode: 'edit',
 			task,
 			onEditSubmit,
+			onDelete,
 		});
 	}
 
@@ -333,37 +422,39 @@ export class CreateSpacedReviewTaskModal extends Modal {
 							this.startDateValue = value;
 						}),
 				);
+		}
 
-			new Setting(contentEl)
-				.setName(dictionary.modal.spacedReview.preset.name)
-				.addDropdown((dropdown) => {
-					for (const option of this.presetOptions) {
-						dropdown.addOption(option.id, option.label);
-					}
+		new Setting(contentEl)
+			.setName(
+				this.mode === 'edit'
+					? dictionary.modal.spacedReview.reviewIntervals
+					: dictionary.modal.spacedReview.preset.name,
+			)
+			.addDropdown((dropdown) => {
+				for (const option of this.presetOptions) {
+					dropdown.addOption(option.id, option.label);
+				}
 
-					dropdown
-						.setValue(this.presetIdValue)
-						.onChange((value) => {
-							this.presetIdValue = value;
-							void this.renderForm();
-						});
+				dropdown.setValue(this.presetIdValue).onChange((value) => {
+					this.presetIdValue = value;
+					void this.renderForm();
 				});
+			});
 
-			if (this.isManualCustomPresetSelected()) {
-				new Setting(contentEl)
-					.setName(dictionary.modal.spacedReview.customIntervals.name)
-					.setDesc(dictionary.modal.spacedReview.customIntervals.description)
-					.addText((text) =>
-						text
-							.setPlaceholder(
-								dictionary.modal.spacedReview.customIntervals.placeholder,
-							)
-							.setValue(this.customIntervalsValue)
-							.onChange((value) => {
-								this.customIntervalsValue = value;
-							}),
-					);
-			}
+		if (this.isManualCustomPresetSelected()) {
+			new Setting(contentEl)
+				.setName(dictionary.modal.spacedReview.customIntervals.name)
+				.setDesc(dictionary.modal.spacedReview.customIntervals.description)
+				.addText((text) =>
+					text
+						.setPlaceholder(
+							dictionary.modal.spacedReview.customIntervals.placeholder,
+						)
+						.setValue(this.customIntervalsValue)
+						.onChange((value) => {
+							this.customIntervalsValue = value;
+						}),
+				);
 		}
 
 		new Setting(contentEl)
@@ -418,6 +509,23 @@ export class CreateSpacedReviewTaskModal extends Modal {
 					.onClick(() => {
 						void this.handleSubmit();
 					});
+			})
+			.addButton((button) => {
+				this.deleteButton = button;
+				if (this.mode !== 'edit' || !this.onDelete) {
+					button.buttonEl.addClass('nest-kit-spaced-review-modal__delete-button--hidden');
+					return;
+				}
+				button
+					.setButtonText(dictionary.modal.spacedReview.deleteTask)
+					.onClick(() => {
+						void this.handleDelete();
+					});
+				button.buttonEl.addClass(
+					'nest-kit-spaced-review-modal__delete-button',
+				);
+				button.buttonEl.ariaLabel = dictionary.modal.spacedReview.deleteTask;
+				button.buttonEl.title = dictionary.modal.spacedReview.deleteTask;
 			})
 			.addButton((button) =>
 				button
@@ -536,16 +644,9 @@ export class CreateSpacedReviewTaskModal extends Modal {
 			return null;
 		}
 
-		const customIntervalsText = this.isManualCustomPresetSelected()
-			? this.customIntervalsValue.trim()
-			: '';
-		if (customIntervalsText.length > 0) {
-			const parsed = parseReviewIntervalsInput(customIntervalsText);
-			if (parsed.intervals.length === 0) {
-				this.clearDuplicateError();
-				new Notice(dictionary.modal.spacedReview.validation.invalidIntervals);
-				return null;
-			}
+		const intervalsInput = this.getIntervalsSubmitInput();
+		if (!(await this.validateIntervalsInput(intervalsInput, dictionary))) {
+			return null;
 		}
 
 		return this.onCreateSubmit?.({
@@ -554,10 +655,8 @@ export class CreateSpacedReviewTaskModal extends Modal {
 			note: this.noteValue,
 			targetLink: this.targetLinkValue,
 			startDate: this.startDateValue,
-			presetId: this.isManualCustomPresetSelected()
-				? this.settings.spacedReviewDefaultPresetId
-				: this.presetIdValue,
-			customIntervalsText,
+			presetId: intervalsInput.presetId,
+			customIntervalsText: intervalsInput.customIntervalsText,
 			customPresetsText: this.settings.spacedReviewCustomPresets,
 			includeTodayAsFirstReview:
 				this.settings.spacedReviewIncludeTodayAsFirstReview,
@@ -565,12 +664,64 @@ export class CreateSpacedReviewTaskModal extends Modal {
 	}
 
 	private async handleEditSubmit(): Promise<ReviewTask | null> {
+		const dictionary = this.getDictionary();
+		const intervalsInput = this.getIntervalsSubmitInput();
+		const resolvedIntervals = await this.validateIntervalsInput(
+			intervalsInput,
+			dictionary,
+		);
+		if (!resolvedIntervals) {
+			return null;
+		}
+		if (await this.shouldConfirmIntervalChange(resolvedIntervals.intervalsSnapshot)) {
+			const confirmed = await SpacedReviewConfirmModal.open(this.app, {
+				title: dictionary.modal.spacedReview.editIntervalsWarningTitle,
+				message: dictionary.modal.spacedReview.editIntervalsWarningMessage,
+				confirmText: dictionary.modal.spacedReview.editIntervalsConfirm,
+				cancelText: dictionary.modal.spacedReview.cancel,
+			});
+			if (!confirmed) {
+				return null;
+			}
+		}
+
 		return this.onEditSubmit?.({
 			title: this.titleValue.trim(),
 			groupPath: this.getResolvedGroupPath(),
 			note: this.noteValue,
 			targetLink: this.targetLinkValue,
+			presetId: intervalsInput.presetId,
+			customIntervalsText: intervalsInput.customIntervalsText,
+			customPresetsText: intervalsInput.customPresetsText,
+			includeTodayAsFirstReview: intervalsInput.includeTodayAsFirstReview,
 		}) ?? null;
+	}
+
+	private async handleDelete(): Promise<void> {
+		const dictionary = this.getDictionary();
+		if (!this.onDelete || this.mode !== 'edit') {
+			return;
+		}
+		const confirmed = await SpacedReviewConfirmModal.open(this.app, {
+			title: dictionary.modal.spacedReview.deleteTaskTitle,
+			message: dictionary.modal.spacedReview.deleteTaskMessage,
+			confirmText: dictionary.modal.spacedReview.deleteTaskConfirm,
+			cancelText: dictionary.modal.spacedReview.deleteTaskCancel,
+			confirmClassName: 'nest-kit-spaced-review-modal__delete-button',
+		});
+		if (!confirmed) {
+			return;
+		}
+		this.setActionButtonsDisabled(true);
+		try {
+			const deleted = await this.onDelete();
+			if (deleted) {
+				new Notice(dictionary.modal.spacedReview.taskDeleted);
+				this.close();
+			}
+		} finally {
+			this.setActionButtonsDisabled(false);
+		}
 	}
 
 	private getPresetLabel(
@@ -648,6 +799,93 @@ export class CreateSpacedReviewTaskModal extends Modal {
 
 	private isManualCustomPresetSelected(): boolean {
 		return this.presetIdValue === MANUAL_CUSTOM_PRESET_ID;
+	}
+
+	private initializeEditIntervalValues(task: ReviewTask): void {
+		this.customIntervalsValue = task.intervalsSnapshot.join(' ');
+		const matchingBuiltIn = this.presetOptions.find(
+			(option) =>
+				option.kind === 'built-in' &&
+				this.hasExactIntervals(option.intervals, task.intervalsSnapshot),
+		);
+		const matchingCustom = this.presetOptions.find(
+			(option) =>
+				option.kind === 'custom' &&
+				this.hasExactIntervals(option.intervals, task.intervalsSnapshot),
+		);
+		this.presetIdValue =
+			matchingBuiltIn?.id ?? matchingCustom?.id ?? MANUAL_CUSTOM_PRESET_ID;
+	}
+
+	private hasExactIntervals(
+		left: readonly number[] | undefined,
+		right: readonly number[],
+	): boolean {
+		if (!left || left.length !== right.length) {
+			return false;
+		}
+		return left.every((value, index) => value === right[index]);
+	}
+
+	private getIntervalsSubmitInput(): {
+		presetId: string;
+		customIntervalsText: string;
+		customPresetsText: string;
+		includeTodayAsFirstReview: boolean;
+	} {
+		return {
+			presetId: this.presetIdValue,
+			customIntervalsText: this.isManualCustomPresetSelected()
+				? this.customIntervalsValue.trim()
+				: '',
+			customPresetsText: this.settings.spacedReviewCustomPresets,
+			includeTodayAsFirstReview:
+				this.settings.spacedReviewIncludeTodayAsFirstReview,
+		};
+	}
+
+	private async validateIntervalsInput(
+		input: {
+			presetId: string;
+			customIntervalsText: string;
+			customPresetsText: string;
+			includeTodayAsFirstReview: boolean;
+		},
+		dictionary: NestKitDictionary & SpacedReviewModalDictionaryExtension,
+	): Promise<
+		| {
+				presetId: string;
+				intervalsSnapshot: number[];
+		  }
+		| null
+	> {
+		try {
+			return resolveReviewTaskIntervalsInput(input);
+		} catch {
+			this.clearDuplicateError();
+			new Notice(dictionary.modal.spacedReview.validation.invalidIntervals);
+			return null;
+		}
+	}
+
+	private async shouldConfirmIntervalChange(
+		nextIntervals: readonly number[],
+	): Promise<boolean> {
+		if (!this.editingTask) {
+			return false;
+		}
+		if (
+			this.editingTask.completedSequenceIndexes.length === 0 &&
+			this.editingTask.skippedSequenceIndexes.length === 0
+		) {
+			return false;
+		}
+		return !this.hasExactIntervals(this.editingTask.intervalsSnapshot, nextIntervals);
+	}
+
+	private setActionButtonsDisabled(disabled: boolean): void {
+		this.saveButton?.setDisabled(disabled);
+		this.deleteButton?.setDisabled(disabled);
 	}
 
 	private async validateDuplicateTitle(

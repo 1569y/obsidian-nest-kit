@@ -2003,6 +2003,27 @@ export class SpacedReviewOverviewModal extends Modal {
 					return null;
 				}
 			},
+			async (): Promise<boolean> => {
+				try {
+					const deleted = await this.feature.deleteOverviewTask(task.id);
+					if (!deleted) {
+						new Notice(this.getDictionary().spacedReview.overview.editFailed);
+						await this.renderOverview();
+						return true;
+					}
+					this.expandedTaskNotes.delete(task.id);
+					if (this.highlightedTaskId === task.id) {
+						this.highlightedTaskId = null;
+					}
+					await this.renderOverview();
+					return true;
+				} catch (error) {
+					console.error(error);
+					new Notice(this.getDictionary().spacedReview.overview.editFailed);
+					await this.renderOverview();
+					return false;
+				}
+			},
 		);
 		modal.open();
 	}

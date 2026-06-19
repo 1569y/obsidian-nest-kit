@@ -440,9 +440,43 @@ body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
   margin-top: 4px;
 }
 
+.nest-kit-spaced-review-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .nest-kit-spaced-review-create-modal .nest-kit-spaced-review-create__actions .setting-item-control {
   justify-content: flex-end;
   gap: 8px;
+}
+
+.nest-kit-spaced-review-create-modal .nest-kit-spaced-review-create__actions .setting-item-control .nest-kit-spaced-review-modal__delete-button,
+.nest-kit-spaced-review-confirm-modal .nest-kit-spaced-review-modal__delete-button {
+  background: color-mix(in srgb, var(--background-secondary) 82%, var(--text-error) 18%);
+  border: 1px solid color-mix(in srgb, var(--background-modifier-border) 68%, var(--text-error) 32%);
+  color: var(--text-error);
+}
+
+.nest-kit-spaced-review-create-modal .nest-kit-spaced-review-create__actions .setting-item-control .nest-kit-spaced-review-modal__delete-button:hover:not(:disabled),
+.nest-kit-spaced-review-confirm-modal .nest-kit-spaced-review-modal__delete-button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--background-secondary-hover) 74%, var(--text-error) 26%);
+  border-color: color-mix(in srgb, var(--background-modifier-border-hover) 56%, var(--text-error) 44%);
+}
+
+.nest-kit-spaced-review-modal__delete-button--hidden {
+  display: none !important;
+}
+
+.nest-kit-spaced-review-confirm-modal .modal-content {
+  padding-bottom: 10px;
+}
+
+.nest-kit-spaced-review-confirm-modal__message {
+  margin: 0 0 18px;
+  line-height: 1.55;
+  color: var(--text-normal);
 }
 
 .nest-kit-spaced-review-create-modal .nest-kit-spaced-review-create__target-suggest-path {

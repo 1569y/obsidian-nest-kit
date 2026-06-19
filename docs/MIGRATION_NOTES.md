@@ -245,3 +245,7 @@
 - Existing tasks continue to rely on their saved `intervalsSnapshot`, even if a related custom preset is later edited or removed from settings.
 - The create-task preset-switch preservation fix is UI-only: it keeps in-progress modal state across rerenders without changing schedule semantics, task storage, or migration requirements.
 - This phase does not change the Spaced Review store schema version and does not add a schedule migration.
+- The 0.3.1 hotfix adds edit-mode delete controls and edit-mode interval updates without changing the Spaced Review store schema version.
+- Existing tasks can now change preset selection or manual custom intervals from the edit modal; the saved `intervalsSnapshot` remains the scheduling source of truth.
+- Deleting a Spaced Review task is a hard delete from the task store only and does not remove target notes or rewrite Daily Notes until the next sync.
+- When interval edits shorten the review plan, existing completed/skipped history is preserved only for sequence indexes that still fit inside the new interval length, and matching date-map entries are pruned alongside those out-of-range indexes.

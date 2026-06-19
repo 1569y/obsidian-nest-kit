@@ -462,6 +462,7 @@ export const enDictionary = {
 					'Optional. Enter cumulative day offsets separated by spaces, for example 1 3 7.',
 				placeholder: '1 3 7',
 			},
+			reviewIntervals: 'Review intervals',
 			note: {
 				name: 'Note',
 				placeholder: 'Add note',
@@ -475,6 +476,17 @@ export const enDictionary = {
 			save: 'Save',
 			saveChanges: 'Save changes',
 			cancel: 'Cancel',
+			deleteTask: 'Delete task',
+			deleteTaskTitle: 'Delete this task?',
+			deleteTaskMessage:
+				'This cannot be undone. Daily Notes will update on the next sync.',
+			deleteTaskConfirm: 'Delete',
+			deleteTaskCancel: 'Cancel',
+			taskDeleted: 'Spaced review task deleted.',
+			editIntervalsWarningTitle: 'Change review intervals?',
+			editIntervalsWarningMessage:
+				'This task already has review history. Changing intervals will recalculate future plans and keep valid completed/skipped sequence indexes; records beyond the new interval range will be ignored.',
+			editIntervalsConfirm: 'Continue',
 			validation: {
 				titleRequired: 'Enter a task title before saving.',
 				invalidDate: 'Enter a valid start date in YYYY-MM-DD format.',
