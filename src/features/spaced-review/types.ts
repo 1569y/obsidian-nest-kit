@@ -1,4 +1,4 @@
-export const SPACED_REVIEW_STORE_SCHEMA_VERSION = 1;
+export const SPACED_REVIEW_STORE_SCHEMA_VERSION = 4;
 
 export type SpacedReviewStoreSchemaVersion =
 	typeof SPACED_REVIEW_STORE_SCHEMA_VERSION;
@@ -17,17 +17,25 @@ export type OverduePolicy = 'carryOver' | 'skip';
 
 export type ScheduleMode = 'fixedTimeline' | 'rollingTimeline';
 
+export type DailyNoteSyncMode = 'manualOnly' | 'onOverviewOpen';
+export type TargetLinkOpenMode = 'current' | 'newTab';
+
 export interface ReviewTask {
 	id: string;
 	title: string;
 	createdAt: string;
 	updatedAt: string;
+	groupPath?: string[];
+	note?: string;
+	targetLink?: string;
 	startDate: string;
 	presetId: string;
 	intervalsSnapshot: number[];
 	status: ReviewTaskStatus;
 	completedSequenceIndexes: number[];
 	skippedSequenceIndexes: number[];
+	completedDatesBySequenceIndex?: Record<string, string>;
+	skippedDatesBySequenceIndex?: Record<string, string>;
 	rollingAnchorDate?: string;
 	completedOccurrenceDisplayOverride?: CompletedOccurrenceDisplay;
 	overduePolicyOverride?: OverduePolicy;

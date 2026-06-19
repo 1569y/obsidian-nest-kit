@@ -48,9 +48,242 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 function cloneTask(task: ReviewTask): ReviewTask {
 	return {
 		...task,
+		groupPath: task.groupPath ? [...task.groupPath] : undefined,
 		intervalsSnapshot: [...task.intervalsSnapshot],
 		completedSequenceIndexes: [...task.completedSequenceIndexes],
 		skippedSequenceIndexes: [...task.skippedSequenceIndexes],
+		completedDatesBySequenceIndex: task.completedDatesBySequenceIndex
+			? { ...task.completedDatesBySequenceIndex }
+			: undefined,
+		skippedDatesBySequenceIndex: task.skippedDatesBySequenceIndex
+			? { ...task.skippedDatesBySequenceIndex }
+			: undefined,
+	};
+}
+
+function normalizeOptionalTrimmedTextField(
+	input: unknown,
+	label: string,
+	taskId: string,
+): {
+	value: string | undefined;
+	didNormalize: boolean;
+	warnings: string[];
+} {
+	if (input === undefined) {
+		return {
+			value: undefined,
+			didNormalize: false,
+			warnings: [],
+		};
+	}
+
+	if (typeof input !== 'string') {
+		return {
+			value: undefined,
+			didNormalize: true,
+			warnings: [
+				`Spaced Review task "${taskId}" has an invalid ${label}; it was removed.`,
+			],
+		};
+	}
+
+	const normalizedValue = input.trim();
+	const didNormalize = normalizedValue !== input || normalizedValue.length === 0;
+
+	return {
+		value: normalizedValue.length > 0 ? normalizedValue : undefined,
+		didNormalize,
+		warnings: didNormalize
+			? [
+					`Spaced Review task "${taskId}" normalized ${label} to a trimmed non-empty string when present.`,
+				]
+			: [],
+	};
+}
+
+function normalizeOptionalNoteField(
+	input: unknown,
+	taskId: string,
+): {
+	value: string | undefined;
+	didNormalize: boolean;
+	warnings: string[];
+} {
+	if (input === undefined) {
+		return {
+			value: undefined,
+			didNormalize: false,
+			warnings: [],
+		};
+	}
+
+	if (typeof input !== 'string') {
+		return {
+			value: undefined,
+			didNormalize: true,
+			warnings: [
+				`Spaced Review task "${taskId}" has an invalid note; it was removed.`,
+			],
+		};
+	}
+
+	const normalizedValue = input.replace(/\r\n?/g, '\n').trim();
+	const didNormalize = normalizedValue !== input || normalizedValue.length === 0;
+
+	return {
+		value: normalizedValue.length > 0 ? normalizedValue : undefined,
+		didNormalize,
+		warnings: didNormalize
+			? [
+					`Spaced Review task "${taskId}" normalized note to trimmed text when present.`,
+				]
+			: [],
+	};
+}
+
+function normalizeGroupPath(
+	input: unknown,
+	taskId: string,
+): {
+	values: string[] | undefined;
+	didNormalize: boolean;
+	warnings: string[];
+} {
+	if (input === undefined) {
+		return {
+			values: undefined,
+			didNormalize: false,
+			warnings: [],
+		};
+	}
+
+	if (!Array.isArray(input)) {
+		return {
+			values: undefined,
+			didNormalize: true,
+			warnings: [
+				`Spaced Review task "${taskId}" has an invalid groupPath; it was removed.`,
+			],
+		};
+	}
+
+	let didNormalize = false;
+	const normalizeSegment = (value: unknown): string => {
+		if (typeof value !== 'string') {
+			if (value !== undefined) {
+				didNormalize = true;
+			}
+			return '';
+		}
+
+		const normalizedValue = value.trim().replace(/\s+/g, ' ');
+		if (normalizedValue !== value) {
+			didNormalize = true;
+		}
+
+		if (normalizedValue.length === 0) {
+			didNormalize = true;
+		}
+
+		return normalizedValue;
+	};
+
+	const groupSegment = normalizeSegment(input[0]);
+	const subgroupSegment = normalizeSegment(input[1]);
+
+	if (groupSegment.length === 0 && subgroupSegment.length > 0) {
+		didNormalize = true;
+	}
+
+	for (let index = 2; index < input.length; index += 1) {
+		if (input[index] !== undefined) {
+			didNormalize = true;
+		}
+	}
+
+	const normalizedValues =
+		groupSegment.length === 0
+			? undefined
+			: subgroupSegment.length > 0
+				? [groupSegment, subgroupSegment]
+				: [groupSegment];
+
+	return {
+		values: normalizedValues,
+		didNormalize,
+		warnings: didNormalize
+			? [
+					`Spaced Review task "${taskId}" normalized groupPath to at most two non-empty text levels.`,
+				]
+			: [],
+	};
+}
+
+function normalizeActionDateMap(
+	input: unknown,
+	label: string,
+	taskId: string,
+	allowedIndexes: number[],
+): {
+	values: Record<string, string> | undefined;
+	didNormalize: boolean;
+	warnings: string[];
+} {
+	if (input === undefined) {
+		return {
+			values: undefined,
+			didNormalize: false,
+			warnings: [],
+		};
+	}
+
+	if (!isPlainObject(input)) {
+		return {
+			values: undefined,
+			didNormalize: true,
+			warnings: [
+				`Spaced Review task "${taskId}" has an invalid ${label}; it was removed.`,
+			],
+		};
+	}
+
+	const allowedIndexSet = new Set(allowedIndexes);
+	const normalizedValues: Record<string, string> = {};
+	const warnings: string[] = [];
+	let didNormalize = false;
+
+	for (const [key, value] of Object.entries(input)) {
+		const sequenceIndex = Number(key);
+		if (
+			!Number.isInteger(sequenceIndex) ||
+			sequenceIndex < 0 ||
+			String(sequenceIndex) !== key ||
+			!allowedIndexSet.has(sequenceIndex)
+		) {
+			didNormalize = true;
+			continue;
+		}
+
+		if (typeof value !== 'string' || !isIsoDateString(value)) {
+			didNormalize = true;
+			continue;
+		}
+
+		normalizedValues[key] = value;
+	}
+
+	if (didNormalize) {
+		warnings.push(
+			`Spaced Review task "${taskId}" normalized ${label} to valid sequence-index date entries only.`,
+		);
+	}
+
+	return {
+		values:
+			Object.keys(normalizedValues).length > 0 ? normalizedValues : undefined,
+		didNormalize,
+		warnings,
 	};
 }
 
@@ -220,6 +453,28 @@ function normalizeReviewTask(
 		);
 	}
 
+	const groupPathResult = normalizeGroupPath(record.groupPath, id);
+	if (groupPathResult.didNormalize) {
+		didNormalize = true;
+	}
+	warnings.push(...groupPathResult.warnings);
+
+	const noteResult = normalizeOptionalNoteField(record.note, id);
+	if (noteResult.didNormalize) {
+		didNormalize = true;
+	}
+	warnings.push(...noteResult.warnings);
+
+	const targetLinkResult = normalizeOptionalTrimmedTextField(
+		record.targetLink,
+		'targetLink',
+		id,
+	);
+	if (targetLinkResult.didNormalize) {
+		didNormalize = true;
+	}
+	warnings.push(...targetLinkResult.warnings);
+
 	const completedSequenceIndexesResult = normalizeNonNegativeIntegerList(
 		record.completedSequenceIndexes,
 		'completedSequenceIndexes',
@@ -230,6 +485,28 @@ function normalizeReviewTask(
 		'skippedSequenceIndexes',
 		id,
 	);
+	const allowedCompletedIndexes = completedSequenceIndexesResult.values.filter(
+		(index) => index < intervalValidation.intervals.length,
+	);
+	const allowedSkippedIndexes = skippedSequenceIndexesResult.values.filter(
+		(index) => index < intervalValidation.intervals.length,
+	);
+
+	if (
+		allowedCompletedIndexes.length !== completedSequenceIndexesResult.values.length
+	) {
+		didNormalize = true;
+		warnings.push(
+			`Spaced Review task "${id}" removed out-of-range completedSequenceIndexes.`,
+		);
+	}
+
+	if (allowedSkippedIndexes.length !== skippedSequenceIndexesResult.values.length) {
+		didNormalize = true;
+		warnings.push(
+			`Spaced Review task "${id}" removed out-of-range skippedSequenceIndexes.`,
+		);
+	}
 
 	if (completedSequenceIndexesResult.didNormalize) {
 		didNormalize = true;
@@ -242,6 +519,46 @@ function normalizeReviewTask(
 	warnings.push(
 		...completedSequenceIndexesResult.warnings,
 		...skippedSequenceIndexesResult.warnings,
+	);
+
+	const overlappingSequenceIndexes = allowedSkippedIndexes.filter((index) =>
+		allowedCompletedIndexes.includes(index),
+	);
+	const normalizedSkippedIndexes = allowedSkippedIndexes.filter(
+		(index) => !allowedCompletedIndexes.includes(index),
+	);
+
+	if (overlappingSequenceIndexes.length > 0) {
+		didNormalize = true;
+		warnings.push(
+			`Spaced Review task "${id}" had overlapping completed and skipped sequence indexes; completed indexes were kept and overlapping skipped indexes were removed.`,
+		);
+	}
+
+	const completedDatesBySequenceIndexResult = normalizeActionDateMap(
+		record.completedDatesBySequenceIndex,
+		'completedDatesBySequenceIndex',
+		id,
+		allowedCompletedIndexes,
+	);
+	const skippedDatesBySequenceIndexResult = normalizeActionDateMap(
+		record.skippedDatesBySequenceIndex,
+		'skippedDatesBySequenceIndex',
+		id,
+		normalizedSkippedIndexes,
+	);
+
+	if (completedDatesBySequenceIndexResult.didNormalize) {
+		didNormalize = true;
+	}
+
+	if (skippedDatesBySequenceIndexResult.didNormalize) {
+		didNormalize = true;
+	}
+
+	warnings.push(
+		...completedDatesBySequenceIndexResult.warnings,
+		...skippedDatesBySequenceIndexResult.warnings,
 	);
 
 	const rollingAnchorDate =
@@ -307,12 +624,18 @@ function normalizeReviewTask(
 		title,
 		createdAt,
 		updatedAt,
+		groupPath: groupPathResult.values,
+		note: noteResult.value,
+		targetLink: targetLinkResult.value,
 		startDate,
 		presetId,
 		intervalsSnapshot: [...intervalValidation.intervals],
 		status,
-		completedSequenceIndexes: completedSequenceIndexesResult.values,
-		skippedSequenceIndexes: skippedSequenceIndexesResult.values,
+		completedSequenceIndexes: allowedCompletedIndexes,
+		skippedSequenceIndexes: normalizedSkippedIndexes,
+		completedDatesBySequenceIndex:
+			completedDatesBySequenceIndexResult.values,
+		skippedDatesBySequenceIndex: skippedDatesBySequenceIndexResult.values,
 		rollingAnchorDate: normalizedRollingAnchorDate,
 		completedOccurrenceDisplayOverride,
 		overduePolicyOverride,
@@ -369,13 +692,13 @@ export function normalizeSpacedReviewStore(
 	) {
 		hasUnsupportedFutureVersion = true;
 		didNormalize = true;
-		warnings.push('Spaced Review store schemaVersion was normalized to 1.');
+		warnings.push('Spaced Review store schemaVersion was normalized to 4.');
 		warnings.push(
 			`Unsupported future Spaced Review store schemaVersion ${String(record.schemaVersion)} was detected; runtime will read known fields without persisting changes.`,
 		);
 	} else if (record.schemaVersion !== SPACED_REVIEW_STORE_SCHEMA_VERSION) {
 		markNormalized();
-		warnings.push('Spaced Review store schemaVersion was normalized to 1.');
+		warnings.push('Spaced Review store schemaVersion was normalized to 4.');
 	}
 
 	const tasks: ReviewTask[] = [];

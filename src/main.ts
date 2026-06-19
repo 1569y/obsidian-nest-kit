@@ -1,9 +1,12 @@
-import { Plugin } from 'obsidian';
+import { Plugin, type TFile } from 'obsidian';
 import { FeatureManager } from './core/feature-manager';
 import { FeatureRegistry } from './core/feature-registry';
 import { migrateSettings } from './core/settings-migration';
 import {
+	openCreateSpacedReviewTaskModal,
+	openSpacedReviewOverview,
 	registerSpacedReviewCommands,
+	syncSpacedReviewDailyNote,
 } from './features/spaced-review/commands';
 import { SpacedReviewFeature } from './features/spaced-review';
 import { RightSidebarDrawerFeature } from './features/right-sidebar-drawer';
@@ -12,6 +15,7 @@ import {
 	NestKitSettingTab,
 	type NestKitSettings,
 } from './settings';
+import { getDictionary, type NestKitDictionary } from './i18n';
 
 export const WORKSPACE_PANEL_SYSTEM_FEATURE_ID = 'workspace-panel-system';
 export const SPACED_REVIEW_FEATURE_ID = 'spaced-review';
@@ -20,6 +24,8 @@ export default class NestKitPlugin extends Plugin {
 	settings: NestKitSettings = {
 		...DEFAULT_SETTINGS,
 	};
+	private overviewRibbonButtonEl: HTMLElement | null = null;
+	private dailyNoteSyncRibbonButtonEl: HTMLElement | null = null;
 	private settingsPersistenceAllowed = true;
 	private hasWarnedAboutBlockedSettingsPersistence = false;
 	private readonly featureRegistry = new FeatureRegistry<NestKitSettings>();
@@ -54,11 +60,13 @@ export default class NestKitPlugin extends Plugin {
 		);
 
 		this.addSettingTab(new NestKitSettingTab(this.app, this));
+		this.registerSpacedReviewEditorContextMenu();
 
 		this.applyFeatureSettings();
 	}
 
 	onunload(): void {
+		this.clearSpacedReviewRibbonButtons();
 		this.featureManager.disableAll();
 	}
 
@@ -171,6 +179,7 @@ export default class NestKitPlugin extends Plugin {
 
 	private applyFeatureSettings(): void {
 		this.featureManager.sync(this.settings);
+		this.refreshSpacedReviewRibbonButtons();
 	}
 
 	private async loadSettings(): Promise<void> {
@@ -219,5 +228,123 @@ export default class NestKitPlugin extends Plugin {
 		return this.featureManager.get<SpacedReviewFeature>(
 			SPACED_REVIEW_FEATURE_ID,
 		);
+	}
+
+	private registerSpacedReviewEditorContextMenu(): void {
+		this.registerEvent(
+			this.app.workspace.on('editor-menu', (menu, editor, info) => {
+				if (
+					!this.settings.spacedReviewEnabled ||
+					!this.settings.spacedReviewShowEditorContextMenuItem
+				) {
+					return;
+				}
+
+				const feature = this.getSpacedReviewFeature();
+				if (!feature?.isEnabled()) {
+					return;
+				}
+
+				const file = info.file;
+				if (!this.isMarkdownFile(file)) {
+					return;
+				}
+
+				const dictionary = this.getCurrentDictionary();
+				menu.addItem((item) => {
+					item
+						.setTitle(
+							dictionary.spacedReview.overview.addToSpacedReviewContextMenu,
+						)
+						.setIcon('plus-square')
+						.onClick(() => {
+							const selectedText = editor.getSelection().trim();
+							const initialTitle =
+								selectedText.length > 0 ? selectedText : file.basename;
+							void openCreateSpacedReviewTaskModal(
+								this,
+								() => this.settings,
+								() => this.getSpacedReviewFeature(),
+								{
+									initialTitle,
+									initialTargetLink: file.path,
+								},
+							);
+						});
+				});
+			}),
+		);
+	}
+
+	private refreshSpacedReviewRibbonButtons(): void {
+		this.clearSpacedReviewRibbonButtons();
+		if (!this.settings.spacedReviewEnabled) {
+			return;
+		}
+
+		const feature = this.getSpacedReviewFeature();
+		if (!feature?.isEnabled()) {
+			return;
+		}
+
+		const dictionary = this.getCurrentDictionary();
+		if (this.settings.spacedReviewShowOverviewRibbonButton) {
+			this.overviewRibbonButtonEl = this.addRibbonIcon(
+				'calendar-check',
+				dictionary.spacedReview.overview.openOverviewRibbonTitle,
+				() => {
+					void openSpacedReviewOverview(
+						this,
+						() => this.settings,
+						() => this.getSpacedReviewFeature(),
+					);
+				},
+			);
+		}
+
+		if (this.settings.spacedReviewShowDailyNoteSyncRibbonButton) {
+			this.dailyNoteSyncRibbonButtonEl = this.addRibbonIcon(
+				'refresh-cw',
+				dictionary.spacedReview.overview.syncDailyNoteRibbonTitle,
+				() => {
+					void syncSpacedReviewDailyNote(
+						this,
+						() => this.settings,
+						() => this.getSpacedReviewFeature(),
+					);
+				},
+			);
+		}
+	}
+
+	private clearSpacedReviewRibbonButtons(): void {
+		this.overviewRibbonButtonEl?.remove();
+		this.dailyNoteSyncRibbonButtonEl?.remove();
+		this.overviewRibbonButtonEl = null;
+		this.dailyNoteSyncRibbonButtonEl = null;
+	}
+
+	private getCurrentDictionary(): NestKitDictionary & {
+		spacedReview: {
+			overview: {
+				openOverviewRibbonTitle: string;
+				syncDailyNoteRibbonTitle: string;
+				addToSpacedReviewContextMenu: string;
+			};
+		};
+	} {
+		return getDictionary(this.settings.uiLanguage) as NestKitDictionary & {
+			spacedReview: {
+				overview: {
+					openOverviewRibbonTitle: string;
+					syncDailyNoteRibbonTitle: string;
+					addToSpacedReviewContextMenu: string;
+				};
+			};
+		};
+	}
+
+	private isMarkdownFile(file: TFile | null | undefined): file is TFile {
+		return !!file && file.extension === 'md';
 	}
 }

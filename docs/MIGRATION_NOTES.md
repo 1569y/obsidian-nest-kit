@@ -47,6 +47,99 @@
 - Opening the settings page does not read `.nestkit/spaced-review/tasks.json`.
 - Opening the settings page does not create `.nestkit` or `.nestkit/spaced-review`.
 - The Spaced Review store remains lazy and is only read during create-task or future user-triggered review flows.
+- Phase 3A adds **NestKit: Open spaced review overview** as a separate read-only command.
+- The overview command reads `.nestkit/spaced-review/tasks.json` only when the user actively runs the command.
+- Running the overview command while Spaced Review is disabled shows a notice and does not read the store.
+- The overview modal refresh action re-reads the store without writing it back.
+- Phase 3A does not change the plugin settings schema version.
+- Phase 3A does not change the Spaced Review store schema version.
+- Phase 3A does not create `.nestkit`, does not create `tasks.json`, and does not write Daily Notes.
+- Phase 3A does not add checkbox listeners, right-click menus, workspace panel task cards, dynamic feature tabs, or disabled-tab hiding.
+- The Phase 3A overview UI is now card-based and read-only, rather than exposing a raw field dump.
+- The overview now adds a fixed 7-day week strip around a modal-local `selectedDate` instead of introducing a full calendar view.
+- The previous-week and next-week controls shift the fixed week strip by exactly one week at a time.
+- Selected-date rendering now keeps at most one actionable occurrence per task so the same task does not expand into multiple cards on one date.
+- Overview separator text now stays written as `\u00b7` escapes in source so review exports do not turn middle-dot separators into mojibake.
+- Refresh re-reads the store while preserving the current modal tab and `selectedDate`.
+- The duplicate selected-date caption is removed; the active week chip now carries the selected-date state by itself.
+- The week strip now renders inside a lightweight calendar panel with single-button date chips that stack day number over weekday text and keep tooltip detail for per-day due and overdue counts.
+- A local help toggle now opens a static popover near the title-row help button; it does not fetch, write, or mutate scheduling data.
+- `Today` cards are now intentionally action-focused and no longer render a per-card mini week or review-track strip.
+- Clicking a `Today` card can jump to `All tasks`, temporarily highlight the matching task card, and scroll that card into view after render.
+- The `All tasks` tab now shows localized preset labels, compact progress, compact next-review text, and a read-only per-task review track instead of reusing the current-week mini week.
+- Review-track chips now keep the review number and planned date inside one compact chip so wrapped rows stay readable.
+- The global week strip may still show aggregate due and overdue counts, while compact `Today` cards intentionally avoid extra per-card timeline chrome.
+- The overview layout now keeps Help / Refresh in the title row, places calendar controls and the date selector above the tabs-plus-summary row, and keeps the main modal body in its own scroll region so the whole modal does not jump in height when content grows.
+- The overview title, calendar controls, date selector, tabs, summary badges, and card content now align to a shared content-left axis.
+- The year, month, week, and calendar-icon controls now read more clearly as one grouped positioning cluster, but they are still not full pickers in this phase.
+- The `Today` tab now restores a stable two-column card grid in the modal, while future narrow-surface reuse can still collapse to one column later.
+- The week navigation bar is visually lighter and shorter so it behaves more like compact navigation chrome than a primary card.
+- The compact-polish pass further reduces header-action weight, keeps the title row on the same left axis as the body content, and continues hiding the native close button inside this modal.
+- Hiding the native close button in the Spaced Review Overview is an intentional UI-only design choice; it does not add a replacement close button and does not affect task data, task-store schema, or scheduling semantics.
+- Week-day chips now drop month-day text, `Today` text, and inline count boxes so the strip can stay visually light while weekday headers, tooltips, and selected-day styling still expose enough context.
+- The overview now frames the full date-navigation area as one light calendar panel so the controls and date chips feel visually grouped without changing the modal width.
+- The grouped calendar panel uses a light background, a soft border, compact radius, and fixed-size day chips so switching dates does not change header width or make the card area shift left or right.
+- Today-only day chips now use a light accent background without an added outline, selected chips use a deeper accent fill, and today-plus-selected intentionally resolves to the selected state only.
+- The help popover no longer sits inside the main task-content flow, so opening it does not push cards, tabs, or the calendar panel around.
+- The help content is now intentionally short, removes old date-chip count explanations, large sample rows, and `CAL` placeholder wording, keeps compact `Date`, `Stats`, and built-in `Presets` guidance instead of large button examples, and uses accent-colored section titles to separate the three blocks more clearly.
+- The legend now explains the light-blue today chip, the deeper selected-date chip, the calendar controls, and the semantic difference between real-today counts and selected-date overdue counts.
+- `Today` cards now hide preset and carried-to-today wording, keep one metadata line, and still use completed-over-total progress only in `All tasks`.
+- Review-track chips now keep a bold review number plus an inline date, the current actionable chip is more prominent, future chips are muted, and the week-navigation arrows are visually centered within their buttons.
+- This round intentionally leaves `All tasks` review-track rendering and state mapping unchanged, aside from shared outer layout alignment.
+- The overview's internal scroll container now hides only its own scrollbar visual while preserving wheel scrolling, so `Today` and `All tasks` keep the same visible outer width when switching tabs.
+- Phase 3B adds minimal complete and skip actions for actionable `Today` cards only; `All tasks` stays read-only and summary-focused in this first write-enabled pass.
+- Those overview actions reuse the existing store normalization boundary plus the pure `completeOccurrence(...)` and `skipOccurrence(...)` helpers, rather than changing the scheduling algorithm or the store schema.
+- This round extends the Spaced Review store schema with optional `completedDatesBySequenceIndex` and `skippedDatesBySequenceIndex` maps on each task.
+- Phase 3D extends each task again with optional `groupPath?: string[]` for lightweight group and subgroup organization in `All tasks`.
+- That grouping round bumps the Spaced Review store schema from `2` to `3`, because older schema-`2` writers would otherwise drop the new optional `groupPath` field during normalization and overwrite persisted grouping data.
+- No manual forced migration is required for existing tasks; tasks without `groupPath` still load normally and render under localized `Ungrouped`.
+- `groupPath` normalization keeps at most two levels, trims each label, collapses internal spaces, removes empty labels, ignores subgroup-only input without a top-level group, and removes invalid non-string entries.
+- Grouping does not change `presetId`, `intervalsSnapshot`, scheduling, `Today` ordering, complete or skip behavior, or the persisted completed or skipped action-date maps.
+- Duplicate-title validation is now scoped to normalized `groupPath` for non-archived tasks, so identical task names can coexist in different groups without changing task ids or schedule semantics.
+- Phase 3E bumps the Spaced Review store schema from `3` to `4`.
+- The schema-`4` bump is required because older schema-`3` writers do not know about optional `note` and `targetLink` fields and would otherwise normalize them away on write.
+- No manual forced migration is required for existing tasks; older tasks without `note` or `targetLink` still load normally and simply keep those fields undefined.
+- `note` is an optional plain-text field with outer-trim normalization and normalized line endings.
+- `targetLink` is an optional Obsidian linktext field with lightweight outer-trim normalization only.
+- Manual archive and restore reuse the existing `archived` task status; this round does not introduce auto-archive behavior or a new task-status family.
+- Archiving preserves `groupPath`, `note`, `targetLink`, `intervalsSnapshot`, completed or skipped indexes, and completed or skipped action-date maps.
+- This round does not change scheduling algorithms, `intervalsSnapshot` semantics, fixed versus rolling behavior, due or overdue derivation, complete versus skip semantics, or calendar-selector logic.
+- This round does not create new sidecar files beyond the existing store path and does not require users to create `.nestkit` or edit `tasks.json` manually.
+- Notes, target links, archived view, and top-level group chips are now implemented; later roadmap remains limited to auto-archive, richer target-link pickers, multiple links, side outline navigation, and right-sidebar narrow-view reuse.
+- The follow-up Phase 3E UI/UX polish does not add another store-schema bump.
+- Edit-task v1 is intentionally metadata-only: it updates title, group, subgroup, note, target link, and `updatedAt`, but it does not rewrite preset choice, custom intervals, start date, scheduling policy, `intervalsSnapshot`, or completed/skipped records.
+- The create-modal layout, target-link suggest, archived hint copy, compact action rows, and scoped focus-ring polish are all UI-layer changes only.
+- The follow-up polish keeps schedule logic, `groupPath` storage shape, completed/skipped semantics, and `intervalsSnapshot` semantics unchanged.
+- This UI/UX pass further narrows the group and subgroup combo behavior so custom text inputs stay hidden until `Add group...` or `Add subgroup...` is explicitly selected.
+- This pass also keeps `targetLink` storage unchanged while fixing suggest-item click selection and preserving manual heading or block suffix entry after a path is chosen.
+- `All tasks` no longer uses a top `Note` action, and management actions now render as lightweight text links rather than pill buttons.
+- Note expansion remains modal-local only and now appears only for longer notes, while short notes stay as plain preview text.
+- Scoped focus cleanup is still UI-only: mouse or programmatic button focus is blurred inside the Spaced Review modals, while keyboard `focus-visible` remains available for accessibility.
+- This rollback pass simplifies the modal again, keeps the same store shape, and intentionally does not change schedule, archive, or note-storage semantics.
+- The group and subgroup inputs remain optional, but the UI now favors a tighter dropdown-plus-input rhythm over extra action-mode controls.
+- Notes are preview-only again in this pass, and the note expand/collapse affordance is intentionally removed.
+- The follow-up Phase 3E layout and hierarchy pass is still UI-only: it does not change schema, schedule logic, `groupPath`, completed or skipped records, archive semantics, or target-link storage.
+- This layout pass changes only presentation: managed cards now use a fixed right action rail, duplicate `Next xx` corner text is removed, and longer notes may expand again through modal-local UI state only.
+- The follow-up polish in the same phase still remains UI-only: it refines default empty dropdown selection in create mode and tightens the action-rail spacing plus underline treatment without changing persistence or scheduling behavior.
+- This compact action-rail follow-up is also CSS-layout only: it replaces the stretched `1fr` rail rows with a compact fixed-width flex column and does not touch schema, store normalization, scheduling, or task semantics.
+- The computed-style cleanup follow-up is still UI-only: it removes `All tasks` and `Archived` rail actions from the old managed button classes, adds a dedicated scoped `rail-action` reset, and leaves `Today` button semantics unchanged.
+- The same cleanup also adds a dedicated `task-action-rail` and `action-slot` wrapper so the managed rail keeps stable computed sizing even when theme button styles are broad.
+- The spacing-balance follow-up is still CSS-only: it increases the managed rail gap by another small step on top of the prior compact-fix cleanup, while keeping the same rail width, card grid, and line-height.
+- This rolling-track date fix is a schedule and preview calculation bugfix only.
+- Custom overview labels are now derived from existing `intervalsSnapshot` data plus built-in preset comparison; no new schema field is introduced.
+- Duplicate review-task title protection now blocks non-archived duplicates without changing task ids, scheduling logic, or persisted schema shape.
+- Phase 3B still does not auto-archive the last completed task, does not change progress to count skipped steps, and does not add optimistic UI.
+- No manual forced migration is required for existing tasks; older tasks that lack these optional maps still load normally.
+- Store normalization now filters action-date maps to valid in-range sequence indexes and valid `YYYY-MM-DD` values only.
+- New complete or skip actions now persist real action dates into those maps.
+- When a persisted action date is missing, the overview still falls back to symbol-only `✓` or `>` instead of inventing dates from planned or rolling preview values.
+- The new year, month, and week selector popovers are modal-local UI navigation only and do not change store normalization, persistence shape, or scheduling algorithms.
+- The week selector continues using the existing Sunday-based overview week logic; this round does not add a Sunday/Monday setting or an ISO-week rewrite.
+- The track symbol display in `All tasks` is a UI-only change: visible chips now prefer status symbols over sequence numbers, while the underlying store and scheduling semantics remain unchanged.
+- A `week starts on Sunday / Monday` setting remains intentionally deferred to a later dedicated task and is not included in this Phase 3A UI polish.
+- Full year or month dropdowns, week selectors, and arbitrary date-jump UI remain intentionally deferred to a later dedicated task and are not included in this Phase 3A UI polish.
+- The compact card layout is intentionally narrow-surface friendly, but this phase still does not connect the overview to the right sidebar.
+- A full calendar-style view remains deferred to a later spaced-review phase or a dedicated calendar module.
 - The Phase 2.5 **What's New** content is local static text only and does not fetch GitHub.
 - The existing language setting is reused by the Phase 2.5 top action; no new language schema field is added.
 - Phase 2.5 does not change the settings schema version.
@@ -88,3 +181,67 @@
 - `spacerOnly` was not sufficient on its own.
 - The root header container no-drag rule must remain alongside the spacer fix.
 - During manual plugin testing, disable the legacy CSS snippet so the snippet and plugin stylesheet are not loaded at the same time.
+
+- Phase 3F keeps the task store schema unchanged and does not change scheduling algorithms.
+- Phase 3F adds plugin-settings fields for Daily Note sync enablement, folder, date format, section heading, create-if-missing behavior, sync mode, group-jump chip visibility, and archived-view visibility.
+- Legacy `spacedReviewManagedBlockHeading` values are treated as the fallback source for the new Daily Note section-heading setting during migration.
+- Existing users still default to Daily Note sync disabled unless they enable it in settings.
+- Daily Note marker blocks are output-only note content and do not change task-store semantics or completed/skipped persistence.
+- This polish round does not add a task-store migration and does not change scheduling, completed/skipped semantics, or group-path behavior.
+- This polish round only fixes Daily Note output encoding, readable fallback-heading behavior, and folder-path documentation for the existing 3F sync flow.
+- Daily Note folder creation remains manual in v1: missing folders raise a Notice and are documented rather than auto-created by the sync path.
+- This 3G follow-up still does not add a task-store schema migration.
+- Generated Daily Note lines now include a hidden `NESTKIT_SR` identity marker so checked items can be imported safely on the next sync.
+- Older generated Daily Note lines without that identity marker cannot be imported as completed, but they are replaced on the next sync rewrite.
+- Duplicate Daily Note marker blocks are cleaned on the next sync rather than left to accumulate.
+- This round still does not change the scheduling algorithm.
+- This 3H follow-up still does not add a task-store schema migration and does not change scheduling, completed/skipped persistence semantics, or group-path schema.
+- Generated Daily Note lines no longer append inline `NESTKIT_SR` identity markers; the next sync rewrite removes those old inline markers from managed output.
+- Identity for checkbox import now lives in a managed metadata block inside the existing Daily Note START and END marker section.
+- If the metadata block is missing or invalid, import skips safely and the next successful sync rebuilds metadata.
+- New plugin settings fields were added for overview ribbon visibility, Daily Note sync ribbon visibility, and Markdown editor context-menu visibility.
+- This follow-up does not add a file watcher, checkbox live listener, background polling, or automatic archive behavior.
+- The Phase 3I Daily Note polish still does not add a task-store schema migration and does not change scheduling, completed/skipped semantics, or group-path storage.
+- Daily Note managed output is now fully clean in Live Preview: sync rewrites the START/END block to visible checkbox task lines only, with no metadata block and no inline identity marker.
+- Existing `%% NESTKIT_SPACED_REVIEW_META ... %%` content is removed on the next sync rewrite.
+- Existing inline `<!-- NESTKIT_SR ... -->` identity markers are also removed on the next sync rewrite.
+- Checkbox import now depends on managed line order: checked line index maps to the current actionable Today item at the same index during sync.
+- Users should not manually reorder lines inside the managed Daily Note section if they want checkbox import to remain accurate.
+- This follow-up keeps the same command-driven sync model and still does not add live checkbox watching, vault-wide listeners, file watchers, or background polling.
+- The Markdown editor context menu now uses one clearer `Add to spaced review` / `加入复习任务` entry instead of keeping two near-duplicate task-creation labels.
+- The Phase 3J Daily Note polish still does not add a task-store schema migration and does not change scheduling, completed/skipped semantics, or group-path storage.
+- Daily Note managed output is now heading-only: sync no longer generates START or END marker comments, metadata blocks, or inline identity markers.
+- Existing START/END marker blocks are cleaned on the next sync rewrite.
+- Existing metadata blocks are cleaned on the next sync rewrite.
+- Existing inline identity markers are cleaned on the next sync rewrite.
+- Checkbox import now depends on the configured heading section plus managed task-line order within that section.
+- Users should not manually reorder lines inside the managed heading section if they want checkbox import to remain accurate.
+- This follow-up still does not add live checkbox watching, file watchers, background polling, or any schedule or store-schema migration.
+- Phase 3K upgrades the Daily Note target setting from a single heading to `spacedReviewDailyNoteSectionPath`.
+- Legacy `spacedReviewDailyNoteSectionHeading` values now migrate forward as a single-line section path, and the older field remains only as a compatibility fallback.
+- The section-path setting accepts one heading label per line, so users can target nested sections such as `Task` then `雅思` without manually counting heading levels.
+- Plain-text multi-line paths are converted to nested headings automatically, while explicit Markdown headings such as `# Task` and `## IELTS` keep their declared levels.
+- Daily Note sync now writes review items under the final heading in that resolved section path and creates missing child headings inside an existing parent section when needed.
+- Checkbox import is now more defensive: it tries visible-line text matching first, falls back to the same managed line index only when needed, and stops rewrite entirely when checked lines cannot be matched safely.
+- This follow-up still does not change task-store schema, schedule semantics, completed/skipped meaning, or add any live checkbox watcher, file watcher, or background polling.
+- Phase 3L adds three plugin-settings fields while keeping the plugin settings schema at `1`:
+  - `spacedReviewTargetLinkOpenMode`
+  - `spacedReviewIncludeTodayAsFirstReview`
+  - `spacedReviewCustomPresets`
+- Missing older settings data normalizes those new fields to defaults without requiring a separate schema bump.
+- `spacedReviewTargetLinkOpenMode` only changes how target links open from Spaced Review actions; it does not change stored link text or task schema.
+- `spacedReviewDailyNoteLinksUseOpenMode` is a new opt-in plugin setting and defaults to `false`, so existing Daily Note wiki-link behaviour stays unchanged unless the user enables it.
+- Earlier 3N and 3O attempts used click interception so Daily Note review links could follow `spacedReviewTargetLinkOpenMode`, but that is no longer the current runtime design.
+- This Live Preview hit-fix round adds no new settings migration and does not change the default for `spacedReviewDailyNoteLinksUseOpenMode`.
+- The 3P follow-up keeps the same setting key and default, but changes its meaning: it now controls whether generated Daily Note review links use regular wiki links or Obsidian URI Markdown links.
+- This round does not change the Spaced Review store schema and does not change scheduling behavior.
+- Existing Daily Note lines are rewritten on the next sync according to the current setting, without a task-store schema migration or schedule change.
+- Users who prefer native wiki-link behavior and backlinks can keep the setting disabled, while users who want stable single-click new-tab opening in Daily Notes can enable it.
+- Historical START and END marker blocks generated by earlier Spaced Review Daily Note sync versions may still be cleaned on the next sync rewrite as part of legacy managed-block cleanup.
+- Current versions no longer generate START or END markers, metadata blocks, or inline identity markers in managed Daily Note output.
+- Regular content outside NestKit-managed historical marker blocks is not intended to be removed; users who need old managed block content should copy it out before syncing, or a narrower migration strategy can be added later.
+- `spacedReviewIncludeTodayAsFirstReview` affects only newly created tasks and does not rewrite existing `intervalsSnapshot` arrays.
+- Custom presets stay in plugin settings as a textarea string, are parsed on demand, and do not introduce a task-store schema migration.
+- Existing tasks continue to rely on their saved `intervalsSnapshot`, even if a related custom preset is later edited or removed from settings.
+- The create-task preset-switch preservation fix is UI-only: it keeps in-progress modal state across rerenders without changing schedule semantics, task storage, or migration requirements.
+- This phase does not change the Spaced Review store schema version and does not add a schedule migration.

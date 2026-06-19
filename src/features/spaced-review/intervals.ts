@@ -40,7 +40,8 @@ export function validateReviewIntervals(
 
 	const intervals: number[] = [];
 
-	for (const value of input) {
+	for (let index = 0; index < input.length; index += 1) {
+		const value = input[index] as unknown;
 		if (typeof value !== 'number' || !Number.isInteger(value)) {
 			warnings.push('Review intervals must use integers only.');
 			return {
@@ -49,8 +50,20 @@ export function validateReviewIntervals(
 			};
 		}
 
-		if (value <= 0) {
-			warnings.push('Review intervals must contain positive integers only.');
+		if (value < 0) {
+			warnings.push(
+				'Review intervals must contain non-negative integers only.',
+			);
+			return {
+				intervals: [],
+				warnings,
+			};
+		}
+
+		if (value === 0 && index !== 0) {
+			warnings.push(
+				'Review interval 0 is only allowed as the first review day.',
+			);
 			return {
 				intervals: [],
 				warnings,

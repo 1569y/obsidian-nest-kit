@@ -6,12 +6,18 @@ import {
 } from './i18n';
 import {
 	DEFAULT_REVIEW_PRESET_ID,
+	getBuiltInReviewPresetName,
 	getBuiltInReviewPresets,
+	getPresetDisplayLabel,
+	parseCustomReviewPresets,
+	withTodayAsFirstReview,
 } from './features/spaced-review/presets';
 import type {
 	CompletedOccurrenceDisplay,
+	DailyNoteSyncMode,
 	OverduePolicy,
 	ScheduleMode,
+	TargetLinkOpenMode,
 } from './features/spaced-review/types';
 import type NestKitPlugin from './main';
 
@@ -36,8 +42,6 @@ interface NumericSettingLimit {
 	step: number;
 	unit: 'px' | 'ms' | '%';
 }
-
-type ReviewPlanSettingValue = 'catchUp' | 'fixed';
 
 type SettingsTabId = 'general' | 'workspace-panel' | 'spaced-review' | 'about';
 
@@ -91,6 +95,13 @@ interface SpacedReviewSettingsDictionaryExtension {
 		spacedReview: {
 			name: string;
 			description: string;
+			dailyNote: {
+				heading: string;
+			};
+			enableDailyNoteSync: {
+				name: string;
+				description: string;
+			};
 			dailyNoteFolder: {
 				name: string;
 				description: string;
@@ -99,34 +110,95 @@ interface SpacedReviewSettingsDictionaryExtension {
 				name: string;
 				description: string;
 			};
-			managedBlockHeading: {
+			dailyNoteSectionHeading: {
 				name: string;
 				description: string;
+			};
+			dailyNoteSectionPath: {
+				name: string;
+				description: string;
+				placeholderTop: string;
+				placeholderBottom: string;
+			};
+			dailyNoteCreateIfMissing: {
+				name: string;
+				description: string;
+			};
+			dailyNoteSyncMode: {
+				name: string;
+				description: string;
+				manualOnly: string;
+				onOverviewOpen: string;
 			};
 			defaultPreset: {
 				name: string;
 				description: string;
 			};
-			completedDisplay: {
+			includeTodayAsFirstReview: {
 				name: string;
 				description: string;
-				remove: string;
-				keepChecked: string;
 			};
-			reviewPlan: {
+			customPresets: {
+				heading: string;
 				name: string;
 				description: string;
-				catchUp: string;
-				fixed: string;
+				placeholderTop: string;
+				placeholderBottom: string;
+				invalidLines: (lines: string) => string;
+			};
+			targetLink: {
+				heading: string;
+				openMode: {
+					name: string;
+					description: string;
+					current: string;
+					newTab: string;
+				};
+				dailyNoteLinksUseOpenMode: {
+					name: string;
+					description: string;
+				};
 			};
 			showOverdueBadge: {
 				name: string;
 				description: string;
 			};
+			showGroupJumpChips: {
+				name: string;
+				description: string;
+			};
+			showArchivedView: {
+				name: string;
+				description: string;
+			};
+			showOverviewRibbonButton: {
+				name: string;
+				description: string;
+			};
+			showDailyNoteSyncRibbonButton: {
+				name: string;
+				description: string;
+			};
+			showEditorContextMenuItem: {
+				name: string;
+				description: string;
+			};
 			presetOptions: {
-				fastReview: string;
+				quickReview: string;
 				standardReview: string;
 				longTermMemory: string;
+			};
+			timelineMode: {
+				name: string;
+				description: string;
+				fixedTimeline: string;
+				rollingTimeline: string;
+			};
+			missedReviewPolicy: {
+				name: string;
+				description: string;
+				carryOver: string;
+				skip: string;
 			};
 		};
 	};
@@ -227,14 +299,27 @@ export interface NestKitSettings {
 	rightSidebarPinTopPx: number;
 	rightSidebarPinRightPx: number;
 	spacedReviewEnabled: boolean;
+	spacedReviewDailyNoteSyncEnabled: boolean;
 	spacedReviewDailyNoteFolder: string;
 	spacedReviewDailyNoteDateFormat: string;
-	spacedReviewManagedBlockHeading: string;
+	spacedReviewDailyNoteSectionHeading: string;
+	spacedReviewDailyNoteSectionPath: string;
+	spacedReviewDailyNoteCreateIfMissing: boolean;
+	spacedReviewDailyNoteSyncMode: DailyNoteSyncMode;
 	spacedReviewDefaultPresetId: string;
+	spacedReviewIncludeTodayAsFirstReview: boolean;
+	spacedReviewCustomPresets: string;
+	spacedReviewTargetLinkOpenMode: TargetLinkOpenMode;
+	spacedReviewDailyNoteLinksUseOpenMode: boolean;
 	spacedReviewCompletedOccurrenceDisplay: CompletedOccurrenceDisplay;
 	spacedReviewOverduePolicy: OverduePolicy;
 	spacedReviewScheduleMode: ScheduleMode;
 	spacedReviewShowOverdueBadge: boolean;
+	spacedReviewShowGroupJumpChips: boolean;
+	spacedReviewShowArchivedView: boolean;
+	spacedReviewShowOverviewRibbonButton: boolean;
+	spacedReviewShowDailyNoteSyncRibbonButton: boolean;
+	spacedReviewShowEditorContextMenuItem: boolean;
 }
 
 export const DEFAULT_SETTINGS: NestKitSettings = {
@@ -256,14 +341,27 @@ export const DEFAULT_SETTINGS: NestKitSettings = {
 	rightSidebarPinTopPx: 6,
 	rightSidebarPinRightPx: 8,
 	spacedReviewEnabled: false,
+	spacedReviewDailyNoteSyncEnabled: false,
 	spacedReviewDailyNoteFolder: '',
 	spacedReviewDailyNoteDateFormat: 'YYYY-MM-DD',
-	spacedReviewManagedBlockHeading: '\u4eca\u65e5\u590d\u4e60',
+	spacedReviewDailyNoteSectionHeading: '\u95f4\u9694\u590d\u4e60',
+	spacedReviewDailyNoteSectionPath: '\u95f4\u9694\u590d\u4e60',
+	spacedReviewDailyNoteCreateIfMissing: true,
+	spacedReviewDailyNoteSyncMode: 'manualOnly',
 	spacedReviewDefaultPresetId: DEFAULT_REVIEW_PRESET_ID,
+	spacedReviewIncludeTodayAsFirstReview: false,
+	spacedReviewCustomPresets: '',
+	spacedReviewTargetLinkOpenMode: 'newTab',
+	spacedReviewDailyNoteLinksUseOpenMode: false,
 	spacedReviewCompletedOccurrenceDisplay: 'remove',
 	spacedReviewOverduePolicy: 'carryOver',
 	spacedReviewScheduleMode: 'rollingTimeline',
 	spacedReviewShowOverdueBadge: true,
+	spacedReviewShowGroupJumpChips: true,
+	spacedReviewShowArchivedView: true,
+	spacedReviewShowOverviewRibbonButton: true,
+	spacedReviewShowDailyNoteSyncRibbonButton: false,
+	spacedReviewShowEditorContextMenuItem: true,
 };
 
 interface SliderSettingConfig {
@@ -617,6 +715,197 @@ export class NestKitSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.defaultPreset.name)
+			.setDesc(dictionary.settings.spacedReview.defaultPreset.description)
+			.addDropdown((dropdown) => {
+				for (const preset of getBuiltInReviewPresets()) {
+					dropdown.addOption(
+						preset.id,
+						this.getPresetLabel(
+							preset.id,
+							dictionary,
+							this.plugin.settings.spacedReviewIncludeTodayAsFirstReview,
+						),
+					);
+				}
+
+				dropdown
+					.setValue(this.plugin.settings.spacedReviewDefaultPresetId)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewDefaultPresetId',
+							value,
+						);
+					});
+			});
+
+		new Setting(containerEl)
+			.setName(
+				dictionary.settings.spacedReview.includeTodayAsFirstReview.name,
+			)
+			.setDesc(
+				dictionary.settings.spacedReview.includeTodayAsFirstReview.description,
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(
+						this.plugin.settings.spacedReviewIncludeTodayAsFirstReview,
+					)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewIncludeTodayAsFirstReview',
+							value,
+						);
+						this.display();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.customPresets.heading)
+			.setHeading();
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.customPresets.name)
+			.setDesc(dictionary.settings.spacedReview.customPresets.description)
+			.addTextArea((text) => {
+				text
+					.setPlaceholder(
+						`${dictionary.settings.spacedReview.customPresets.placeholderTop}\n${dictionary.settings.spacedReview.customPresets.placeholderBottom}`,
+					)
+					.setValue(this.plugin.settings.spacedReviewCustomPresets)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewCustomPresets',
+							value,
+						);
+					});
+				text.inputEl.rows = 4;
+				text.inputEl.addClass('nest-kit-settings__textarea');
+			});
+		const customPresetParseResult = parseCustomReviewPresets(
+			this.plugin.settings.spacedReviewCustomPresets,
+		);
+		if (customPresetParseResult.invalidLines.length > 0) {
+			containerEl.createEl('p', {
+				cls: 'nest-kit-settings__helper-text',
+				text: dictionary.settings.spacedReview.customPresets.invalidLines(
+					customPresetParseResult.invalidLines.join(', '),
+				),
+			});
+		}
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.targetLink.heading)
+			.setHeading();
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.targetLink.openMode.name)
+			.setDesc(
+				dictionary.settings.spacedReview.targetLink.openMode.description,
+			)
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption(
+						'current',
+						dictionary.settings.spacedReview.targetLink.openMode.current,
+					)
+					.addOption(
+						'newTab',
+						dictionary.settings.spacedReview.targetLink.openMode.newTab,
+					)
+					.setValue(this.plugin.settings.spacedReviewTargetLinkOpenMode)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewTargetLinkOpenMode',
+							value as TargetLinkOpenMode,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(
+				dictionary.settings.spacedReview.targetLink.dailyNoteLinksUseOpenMode.name,
+			)
+			.setDesc(
+				dictionary.settings.spacedReview.targetLink.dailyNoteLinksUseOpenMode.description,
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(
+						this.plugin.settings.spacedReviewDailyNoteLinksUseOpenMode,
+					)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewDailyNoteLinksUseOpenMode',
+							value,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.timelineMode.name)
+			.setDesc(dictionary.settings.spacedReview.timelineMode.description)
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption(
+						'fixedTimeline',
+						dictionary.settings.spacedReview.timelineMode.fixedTimeline,
+					)
+					.addOption(
+						'rollingTimeline',
+						dictionary.settings.spacedReview.timelineMode.rollingTimeline,
+					)
+					.setValue(this.plugin.settings.spacedReviewScheduleMode)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewScheduleMode',
+							value as ScheduleMode,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.missedReviewPolicy.name)
+			.setDesc(dictionary.settings.spacedReview.missedReviewPolicy.description)
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption(
+						'carryOver',
+						dictionary.settings.spacedReview.missedReviewPolicy.carryOver,
+					)
+					.addOption(
+						'skip',
+						dictionary.settings.spacedReview.missedReviewPolicy.skip,
+					)
+					.setValue(this.plugin.settings.spacedReviewOverduePolicy)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewOverduePolicy',
+							value as OverduePolicy,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.dailyNote.heading)
+			.setHeading();
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.enableDailyNoteSync.name)
+			.setDesc(dictionary.settings.spacedReview.enableDailyNoteSync.description)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.spacedReviewDailyNoteSyncEnabled)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewDailyNoteSyncEnabled',
+							value,
+						);
+						this.display();
+					}),
+			);
+
+		new Setting(containerEl)
 			.setName(dictionary.settings.spacedReview.dailyNoteFolder.name)
 			.setDesc(dictionary.settings.spacedReview.dailyNoteFolder.description)
 			.addText((text) =>
@@ -649,84 +938,152 @@ export class NestKitSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName(dictionary.settings.spacedReview.managedBlockHeading.name)
+			.setName(dictionary.settings.spacedReview.dailyNoteSectionPath.name)
 			.setDesc(
-				dictionary.settings.spacedReview.managedBlockHeading.description,
+				dictionary.settings.spacedReview.dailyNoteSectionPath.description,
 			)
-			.addText((text) =>
+			.addTextArea((text) => {
 				text
-					.setPlaceholder(dictionary.settings.spacedReview.name)
-					.setValue(this.plugin.settings.spacedReviewManagedBlockHeading)
+					.setPlaceholder(
+						`${dictionary.settings.spacedReview.dailyNoteSectionPath.placeholderTop}\n${dictionary.settings.spacedReview.dailyNoteSectionPath.placeholderBottom}`,
+					)
+					.setValue(
+						this.plugin.settings.spacedReviewDailyNoteSectionPath,
+					)
 					.onChange(async (value) => {
 						await this.plugin.updateSetting(
-							'spacedReviewManagedBlockHeading',
-							value,
-						);
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName(dictionary.settings.spacedReview.defaultPreset.name)
-			.setDesc(dictionary.settings.spacedReview.defaultPreset.description)
-			.addDropdown((dropdown) => {
-				for (const preset of getBuiltInReviewPresets()) {
-					dropdown.addOption(
-						preset.id,
-						this.getPresetLabel(preset.id, dictionary),
-					);
-				}
-
-				dropdown
-					.setValue(this.plugin.settings.spacedReviewDefaultPresetId)
-					.onChange(async (value) => {
-						await this.plugin.updateSetting(
-							'spacedReviewDefaultPresetId',
+							'spacedReviewDailyNoteSectionPath',
 							value,
 						);
 					});
+				text.inputEl.rows = 3;
+				text.inputEl.addClass('nest-kit-settings__textarea');
 			});
 
 		new Setting(containerEl)
-			.setName(dictionary.settings.spacedReview.completedDisplay.name)
-			.setDesc(dictionary.settings.spacedReview.completedDisplay.description)
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption(
-						'remove',
-						dictionary.settings.spacedReview.completedDisplay.remove,
-					)
-					.addOption(
-						'keepChecked',
-						dictionary.settings.spacedReview.completedDisplay.keepChecked,
-					)
+			.setName(
+				dictionary.settings.spacedReview.dailyNoteCreateIfMissing.name,
+			)
+			.setDesc(
+				dictionary.settings.spacedReview.dailyNoteCreateIfMissing.description,
+			)
+			.addToggle((toggle) =>
+				toggle
 					.setValue(
-						this.plugin.settings.spacedReviewCompletedOccurrenceDisplay,
+						this.plugin.settings.spacedReviewDailyNoteCreateIfMissing,
 					)
 					.onChange(async (value) => {
 						await this.plugin.updateSetting(
-							'spacedReviewCompletedOccurrenceDisplay',
-							value as CompletedOccurrenceDisplay,
+							'spacedReviewDailyNoteCreateIfMissing',
+							value,
 						);
 					}),
 			);
 
 		new Setting(containerEl)
-			.setName(dictionary.settings.spacedReview.reviewPlan.name)
-			.setDesc(dictionary.settings.spacedReview.reviewPlan.description)
+			.setName(dictionary.settings.spacedReview.dailyNoteSyncMode.name)
+			.setDesc(dictionary.settings.spacedReview.dailyNoteSyncMode.description)
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOption(
-						'catchUp',
-						dictionary.settings.spacedReview.reviewPlan.catchUp,
+						'manualOnly',
+						dictionary.settings.spacedReview.dailyNoteSyncMode.manualOnly,
 					)
 					.addOption(
-						'fixed',
-						dictionary.settings.spacedReview.reviewPlan.fixed,
+						'onOverviewOpen',
+						dictionary.settings.spacedReview.dailyNoteSyncMode.onOverviewOpen,
 					)
-					.setValue(this.getReviewPlanValue())
+					.setValue(this.plugin.settings.spacedReviewDailyNoteSyncMode)
 					.onChange(async (value) => {
-						await this.plugin.updateSpacedReviewPlan(
-							value as ReviewPlanSettingValue,
+						await this.plugin.updateSetting(
+							'spacedReviewDailyNoteSyncMode',
+							value as DailyNoteSyncMode,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.showGroupJumpChips.name)
+			.setDesc(
+				dictionary.settings.spacedReview.showGroupJumpChips.description,
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.spacedReviewShowGroupJumpChips)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewShowGroupJumpChips',
+							value,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.showArchivedView.name)
+			.setDesc(dictionary.settings.spacedReview.showArchivedView.description)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.spacedReviewShowArchivedView)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+						'spacedReviewShowArchivedView',
+							value,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.showOverviewRibbonButton.name)
+			.setDesc(
+				dictionary.settings.spacedReview.showOverviewRibbonButton.description,
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(
+						this.plugin.settings.spacedReviewShowOverviewRibbonButton,
+					)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewShowOverviewRibbonButton',
+							value,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(
+				dictionary.settings.spacedReview.showDailyNoteSyncRibbonButton.name,
+			)
+			.setDesc(
+				dictionary.settings.spacedReview.showDailyNoteSyncRibbonButton.description,
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(
+						this.plugin.settings.spacedReviewShowDailyNoteSyncRibbonButton,
+					)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewShowDailyNoteSyncRibbonButton',
+							value,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.spacedReview.showEditorContextMenuItem.name)
+			.setDesc(
+				dictionary.settings.spacedReview.showEditorContextMenuItem.description,
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(
+						this.plugin.settings.spacedReviewShowEditorContextMenuItem,
+					)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'spacedReviewShowEditorContextMenuItem',
+							value,
 						);
 					}),
 			);
@@ -872,27 +1229,47 @@ export class NestKitSettingTab extends PluginSettingTab {
 		)}.`;
 	}
 
-	private getReviewPlanValue(): ReviewPlanSettingValue {
-		return this.plugin.settings.spacedReviewOverduePolicy === 'skip' &&
-			this.plugin.settings.spacedReviewScheduleMode === 'fixedTimeline'
-			? 'fixed'
-			: 'catchUp';
-	}
-
 	private getPresetLabel(
 		presetId: string,
 		dictionary: NestKitDictionary & SpacedReviewSettingsDictionaryExtension,
+		includeTodayAsFirstReview = false,
 	): string {
-		switch (presetId) {
-			case 'fast-review':
-				return dictionary.settings.spacedReview.presetOptions.fastReview;
-			case 'standard-review':
-				return dictionary.settings.spacedReview.presetOptions.standardReview;
-			case 'long-term-memory':
-				return dictionary.settings.spacedReview.presetOptions.longTermMemory;
-			default:
-				return presetId;
+		const preset = getBuiltInReviewPresets().find(
+			(entry) => entry.id === presetId,
+		);
+		if (!preset) {
+			return presetId;
 		}
+
+		return getPresetDisplayLabel({
+			name: getBuiltInReviewPresetName(presetId, {
+				quickReview: dictionary.settings.spacedReview.presetOptions.quickReview,
+				standardReview:
+					dictionary.settings.spacedReview.presetOptions.standardReview,
+				longTermMemory:
+					dictionary.settings.spacedReview.presetOptions.longTermMemory,
+			}),
+			intervals: withTodayAsFirstReview(
+				preset.intervals,
+				includeTodayAsFirstReview,
+			),
+		});
+	}
+
+	private getPresetIntervalsLabel(
+		presetId: string,
+		includeTodayAsFirstReview: boolean,
+	): string {
+		const preset = getBuiltInReviewPresets().find((entry) => entry.id === presetId);
+		if (!preset) {
+			return '';
+		}
+
+		const intervals =
+			includeTodayAsFirstReview && preset.intervals[0] !== 0
+				? [0, ...preset.intervals]
+				: preset.intervals;
+		return intervals.join(' · ');
 	}
 }
 

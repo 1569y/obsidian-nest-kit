@@ -26,7 +26,7 @@ export const zhCnDictionary = {
 			phase25:
 				'\u5df2\u52a0\u5165\u8bbe\u7f6e\u9875\u5206\u7ec4\u4e0e\u8f7b\u91cf\u5316\u7ea6\u675f\u3002',
 			later:
-				'\u4efb\u52a1\u603b\u89c8\u4e0e Daily Note \u6e32\u67d3\u5c06\u5728\u540e\u7eed\u9636\u6bb5\u52a0\u5165\u3002',
+				'\u95f4\u9694\u590d\u4e60\u5df2\u63a5\u5165\u603b\u89c8\u7ba1\u7406\u4e0e Daily Note \u540c\u6b65\u3002',
 		},
 		about: {
 			title: '\u5173\u4e8e',
@@ -73,26 +73,83 @@ export const zhCnDictionary = {
 		spacedReview: {
 			name: '\u95f4\u9694\u590d\u4e60',
 			description:
-				'\u4e3a\u540e\u7eed\u7684\u603b\u89c8\u4e0e Daily Note \u529f\u80fd\u914d\u7f6e\u9ed8\u8ba4\u590d\u4e60\u9009\u9879\u3002',
+				'\u914d\u7f6e\u95f4\u9694\u590d\u4e60\u7684\u9ed8\u8ba4\u9879\u3001Daily Note \u540c\u6b65\u4e0e\u8f7b\u91cf\u603b\u89c8\u9009\u9879\u3002',
+			dailyNote: {
+				heading: 'Daily Note',
+			},
+			enableDailyNoteSync: {
+				name: '\u542f\u7528\u6bcf\u65e5\u65e5\u8bb0\u540c\u6b65',
+				description:
+					'\u5141\u8bb8 Spaced Review \u5c06\u4eca\u65e5\u590d\u4e60\u5217\u8868\u5199\u5165\u6307\u5b9a Daily Note \u533a\u5757\u3002',
+			},
 			dailyNoteFolder: {
 				name: 'Daily Note \u6587\u4ef6\u5939',
 				description:
-					'\u9884\u5148\u914d\u7f6e\u540e\u7eed\u9636\u6bb5\u4f7f\u7528\u7684 Daily Note \u76ee\u5f55\u3002\u672c\u9636\u6bb5\u4e0d\u4f1a\u5199\u5165 Daily Note\u3002',
+					'\u8bbe\u7f6e Daily Note \u6240\u5728\u6587\u4ef6\u5939\u3002\u7559\u7a7a\u65f6\u5c06\u5199\u5165 vault \u6839\u76ee\u5f55\uff0c\u4f7f\u7528\u524d\u8bf7\u5148\u521b\u5efa\u8be5\u6587\u4ef6\u5939\u3002',
 			},
 			dailyNoteDateFormat: {
 				name: 'Daily Note \u65e5\u671f\u683c\u5f0f',
 				description:
-					'\u9884\u5148\u914d\u7f6e\u540e\u7eed\u9636\u6bb5\u4f7f\u7528\u7684 Daily Note \u6587\u4ef6\u540d\u65e5\u671f\u683c\u5f0f\u3002',
+					'\u8bbe\u7f6e Daily Note \u6587\u4ef6\u540d\u7684\u65e5\u671f\u683c\u5f0f\u3002\u8be5\u8bbe\u7f6e\u53ea\u7528\u4e8e\u6587\u4ef6\u540d\uff0c\u4e0d\u652f\u6301\u7684\u683c\u5f0f\u6216\u542b\u76ee\u5f55\u5206\u9694\u7b26\u7684\u683c\u5f0f\u4f1a\u56de\u9000\u5230 YYYY-MM-DD\u3002',
 			},
-			managedBlockHeading: {
-				name: '\u6258\u7ba1\u533a\u5757\u6807\u9898',
+			dailyNoteSectionHeading: {
+				name: '\u6bcf\u65e5\u590d\u4e60\u533a\u57df\u6807\u9898',
 				description:
-					'\u9884\u5148\u914d\u7f6e\u540e\u7eed\u9636\u6bb5\u7528\u4e8e\u590d\u4e60\u5217\u8868\u7684\u6807\u9898\u3002',
+					'\u65e7\u7248\u5355\u6807\u9898\u517c\u5bb9\u5b57\u6bb5\uff0c\u4f5c\u4e3a Daily Note \u6258\u7ba1\u533a\u57df\u8def\u5f84\u7684\u56de\u9000\u503c\u3002',
+			},
+			dailyNoteSectionPath: {
+				name: 'Daily Note \u533a\u57df\u8def\u5f84',
+				description:
+					'\u6bcf\u4e00\u884c\u4ee3\u8868\u4e00\u7ea7\u6807\u9898\u8def\u5f84\u3002\u4f8b\u5982\u8f93\u5165\uff1a\nTask\n\u96c5\u601d\n\u4f1a\u5199\u5165\u5230 # Task \u4e0b\u7684 ## \u96c5\u601d \u533a\u57df\u3002',
+				placeholderTop: 'Task',
+				placeholderBottom: '\u96c5\u601d',
+			},
+			dailyNoteCreateIfMissing: {
+				name: '\u5982\u679c Daily Note \u4e0d\u5b58\u5728\u5219\u521b\u5efa',
+				description:
+					'\u76ee\u6807 Daily Note \u4e0d\u5b58\u5728\u65f6\u5141\u8bb8\u521b\u5efa\u3002\u76ee\u6807\u6587\u4ef6\u5939\u9700\u8981\u5df2\u5b58\u5728\uff0c\u7f3a\u5931\u65f6\u53ea\u63d0\u793a\uff0c\u4e0d\u81ea\u52a8\u521b\u5efa\u6587\u4ef6\u5939\u3002',
+			},
+			dailyNoteSyncMode: {
+				name: '\u6bcf\u65e5\u65e5\u8bb0\u540c\u6b65\u6a21\u5f0f',
+				description:
+					'\u9009\u62e9\u53ea\u901a\u8fc7\u547d\u4ee4\u624b\u52a8\u540c\u6b65\uff0c\u6216\u5728\u6253\u5f00 overview \u65f6\u540c\u6b65\u4e00\u6b21\u3002',
+				manualOnly: '\u4ec5\u624b\u52a8',
+				onOverviewOpen: '\u6253\u5f00 overview \u65f6',
 			},
 			defaultPreset: {
 				name: '\u9ed8\u8ba4\u9884\u8bbe',
 				description:
 					'\u9009\u62e9\u521b\u5efa\u65b0\u590d\u4e60\u4efb\u52a1\u65f6\u9ed8\u8ba4\u4f7f\u7528\u7684\u5185\u7f6e\u9884\u8bbe\u3002',
+			},
+			includeTodayAsFirstReview: {
+				name: '\u9884\u8bbe\u4ece\u5f53\u5929\u5f00\u59cb',
+				description:
+					'\u5f00\u542f\u540e\uff0c\u9884\u8bbe\u95f4\u9694\u4f1a\u4ee5 0 \u5f00\u5934\uff0c\u8868\u793a\u521b\u5efa\u5f53\u5929\u4e5f\u5b89\u6392\u4e00\u6b21\u590d\u4e60\u3002',
+			},
+			customPresets: {
+				heading: '\u9884\u8bbe',
+				name: '\u81ea\u5b9a\u4e49\u9884\u8bbe',
+				description:
+					'\u6bcf\u884c\u4e00\u4e2a\u9884\u8bbe\uff0c\u683c\u5f0f\u4e3a \u540d\u79f0 = \u5929\u6570\u3002\u65e0\u6548\u884c\u4f1a\u88ab\u8df3\u8fc7\u3002',
+				placeholderTop: '\u96c5\u601d\u77ed\u671f = 0 1 3 7',
+				placeholderBottom: '\u8bba\u6587\u957f\u671f = 1 7 14 30',
+				invalidLines: (lines: string): string =>
+					`\u5df2\u8df3\u8fc7\u65e0\u6548\u7684\u81ea\u5b9a\u4e49\u9884\u8bbe\u884c\uff1a${lines}\u3002`,
+			},
+			targetLink: {
+				heading: '\u94fe\u63a5',
+				openMode: {
+					name: '\u6253\u5f00\u65b9\u5f0f',
+					description:
+						'\u63a7\u5236\u590d\u4e60\u603b\u89c8\u3001Today \u5361\u7247\u548c\u5df2\u5f52\u6863\u89c6\u56fe\u4e2d\u7684\u201c\u6253\u5f00\u201d\u6309\u94ae\u3002\u5982\u679c\u5f00\u542f\u4e0b\u65b9\u7684 Daily Note \u9009\u9879\uff0c\u751f\u6210\u7684 Daily Note \u590d\u4e60\u94fe\u63a5\u4e5f\u4f1a\u901a\u8fc7 Obsidian URI \u8ddf\u968f\u8fd9\u4e2a\u6253\u5f00\u65b9\u5f0f\uff1b\u5176\u4ed6 wiki \u94fe\u63a5\u4ecd\u4fdd\u6301 Obsidian \u539f\u751f\u884c\u4e3a\u3002',
+					current: '\u5728\u5f53\u524d\u9875\u9762\u6253\u5f00',
+					newTab: '\u5728\u65b0\u6807\u7b7e\u9875\u6253\u5f00',
+				},
+				dailyNoteLinksUseOpenMode: {
+					name: 'Daily Note \u590d\u4e60\u94fe\u63a5\u8ddf\u968f\u6253\u5f00\u65b9\u5f0f',
+					description:
+						'\u5f00\u542f\u540e\uff0cDaily Note \u4e2d\u7684\u590d\u4e60\u94fe\u63a5\u4f1a\u751f\u6210\u4e3a Obsidian URI \u94fe\u63a5\uff0c\u5e76\u8ddf\u968f\u201c\u76ee\u6807\u94fe\u63a5\u6253\u5f00\u65b9\u5f0f\u201d\u8bbe\u7f6e\uff1b\u65b0\u6807\u7b7e\u9875\u6a21\u5f0f\u4f1a\u4f7f\u7528 paneType=tab\u3002\u5173\u95ed\u65f6\u4ecd\u751f\u6210\u666e\u901a wiki \u94fe\u63a5\u3002',
+				},
 			},
 			completedDisplay: {
 				name: '\u5df2\u5b8c\u6210\u9879\u663e\u793a\u65b9\u5f0f',
@@ -111,12 +168,51 @@ export const zhCnDictionary = {
 			showOverdueBadge: {
 				name: '\u663e\u793a\u8fc7\u671f\u6807\u8bb0',
 				description:
-					'\u9884\u5148\u914d\u7f6e\u540e\u7eed\u9636\u6bb5\u662f\u5426\u663e\u793a\u8fc7\u671f\u6807\u8bb0\u3002',
+					'\u5728 overview \u4e2d\u663e\u793a\u8fc7\u671f\u6807\u8bb0\u3002',
+			},
+			showGroupJumpChips: {
+				name: '\u663e\u793a\u5927\u7ec4\u5feb\u901f\u8df3\u8f6c',
+				description:
+					'\u5f53 All tasks \u4e2d\u5b58\u5728\u591a\u4e2a\u5927\u7ec4\u65f6\uff0c\u663e\u793a\u9876\u90e8\u5feb\u901f\u8df3\u8f6c chips\u3002',
+			},
+			showArchivedView: {
+				name: '\u663e\u793a\u5df2\u5f52\u6863\u5165\u53e3',
+				description:
+					'\u5728 overview \u4e2d\u4fdd\u7559 Archived \u6807\u7b7e\u3002',
+			},
+			showOverviewRibbonButton: {
+				name: '\u5728\u5de6\u4fa7\u680f\u663e\u793a\u590d\u4e60\u603b\u89c8\u6309\u94ae',
+				description:
+					'\u5728 Obsidian \u5de6\u4fa7 Ribbon \u4e2d\u663e\u793a\u6253\u5f00\u590d\u4e60\u603b\u89c8\u7684\u5feb\u6377\u6309\u94ae\u3002',
+			},
+			showDailyNoteSyncRibbonButton: {
+				name: '\u5728\u5de6\u4fa7\u680f\u663e\u793a Daily Note \u540c\u6b65\u6309\u94ae',
+				description:
+					'\u5728 Obsidian \u5de6\u4fa7 Ribbon \u4e2d\u663e\u793a\u540c\u6b65\u4eca\u65e5\u590d\u4e60\u5230 Daily Note \u7684\u5feb\u6377\u6309\u94ae\u3002',
+			},
+			showEditorContextMenuItem: {
+				name: '\u5728\u7f16\u8f91\u5668\u53f3\u952e\u83dc\u5355\u663e\u793a\u52a0\u5165\u590d\u4e60\u4efb\u52a1',
+				description:
+					'\u5728 Markdown \u7f16\u8f91\u5668\u53f3\u952e\u83dc\u5355\u4e2d\u663e\u793a\u52a0\u5165\u590d\u4e60\u4efb\u52a1\u5165\u53e3\u3002',
 			},
 			presetOptions: {
-				fastReview: '\u5feb\u901f\u590d\u4e60',
+				quickReview: '\u5feb\u901f\u590d\u4e60',
 				standardReview: '\u6807\u51c6\u590d\u4e60',
 				longTermMemory: '\u957f\u671f\u8bb0\u5fc6',
+			},
+			timelineMode: {
+				name: '\u9ed8\u8ba4\u65f6\u95f4\u7ebf\u6a21\u5f0f',
+				description:
+					'\u9009\u62e9\u65b0\u5efa\u4efb\u52a1\u9ed8\u8ba4\u4f7f\u7528\u7684\u65f6\u95f4\u7ebf\u6a21\u5f0f\u3002',
+				fixedTimeline: '\u56fa\u5b9a\u65f6\u95f4\u7ebf',
+				rollingTimeline: '\u6eda\u52a8\u65f6\u95f4\u7ebf',
+			},
+			missedReviewPolicy: {
+				name: '\u9ed8\u8ba4\u9519\u8fc7\u590d\u4e60\u5904\u7406',
+				description:
+					'\u9009\u62e9\u65b0\u5efa\u4efb\u52a1\u9ed8\u8ba4\u5982\u4f55\u5904\u7406\u9519\u8fc7\u7684\u590d\u4e60\u3002',
+				carryOver: '\u987a\u5ef6',
+				skip: '\u8df3\u8fc7',
 			},
 		},
 		sliders: {
@@ -194,13 +290,32 @@ export const zhCnDictionary = {
 	features: {
 		spacedReview: {
 			name: '\u95f4\u9694\u590d\u4e60',
-			description: '\u521b\u5efa\u95f4\u9694\u590d\u4e60\u4efb\u52a1\u5e76\u8bbf\u95ee\u4efb\u52a1 store\u3002',
+			description:
+				'\u521b\u5efa\u95f4\u9694\u590d\u4e60\u4efb\u52a1\u5e76\u8bbf\u95ee\u53ea\u8bfb\u603b\u89c8\u3002',
 		},
 	},
 	commands: {
 		spacedReview: {
 			createTask: {
 				name: '\u521b\u5efa\u95f4\u9694\u590d\u4e60\u4efb\u52a1',
+			},
+			openOverview: {
+				name: '\u6253\u5f00\u95f4\u9694\u590d\u4e60\u603b\u89c8',
+			},
+			syncDailyNote: {
+				name: '\u540c\u6b65\u4eca\u65e5\u590d\u4e60\u5230\u6bcf\u65e5\u65e5\u8bb0',
+				success: '\u4eca\u65e5\u590d\u4e60\u5df2\u540c\u6b65\u5230 Daily Note\u3002',
+				failed: '\u540c\u6b65\u4eca\u65e5\u590d\u4e60\u5230 Daily Note \u5931\u8d25\u3002',
+				duplicateHeadingWarning:
+					'\u68c0\u6d4b\u5230\u591a\u4e2a Spaced Review Daily Note \u540c\u540d\u6807\u9898\u533a\u57df\uff0c\u672c\u6b21\u53ea\u66f4\u65b0\u4e86\u7b2c\u4e00\u4e2a\u3002',
+				checkedImported:
+					'\u5df2\u5bfc\u5165 Daily Note \u4e2d\u52fe\u9009\u7684\u590d\u4e60\u8bb0\u5f55\u3002',
+				duplicateHeadingCleaned:
+					'\u68c0\u6d4b\u5230\u591a\u4e2a Spaced Review Daily Note \u540c\u540d\u6807\u9898\u533a\u57df\uff0c\u53ea\u5c06\u7b2c\u4e00\u4e2a\u89c6\u4e3a\u63d2\u4ef6\u6258\u7ba1\u533a\u57df\u3002',
+				checkboxImportHint:
+					'Daily Note \u590d\u9009\u6846\u4f1a\u5728\u540c\u6b65\u65f6\u5bfc\u5165\uff0c\u4e0d\u505a\u5b9e\u65f6\u76d1\u542c\u3002',
+				unmatchedCheckedPreserved:
+					'\u672a\u80fd\u5339\u914d Daily Note \u4e2d\u52fe\u9009\u7684\u590d\u4e60\u9879\uff0c\u5df2\u4fdd\u7559\u539f\u6587\u3002',
 			},
 			disabledNotice:
 				'\u8bf7\u5148\u5728 NestKit \u8bbe\u7f6e\u4e2d\u542f\u7528\u95f4\u9694\u590d\u4e60\uff0c\u518d\u521b\u5efa\u4efb\u52a1\u3002',
@@ -209,18 +324,166 @@ export const zhCnDictionary = {
 				'\u521b\u5efa\u95f4\u9694\u590d\u4e60\u4efb\u52a1\u5931\u8d25\uff0c\u8bf7\u67e5\u770b\u63a7\u5236\u53f0\u3002',
 		},
 	},
+		spacedReview: {
+			notices: {
+				enableFirst:
+					'\u8bf7\u5148\u5728 NestKit \u8bbe\u7f6e\u4e2d\u542f\u7528\u95f4\u9694\u590d\u4e60\uff0c\u518d\u6253\u5f00\u603b\u89c8\u3002',
+			},
+			overview: {
+				title: '\u95f4\u9694\u590d\u4e60\u603b\u89c8',
+				empty: '\u6682\u65e0\u590d\u4e60\u4efb\u52a1\u3002',
+				noTasksHint:
+					'\u8bf7\u5148\u4f7f\u7528\u201c\u521b\u5efa\u95f4\u9694\u590d\u4e60\u4efb\u52a1\u201d\u547d\u4ee4\u6dfb\u52a0\u4e00\u4e2a\u4efb\u52a1\u3002',
+				refresh: '\u5237\u65b0',
+				help: '\u663e\u793a\u603b\u89c8\u56fe\u4f8b',
+				legendTitle: '\u56fe\u4f8b',
+				legendSymbols: '\u65e5\u671f\u6807',
+				legendPresets: '\u9884\u8bbe',
+				legendTrack: '\u8f68\u9053',
+				legendDateNavigation: '\u6309\u5e74\u3001\u6708\u3001\u5468\u8df3\u8f6c',
+				legendTrackCompleted: '\u65e5\u671f\uff1a\u5df2\u5b8c\u6210',
+				legendTrackSkipped: '\u65e5\u671f\uff1a\u5df2\u8df3\u8fc7',
+				legendTrackOverdue: '\u903e\u671f',
+				legendTrackCurrent: '\u5f53\u524d',
+				legendTrackPending: '\u5f85\u590d\u4e60',
+				legendDueCount:
+					'\u84dd\u8272\u6570\u5b57\uff1a\u8be5\u65e5\u671f\u8ba1\u5212\u590d\u4e60\u6570',
+				legendOverdueCount:
+					'\u7ea2\u8272\u6570\u5b57\uff1a\u8be5\u65e5\u671f\u903e\u671f\u672a\u5b8c\u6210\u6570',
+				legendToday: '\u4eca\u5929\uff1a\u5f53\u524d\u65e5\u671f',
+				legendSelectedDate:
+					'\u5f53\u524d\u9009\u4e2d\u65e5\u671f\uff1a\u7528\u4e8e Today \u89c6\u56fe\u7684\u65e5\u671f',
+				legendReadOnly:
+					'\u590d\u4e60\u8f68\u9053\u4ec5\u7528\u4e8e\u5c55\u793a\u8ba1\u5212\u72b6\u6001\uff0c\u5f53\u524d\u9636\u6bb5\u4e0d\u53ef\u70b9\u51fb\u5b8c\u6210\u6216\u8df3\u8fc7',
+				dueTodayCount: (count: number): string => `\u4eca\u65e5 ${count}`,
+				overdueCount: (count: number): string => `\u903e\u671f ${count}`,
+				activeCount: (count: number): string => `\u8fdb\u884c\u4e2d ${count}`,
+				allTasksGroupedHint:
+					'\u5168\u90e8\u4efb\u52a1\u4f1a\u6309\u5927\u7ec4 / \u5c0f\u7ec4\u6574\u7406\u3002',
+				weekRange: (start: string, end: string): string =>
+					`${start} ~ ${end}`,
+				previousWeek: '\u4e0a\u4e00\u5468',
+				nextWeek: '\u4e0b\u4e00\u5468',
+				todayTab: '\u4eca\u65e5',
+				allTasksTab: '\u5168\u90e8\u4efb\u52a1',
+				archivedTab: '\u5df2\u5f52\u6863',
+				dueTodayBadge: '\u4eca\u65e5',
+				overdueBadge: '\u903e\u671f',
+				futureBadge: '\u8ba1\u5212',
+				activeBadge: '\u8fdb\u884c\u4e2d',
+				fastReview: '\u5feb\u901f\u590d\u4e60',
+				standardReview: '\u6807\u51c6\u590d\u4e60',
+				longTermMemory: '\u957f\u671f\u8bb0\u5fc6',
+				dateChipToday: '\u4eca\u5929',
+				contentSectionAriaLabel: '\u603b\u89c8\u5185\u5bb9',
+				dueCountCompact: (count: number): string => `${count}`,
+				overdueCountCompact: (count: number): string => `${count}`,
+				noDueToday: '\u4eca\u5929\u6682\u65e0\u5e94\u590d\u4e60\u4efb\u52a1',
+				noReviewsForDate:
+					'\u8be5\u65e5\u671f\u6682\u65e0\u5e94\u590d\u4e60\u4efb\u52a1',
+				noPendingReviews:
+					'\u6682\u65e0\u5f85\u590d\u4e60\u4efb\u52a1',
+				noArchivedTasks:
+					'\u6682\u65e0\u5df2\u5f52\u6863\u590d\u4e60\u4efb\u52a1',
+				archivedDescription:
+					'\u5f52\u6863\u4f1a\u4ece\u9ed8\u8ba4\u5217\u8868\u9690\u85cf\u4efb\u52a1\uff0c\u4f46\u4e0d\u4f1a\u5220\u9664\u8bb0\u5f55\u3002',
+				customPreset: '\u81ea\u5b9a\u4e49\u9884\u8bbe',
+				customPresetWithIntervals: (intervals: string): string =>
+					`\u81ea\u5b9a\u4e49\uff1a${intervals}`,
+				dueTodayLine: (count: number): string =>
+					`\u7b2c ${count} \u6b21`,
+				overdueLine: (count: number): string =>
+					`\u7b2c ${count} \u6b21`,
+				futureLine: (count: number): string =>
+					`\u7b2c ${count} \u6b21`,
+				carriedToToday: '\u987a\u5ef6\u5230\u4eca\u5929',
+				plannedDateShort: (date: string): string => `\u8ba1\u5212 ${date}`,
+				originalPlannedDate: (date: string): string => `\u539f\u8ba1\u5212 ${date}`,
+				nextReviewCompact: (date: string): string => `\u4e0b\u6b21 ${date}`,
+				progressCompact: (current: number, total: number): string =>
+					`\u8fdb\u5ea6 ${current}/${total}`,
+				progress: (current: number, total: number): string =>
+					`\u8fdb\u5ea6\uff1a\u7b2c ${current} \u6b21 / \u5171 ${total} \u6b21`,
+				reviewTrackItem: (reviewNumber: number): string =>
+					`\u7b2c ${reviewNumber} \u6b21\u590d\u4e60`,
+				current: '\u5f53\u524d',
+				future: '\u540e\u7eed',
+				completed: '\u5df2\u5b8c\u6210',
+				skipped: '\u5df2\u8df3\u8fc7',
+				ungrouped: '\u672a\u5206\u7ec4',
+				note: '\u5907\u6ce8',
+				expand: '\u5c55\u5f00',
+				collapse: '\u6536\u8d77',
+				missingTargetLink: '\u672a\u8bbe\u7f6e\u76ee\u6807\u8def\u5f84',
+				missingNote: '\u6ca1\u6709\u5907\u6ce8',
+				noneNoteText: '\u65e0',
+				noExtraNoteToExpand: '\u6ca1\u6709\u66f4\u591a\u5907\u6ce8\u53ef\u5c55\u5f00',
+				openAction: '\u6253\u5f00',
+				editAction: '\u7f16\u8f91',
+				openOverviewRibbonTitle: '\u6253\u5f00\u590d\u4e60\u603b\u89c8',
+				syncDailyNoteRibbonTitle:
+					'\u540c\u6b65\u4eca\u65e5\u590d\u4e60\u5230 Daily Note',
+				addToSpacedReviewContextMenu:
+					'\u52a0\u5165\u590d\u4e60\u4efb\u52a1',
+				openFailed: '\u65e0\u6cd5\u6253\u5f00\u76ee\u6807\u7b14\u8bb0',
+				archiveAction: '\u5f52\u6863',
+				restoreAction: '\u6062\u590d',
+				noteAction: '\u5907\u6ce8',
+				syncNote: '\u540c\u6b65\u65e5\u8bb0',
+				syncNoteFailed: '\u540c\u6b65 Daily Note \u5931\u8d25\u3002',
+				archiveFailed: '\u5f52\u6863\u5931\u8d25',
+				restoreFailed: '\u6062\u590d\u5931\u8d25',
+				editFailed: '\u66f4\u65b0\u4efb\u52a1\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002',
+				completeAction: '\u5b8c\u6210',
+				skipAction: '\u8df3\u8fc7',
+				completeFailed: '\u5b8c\u6210\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002',
+				skipFailed: '\u8df3\u8fc7\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002',
+				futureStoreBlocked:
+					'\u5f53\u524d\u590d\u4e60\u6570\u636e\u6765\u81ea\u8f83\u65b0\u7248\u672c\uff0c\u65e0\u6cd5\u5199\u5165\u3002',
+				actionUnavailable:
+					'\u5f53\u524d\u590d\u4e60\u5df2\u4e0d\u53ef\u64cd\u4f5c\u3002',
+				legendActionHint:
+					'\u5b8c\u6210\u540e\u4f1a\u63a8\u8fdb\u4e0b\u4e00\u6b21\u590d\u4e60\uff1b\u8df3\u8fc7\u53ea\u6807\u8bb0\u5f53\u524d\u8282\u70b9\u3002',
+			},
+			dailyNote: {
+				noReviewsToday: '\u4eca\u5929\u6ca1\u6709\u9700\u8981\u590d\u4e60\u7684\u4efb\u52a1\u3002',
+				plannedDate: (date: string): string => `\u539f\u8ba1\u5212 ${date}`,
+				reviewNumber: (reviewNumber: number): string =>
+					`\u7b2c ${reviewNumber} \u6b21`,
+				overdue: '\u903e\u671f',
+				missingFolder:
+					'\u6bcf\u65e5\u65e5\u8bb0\u6587\u4ef6\u5939\u4e0d\u5b58\u5728',
+				notAFile:
+					'\u914d\u7f6e\u7684 Daily Note \u8def\u5f84\u4e0d\u662f Markdown \u6587\u4ef6\u3002',
+				createdFile:
+					'\u540c\u6b65\u524d\u5df2\u521b\u5efa\u4eca\u65e5 Daily Note\u3002',
+			},
+		},
 	modal: {
 		spacedReview: {
 			createTitle: '\u521b\u5efa\u95f4\u9694\u590d\u4e60\u4efb\u52a1',
+			editTitle: '\u7f16\u8f91\u95f4\u9694\u590d\u4e60\u4efb\u52a1',
 			title: {
 				name: '\u6807\u9898',
 				placeholder: '\u4f8b\u5982\uff1a\u590d\u4e60\u7b2c 3 \u7ae0\u7b14\u8bb0',
+			},
+			group: {
+				name: '\u5927\u7ec4',
+				placeholder: '\u672a\u9009\u62e9',
+				newPlaceholder: '\u65b0\u5927\u7ec4\uff0c\u53ef\u9009',
+			},
+			subgroup: {
+				name: '\u5c0f\u7ec4',
+				placeholder: '\u65e0',
+				newPlaceholder: '\u65b0\u5c0f\u7ec4\uff0c\u53ef\u9009',
 			},
 			startDate: {
 				name: '\u5f00\u59cb\u65e5\u671f',
 			},
 			preset: {
 				name: '\u9884\u8bbe',
+				manualCustom: '\u624b\u52a8\u81ea\u5b9a\u4e49',
+				customPrefix: (name: string): string => `\u81ea\u5b9a\u4e49\uff1a${name}`,
 			},
 			customIntervals: {
 				name: '\u81ea\u5b9a\u4e49\u95f4\u9694',
@@ -228,13 +491,28 @@ export const zhCnDictionary = {
 					'\u53ef\u9009\u3002\u8f93\u5165\u7528\u7a7a\u683c\u5206\u9694\u7684\u7d2f\u8ba1\u5929\u6570\uff0c\u4f8b\u5982 1 3 7\u3002',
 				placeholder: '1 3 7',
 			},
+			note: {
+				name: '\u5907\u6ce8',
+				placeholder: '\u6dfb\u52a0\u5907\u6ce8',
+			},
+			targetLink: {
+				name: '\u76ee\u6807\u8def\u5f84',
+				placeholder: 'IELTS/Listening/\u8bed\u6599\u5e93.md#Day 1',
+				description:
+					'\u53ef\u4ee5\u5148\u9009\u62e9 Markdown \u6587\u4ef6\u8def\u5f84\uff0c\u518d\u624b\u52a8\u8ffd\u52a0 #\u6807\u9898 \u6216 #^block-id\u3002',
+			},
 			save: '\u4fdd\u5b58',
+			saveChanges: '\u4fdd\u5b58\u4fee\u6539',
 			cancel: '\u53d6\u6d88',
 			validation: {
 				titleRequired: '\u8bf7\u5148\u8f93\u5165\u4efb\u52a1\u6807\u9898\u3002',
 				invalidDate: '\u8bf7\u8f93\u5165\u6709\u6548\u7684 YYYY-MM-DD \u65e5\u671f\u3002',
 				invalidIntervals:
-					'\u81ea\u5b9a\u4e49\u95f4\u9694\u65e0\u6548\uff0c\u8bf7\u4f7f\u7528\u6b63\u6574\u6570\u4e14\u4e25\u683c\u9012\u589e\u7684\u7d2f\u8ba1\u5929\u6570\u3002',
+					'\u81ea\u5b9a\u4e49\u95f4\u9694\u65e0\u6548\uff0c\u8bf7\u4f7f\u7528\u9012\u589e\u7684\u7d2f\u8ba1\u5929\u6570\uff0c\u5982\u9700 0 \u53ea\u80fd\u653e\u5728\u6700\u524d\u9762\u3002',
+				groupAlreadyHasTaskName:
+					'\u8be5\u5206\u7ec4\u4e2d\u5df2\u5b58\u5728\u540c\u540d\u590d\u4e60\u4efb\u52a1',
+				invalidCustomPresetSkipped: (lines: string): string =>
+					`\u8bbe\u7f6e\u4e2d\u7684\u65e0\u6548\u81ea\u5b9a\u4e49\u9884\u8bbe\u884c\u5df2\u88ab\u8df3\u8fc7\uff1a${lines}\u3002`,
 			},
 		},
 	},

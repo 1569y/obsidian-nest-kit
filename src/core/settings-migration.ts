@@ -2,8 +2,10 @@ import type { NestKitLanguage } from '../i18n';
 import { DEFAULT_REVIEW_PRESET_ID } from '../features/spaced-review/presets';
 import type {
 	CompletedOccurrenceDisplay,
+	DailyNoteSyncMode,
 	OverduePolicy,
 	ScheduleMode,
+	TargetLinkOpenMode,
 } from '../features/spaced-review/types';
 import type { NestKitSettings } from '../settings';
 import {
@@ -60,6 +62,14 @@ const OVERDUE_POLICY_VALUES = new Set<OverduePolicy>(['carryOver', 'skip']);
 const SCHEDULE_MODE_VALUES = new Set<ScheduleMode>([
 	'fixedTimeline',
 	'rollingTimeline',
+]);
+const DAILY_NOTE_SYNC_MODE_VALUES = new Set<DailyNoteSyncMode>([
+	'manualOnly',
+	'onOverviewOpen',
+]);
+const TARGET_LINK_OPEN_MODE_VALUES = new Set<TargetLinkOpenMode>([
+	'current',
+	'newTab',
 ]);
 const BUILT_IN_PRESET_IDS = new Set<string>([
 	'fast-review',
@@ -310,6 +320,12 @@ function normalizeSettings(
 			DEFAULT_SETTINGS.spacedReviewEnabled,
 			invalidFieldWarnings,
 		),
+		spacedReviewDailyNoteSyncEnabled: readBoolean(
+			raw,
+			'spacedReviewDailyNoteSyncEnabled',
+			DEFAULT_SETTINGS.spacedReviewDailyNoteSyncEnabled,
+			invalidFieldWarnings,
+		),
 		spacedReviewDailyNoteFolder: readString(
 			raw,
 			'spacedReviewDailyNoteFolder',
@@ -322,16 +338,75 @@ function normalizeSettings(
 			DEFAULT_SETTINGS.spacedReviewDailyNoteDateFormat,
 			invalidFieldWarnings,
 		),
-		spacedReviewManagedBlockHeading: readString(
+		spacedReviewDailyNoteSectionHeading: readString(
 			raw,
-			'spacedReviewManagedBlockHeading',
-			DEFAULT_SETTINGS.spacedReviewManagedBlockHeading,
+			'spacedReviewDailyNoteSectionHeading',
+			readString(
+				raw,
+				'spacedReviewManagedBlockHeading' as KnownSettingsKey,
+				DEFAULT_SETTINGS.spacedReviewDailyNoteSectionHeading,
+				[],
+			),
+			invalidFieldWarnings,
+		),
+		spacedReviewDailyNoteSectionPath: readString(
+			raw,
+			'spacedReviewDailyNoteSectionPath',
+			readString(
+				raw,
+				'spacedReviewDailyNoteSectionHeading',
+				readString(
+					raw,
+					'spacedReviewManagedBlockHeading' as KnownSettingsKey,
+					DEFAULT_SETTINGS.spacedReviewDailyNoteSectionPath,
+					[],
+				),
+				[],
+			),
+			invalidFieldWarnings,
+		),
+		spacedReviewDailyNoteCreateIfMissing: readBoolean(
+			raw,
+			'spacedReviewDailyNoteCreateIfMissing',
+			DEFAULT_SETTINGS.spacedReviewDailyNoteCreateIfMissing,
+			invalidFieldWarnings,
+		),
+		spacedReviewDailyNoteSyncMode: readEnumSetting(
+			raw,
+			'spacedReviewDailyNoteSyncMode',
+			DEFAULT_SETTINGS.spacedReviewDailyNoteSyncMode,
+			DAILY_NOTE_SYNC_MODE_VALUES,
 			invalidFieldWarnings,
 		),
 		spacedReviewDefaultPresetId: readBuiltInPresetId(
 			raw,
 			'spacedReviewDefaultPresetId',
 			DEFAULT_SETTINGS.spacedReviewDefaultPresetId,
+			invalidFieldWarnings,
+		),
+		spacedReviewIncludeTodayAsFirstReview: readBoolean(
+			raw,
+			'spacedReviewIncludeTodayAsFirstReview',
+			DEFAULT_SETTINGS.spacedReviewIncludeTodayAsFirstReview,
+			invalidFieldWarnings,
+		),
+		spacedReviewCustomPresets: readString(
+			raw,
+			'spacedReviewCustomPresets',
+			DEFAULT_SETTINGS.spacedReviewCustomPresets,
+			invalidFieldWarnings,
+		),
+		spacedReviewTargetLinkOpenMode: readEnumSetting(
+			raw,
+			'spacedReviewTargetLinkOpenMode',
+			DEFAULT_SETTINGS.spacedReviewTargetLinkOpenMode,
+			TARGET_LINK_OPEN_MODE_VALUES,
+			invalidFieldWarnings,
+		),
+		spacedReviewDailyNoteLinksUseOpenMode: readBoolean(
+			raw,
+			'spacedReviewDailyNoteLinksUseOpenMode',
+			DEFAULT_SETTINGS.spacedReviewDailyNoteLinksUseOpenMode,
 			invalidFieldWarnings,
 		),
 		spacedReviewCompletedOccurrenceDisplay: readEnumSetting(
@@ -359,6 +434,36 @@ function normalizeSettings(
 			raw,
 			'spacedReviewShowOverdueBadge',
 			DEFAULT_SETTINGS.spacedReviewShowOverdueBadge,
+			invalidFieldWarnings,
+		),
+		spacedReviewShowGroupJumpChips: readBoolean(
+			raw,
+			'spacedReviewShowGroupJumpChips',
+			DEFAULT_SETTINGS.spacedReviewShowGroupJumpChips,
+			invalidFieldWarnings,
+		),
+		spacedReviewShowArchivedView: readBoolean(
+			raw,
+			'spacedReviewShowArchivedView',
+			DEFAULT_SETTINGS.spacedReviewShowArchivedView,
+			invalidFieldWarnings,
+		),
+		spacedReviewShowOverviewRibbonButton: readBoolean(
+			raw,
+			'spacedReviewShowOverviewRibbonButton',
+			DEFAULT_SETTINGS.spacedReviewShowOverviewRibbonButton,
+			invalidFieldWarnings,
+		),
+		spacedReviewShowDailyNoteSyncRibbonButton: readBoolean(
+			raw,
+			'spacedReviewShowDailyNoteSyncRibbonButton',
+			DEFAULT_SETTINGS.spacedReviewShowDailyNoteSyncRibbonButton,
+			invalidFieldWarnings,
+		),
+		spacedReviewShowEditorContextMenuItem: readBoolean(
+			raw,
+			'spacedReviewShowEditorContextMenuItem',
+			DEFAULT_SETTINGS.spacedReviewShowEditorContextMenuItem,
 			invalidFieldWarnings,
 		),
 	};

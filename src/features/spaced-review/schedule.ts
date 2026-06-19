@@ -22,6 +22,28 @@ function sortUniqueIndexes(indexes: number[]): number[] {
 	return [...new Set(indexes)].sort((left, right) => left - right);
 }
 
+function withoutSequenceIndex(
+	dateMap: Record<string, string> | undefined,
+	sequenceIndex: number,
+): Record<string, string> | undefined {
+	if (!dateMap) {
+		return undefined;
+	}
+
+	const key = String(sequenceIndex);
+	if (!(key in dateMap)) {
+		return { ...dateMap };
+	}
+
+	const nextMap = { ...dateMap };
+	delete nextMap[key];
+	return Object.keys(nextMap).length > 0 ? nextMap : undefined;
+}
+
+function getUpdatedAtTimestamp(): string {
+	return new Date().toISOString();
+}
+
 function isSequenceCompleted(task: ReviewTask, sequenceIndex: number): boolean {
 	return task.completedSequenceIndexes.includes(sequenceIndex);
 }
@@ -79,13 +101,48 @@ export function getRollingGapDays(
 	return current - previous;
 }
 
+function getLatestRollingCompletedSequenceIndex(task: ReviewTask): number {
+	return task.completedSequenceIndexes.reduce(
+		(latestIndex, index) => (index > latestIndex ? index : latestIndex),
+		-1,
+	);
+}
+
+function getRollingAnchorSequenceIndex(task: ReviewTask): number {
+	if (task.rollingAnchorDate === undefined) {
+		return -1;
+	}
+
+	return getLatestRollingCompletedSequenceIndex(task);
+}
+
 export function getRollingPlannedDate(
 	task: ReviewTask,
 	sequenceIndex: number,
 ): string {
 	const anchorDate = getRollingAnchorDate(task);
-	const gapDays = getRollingGapDays(task.intervalsSnapshot, sequenceIndex);
-	return addCalendarDays(anchorDate, gapDays);
+	const anchorSequenceIndex = getRollingAnchorSequenceIndex(task);
+
+	if (sequenceIndex <= anchorSequenceIndex) {
+		return addCalendarDays(
+			anchorDate,
+			getRollingGapDays(task.intervalsSnapshot, sequenceIndex),
+		);
+	}
+
+	let plannedDate = anchorDate;
+	for (
+		let currentSequenceIndex = anchorSequenceIndex + 1;
+		currentSequenceIndex <= sequenceIndex;
+		currentSequenceIndex += 1
+	) {
+		plannedDate = addCalendarDays(
+			plannedDate,
+			getRollingGapDays(task.intervalsSnapshot, currentSequenceIndex),
+		);
+	}
+
+	return plannedDate;
 }
 
 export function createOccurrence(
@@ -117,6 +174,8 @@ export function createOccurrence(
 			sourceIntervalDays: getIntervalAt(task, sequenceIndex),
 			isOverdue: false,
 			dailyNoteDate: plannedDate,
+			completedAt:
+				task.completedDatesBySequenceIndex?.[String(sequenceIndex)],
 		};
 	}
 
@@ -131,6 +190,8 @@ export function createOccurrence(
 			sourceIntervalDays: getIntervalAt(task, sequenceIndex),
 			isOverdue: false,
 			dailyNoteDate: plannedDate,
+			skippedAt:
+				task.skippedDatesBySequenceIndex?.[String(sequenceIndex)],
 		};
 	}
 
@@ -245,16 +306,26 @@ export function completeOccurrence(
 	const skippedSequenceIndexes = task.skippedSequenceIndexes.filter(
 		(index) => index !== occurrence.sequenceIndex,
 	);
+	const completedDatesBySequenceIndex = {
+		...(task.completedDatesBySequenceIndex ?? {}),
+		[String(occurrence.sequenceIndex)]: completedDate,
+	};
+	const skippedDatesBySequenceIndex = withoutSequenceIndex(
+		task.skippedDatesBySequenceIndex,
+		occurrence.sequenceIndex,
+	);
 
 	return {
 		...task,
 		completedSequenceIndexes,
 		skippedSequenceIndexes,
+		completedDatesBySequenceIndex,
+		skippedDatesBySequenceIndex,
 		rollingAnchorDate:
 			scheduleMode === 'rollingTimeline'
 				? completedDate
 				: task.rollingAnchorDate,
-		updatedAt: completedDate,
+		updatedAt: getUpdatedAtTimestamp(),
 	};
 }
 
@@ -275,11 +346,21 @@ export function skipOccurrence(
 	const completedSequenceIndexes = task.completedSequenceIndexes.filter(
 		(index) => index !== occurrence.sequenceIndex,
 	);
+	const skippedDatesBySequenceIndex = {
+		...(task.skippedDatesBySequenceIndex ?? {}),
+		[String(occurrence.sequenceIndex)]: skippedDate,
+	};
+	const completedDatesBySequenceIndex = withoutSequenceIndex(
+		task.completedDatesBySequenceIndex,
+		occurrence.sequenceIndex,
+	);
 
 	return {
 		...task,
 		completedSequenceIndexes,
 		skippedSequenceIndexes,
-		updatedAt: skippedDate,
+		completedDatesBySequenceIndex,
+		skippedDatesBySequenceIndex,
+		updatedAt: getUpdatedAtTimestamp(),
 	};
 }
