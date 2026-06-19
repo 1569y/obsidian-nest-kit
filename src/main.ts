@@ -1,7 +1,12 @@
-import { Plugin, type TFile } from 'obsidian';
+import { Plugin, normalizePath, TFile, type TAbstractFile } from 'obsidian';
 import { FeatureManager } from './core/feature-manager';
 import { FeatureRegistry } from './core/feature-registry';
 import { migrateSettings } from './core/settings-migration';
+import {
+	buildDailyNotePath,
+	importCheckedReviewsForToday,
+} from './features/spaced-review/daily-note-sync';
+import { todayIsoDate } from './features/spaced-review/dates';
 import {
 	openCreateSpacedReviewTaskModal,
 	openSpacedReviewOverview,
@@ -21,6 +26,7 @@ export const WORKSPACE_PANEL_SYSTEM_FEATURE_ID = 'workspace-panel-system';
 export const SPACED_REVIEW_FEATURE_ID = 'spaced-review';
 
 export default class NestKitPlugin extends Plugin {
+	private static readonly DAILY_NOTE_CHECKBOX_IMPORT_DEBOUNCE_MS = 1000;
 	settings: NestKitSettings = {
 		...DEFAULT_SETTINGS,
 	};
@@ -28,6 +34,10 @@ export default class NestKitPlugin extends Plugin {
 	private dailyNoteSyncRibbonButtonEl: HTMLElement | null = null;
 	private settingsPersistenceAllowed = true;
 	private hasWarnedAboutBlockedSettingsPersistence = false;
+	private dailyNoteCheckboxImportTimer: number | null = null;
+	private pendingDailyNoteImportPath: string | null = null;
+	private dailyNoteCheckboxImportInFlight = false;
+	private rerunDailyNoteCheckboxImport = false;
 	private readonly featureRegistry = new FeatureRegistry<NestKitSettings>();
 	private readonly featureManager = new FeatureManager<NestKitSettings>(
 		this.featureRegistry,
@@ -61,11 +71,13 @@ export default class NestKitPlugin extends Plugin {
 
 		this.addSettingTab(new NestKitSettingTab(this.app, this));
 		this.registerSpacedReviewEditorContextMenu();
+		this.registerTodayDailyNoteCheckboxImportListener();
 
 		this.applyFeatureSettings();
 	}
 
 	onunload(): void {
+		this.clearDailyNoteCheckboxImportTimer();
 		this.clearSpacedReviewRibbonButtons();
 		this.featureManager.disableAll();
 	}
@@ -180,6 +192,28 @@ export default class NestKitPlugin extends Plugin {
 	private applyFeatureSettings(): void {
 		this.featureManager.sync(this.settings);
 		this.refreshSpacedReviewRibbonButtons();
+	}
+
+	private registerTodayDailyNoteCheckboxImportListener(): void {
+		this.registerEvent(
+			this.app.vault.on('modify', (file) => {
+				if (!this.shouldTrackTodayDailyNoteModify(file)) {
+					return;
+				}
+
+				this.pendingDailyNoteImportPath = file.path;
+				this.clearDailyNoteCheckboxImportTimer();
+				this.dailyNoteCheckboxImportTimer = window.setTimeout(() => {
+					this.dailyNoteCheckboxImportTimer = null;
+					const pendingPath = this.pendingDailyNoteImportPath;
+					if (!pendingPath) {
+						return;
+					}
+
+					void this.runDailyNoteCheckboxImport(pendingPath);
+				}, NestKitPlugin.DAILY_NOTE_CHECKBOX_IMPORT_DEBOUNCE_MS);
+			}),
+		);
 	}
 
 	private async loadSettings(): Promise<void> {
@@ -322,6 +356,82 @@ export default class NestKitPlugin extends Plugin {
 		this.dailyNoteSyncRibbonButtonEl?.remove();
 		this.overviewRibbonButtonEl = null;
 		this.dailyNoteSyncRibbonButtonEl = null;
+	}
+
+	private shouldTrackTodayDailyNoteModify(
+		file: TAbstractFile | null | undefined,
+	): file is TFile {
+		if (!(file instanceof TFile) || !this.isMarkdownFile(file)) {
+			return false;
+		}
+
+		if (
+			!this.settings.spacedReviewEnabled ||
+			!this.settings.spacedReviewDailyNoteSyncEnabled
+		) {
+			return false;
+		}
+
+		const feature = this.getSpacedReviewFeature();
+		if (!feature?.isEnabled()) {
+			return false;
+		}
+
+		const expectedPath = normalizePath(
+			buildDailyNotePath(this.settings, todayIsoDate()),
+		);
+		return file.path === expectedPath;
+	}
+
+	private clearDailyNoteCheckboxImportTimer(): void {
+		if (this.dailyNoteCheckboxImportTimer !== null) {
+			window.clearTimeout(this.dailyNoteCheckboxImportTimer);
+			this.dailyNoteCheckboxImportTimer = null;
+		}
+	}
+
+	private async runDailyNoteCheckboxImport(path: string): Promise<void> {
+		if (this.dailyNoteCheckboxImportInFlight) {
+			this.rerunDailyNoteCheckboxImport = true;
+			return;
+		}
+
+		const feature = this.getSpacedReviewFeature();
+		if (!feature?.isEnabled()) {
+			return;
+		}
+
+		const expectedPath = normalizePath(
+			buildDailyNotePath(this.settings, todayIsoDate()),
+		);
+		if (path !== expectedPath) {
+			return;
+		}
+
+		this.dailyNoteCheckboxImportInFlight = true;
+		try {
+			await importCheckedReviewsForToday({
+				app: this.app,
+				settings: this.settings,
+				feature,
+				silent: true,
+			});
+			await feature.refreshOpenOverviewFromExternalChange();
+		} catch (error) {
+			console.warn(
+				'[NestKit] Failed to auto-import checked Daily Note review items.',
+				error,
+			);
+		} finally {
+			this.dailyNoteCheckboxImportInFlight = false;
+			if (this.rerunDailyNoteCheckboxImport) {
+				this.rerunDailyNoteCheckboxImport = false;
+				const pendingPath = this.pendingDailyNoteImportPath;
+				if (pendingPath) {
+					void this.runDailyNoteCheckboxImport(pendingPath);
+				}
+			}
+		}
 	}
 
 	private getCurrentDictionary(): NestKitDictionary & {

@@ -66,6 +66,10 @@ function pruneSequenceDateMap(
 export class SpacedReviewFeature implements FeatureModule {
 	private enabled = false;
 	private storageAdapter?: SpacedReviewStorageAdapter;
+	private activeOverviewOwner: object | null = null;
+	private activeOverviewRefresh:
+		| (() => Promise<void>)
+		| null = null;
 
 	constructor(
 		private readonly plugin: Plugin,
@@ -87,6 +91,32 @@ export class SpacedReviewFeature implements FeatureModule {
 
 	refresh(): void {
 		void this.getSettings();
+	}
+
+	registerOpenOverviewRefresh(
+		owner: object,
+		refresh: () => Promise<void>,
+	): void {
+		this.activeOverviewOwner = owner;
+		this.activeOverviewRefresh = refresh;
+	}
+
+	clearOpenOverviewRefresh(owner: object): void {
+		if (this.activeOverviewOwner !== owner) {
+			return;
+		}
+
+		this.activeOverviewOwner = null;
+		this.activeOverviewRefresh = null;
+	}
+
+	async refreshOpenOverviewFromExternalChange(): Promise<boolean> {
+		if (!this.activeOverviewRefresh) {
+			return false;
+		}
+
+		await this.activeOverviewRefresh();
+		return true;
 	}
 
 	isEnabled(): boolean {

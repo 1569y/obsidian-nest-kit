@@ -249,3 +249,7 @@
 - Existing tasks can now change preset selection or manual custom intervals from the edit modal; the saved `intervalsSnapshot` remains the scheduling source of truth.
 - Deleting a Spaced Review task is a hard delete from the task store only and does not remove target notes or rewrite Daily Notes until the next sync.
 - When interval edits shorten the review plan, existing completed/skipped history is preserved only for sequence indexes that still fit inside the new interval length, and matching date-map entries are pruned alongside those out-of-range indexes.
+- The 0.3.2 hotfix adds a scoped near-real-time Daily Note checkbox import path without changing the Spaced Review store schema or scheduling behavior.
+- That auto-import path reuses the existing checked-item import logic after a short debounce, only targets today's configured Daily Note path, and does not rewrite the Daily Note file.
+- If the Overview modal is already open, the 0.3.2 auto-import path refreshes that existing modal in place; it does not open a second overview window.
+- This follow-up still does not add vault-wide scanning, background polling, arbitrary checkbox listeners, START or END markers, metadata blocks, or inline identity markers.

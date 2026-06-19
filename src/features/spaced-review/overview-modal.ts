@@ -190,11 +190,15 @@ export class SpacedReviewOverviewModal extends Modal {
 	onOpen(): void {
 		this.modalEl.addClass('nest-kit-spaced-review-overview-modal');
 		this.hasSyncedDailyNoteOnOpen = false;
+		this.feature.registerOpenOverviewRefresh(this, async () =>
+			this.refreshFromExternalChange(),
+		);
 		this.modalEl.addEventListener('click', this.handleModalClick);
 		void this.renderOverview();
 	}
 
 	onClose(): void {
+		this.feature.clearOpenOverviewRefresh(this);
 		this.clearLegendPopover();
 		this.clearSelectorPopover();
 		this.clearTitleActions();
@@ -1848,6 +1852,10 @@ export class SpacedReviewOverviewModal extends Modal {
 		} finally {
 			await this.renderOverview();
 		}
+	}
+
+	private async refreshFromExternalChange(): Promise<void> {
+		await this.renderOverview();
 	}
 
 	private async maybeSyncDailyNoteOnOpen(

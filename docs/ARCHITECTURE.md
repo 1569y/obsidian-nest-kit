@@ -262,9 +262,9 @@ The stable feature id is now future-facing and already reflects the intended top
 ## Spaced Review Phase 3F
 
 - Spaced Review settings now live in the existing `Spaced Review` settings tab and remain part of plugin settings, not the task store schema.
-- Daily Note sync is command-driven and lightweight: it runs only from the manual command, the optional overview button, or once per overview open when `onOverviewOpen` is enabled.
+- Daily Note sync is command-driven and lightweight: it runs only from the manual command, the optional overview button, once per overview open when `onOverviewOpen` is enabled, or a scoped near-real-time checkbox import for today's Daily Note after a short debounce.
 - Daily Note sync writes only inside the vault through the Obsidian `Vault` API and does not rely on the Daily Notes plugin internal API.
-- Daily Note sync does not watch files, does not poll in the background, and does not listen to checkbox state changes.
+- Daily Note sync does not poll in the background, does not scan the vault, and does not listen to arbitrary checkbox state changes.
 - The Daily Note path is derived from `spacedReviewDailyNoteFolder` plus `spacedReviewDailyNoteDateFormat`, with unsupported formats falling back to `YYYY-MM-DD`.
 - The Daily Note filename format is filename-only; formats that still contain path separators fall back to `YYYY-MM-DD` instead of creating nested folders from the date format itself.
 - The Daily Note target area is now configured as a section path rather than a single heading string.
@@ -281,6 +281,9 @@ The stable feature id is now future-facing and already reflects the intended top
 - Daily Note output must not contain mojibake literals; source-safe separators should stay written as `\u2014` and `\u00b7`, and the fallback heading should resolve to readable dictionary or default-settings text.
 - Folder creation stays intentionally lightweight in v1: the note file may be created when allowed, but the configured Daily Note folder must already exist and is not auto-created.
 - Checked Daily Note items are imported during sync and refresh flows only; they are not live-watched and do not rely on a vault-wide checkbox listener.
+- The 0.3.2 hotfix adds one scoped Obsidian `vault.modify` listener through `registerEvent(...)`, but it only reacts when the modified file path is exactly today's configured Daily Note path.
+- That near-real-time import path debounces repeated note edits, reuses the existing checked-checkbox import logic, does not call `syncTodayReviewsToDailyNote(...)`, and does not rewrite the Daily Note file.
+- If the Spaced Review Overview modal is already open, the same auto-import path refreshes that modal in place through a feature-level callback instead of opening a new overview.
 - Checkbox import reuses the existing complete-occurrence semantics through the feature layer instead of writing custom completion state directly.
 - Daily Note output no longer generates START or END comment markers, metadata comment blocks, or hidden per-line identity markers.
 - Checkbox import now normalizes checked task lines back to unchecked visible text, tries a unique clean-line text match against freshly rebuilt Today items first, and falls back to the same managed line index only when needed.

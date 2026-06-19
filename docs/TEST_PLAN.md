@@ -769,6 +769,10 @@
 30. Confirm when checked lines exist but no Today item can be matched, sync shows a warning and leaves the note unchanged.
 31. Confirm the unmatched-checked warning preserves the user’s `[x]` lines instead of silently rewriting them back to `[ ]`.
 32. Confirm there is still no live checkbox watcher, file watcher, or background polling loop.
+33. Confirm checking an item in today's managed Daily Note section is imported after a short debounce without manually clicking `Refresh` or `Sync note`.
+34. Confirm that near-real-time path reacts only when the modified file is exactly today's configured Daily Note path.
+35. Confirm the near-real-time path does not rewrite the Daily Note and does not reintroduce START or END markers, metadata blocks, or inline identity markers.
+36. Confirm if the Overview modal is already open, that same near-real-time import refreshes the existing modal in place instead of opening another one.
 
 ## Spaced Review Phase 3H Daily Note clean display, ribbon, context menu, and card polish
 
