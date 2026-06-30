@@ -44,6 +44,8 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 
 Heading Progress Phase 1A is implemented as an independent feature module. It does not belong to `right-sidebar-drawer`, does not belong to `spaced-review`, and does not depend on the right sidebar, Daily Note sync, or any vault-wide task or review data.
 
+Its current delivery state is branch-local rather than released: the Phase 1A status bar MVP is implemented on the current branch, remains disabled by default, and is not yet part of the released `0.3.2` line.
+
 The Phase 1A data boundary is intentionally narrow:
 
 - Read only the current active Markdown editor
@@ -118,6 +120,7 @@ The stable feature id is now future-facing and already reflects the intended top
 - Unsupported future schema versions are never overwritten by this branch: the plugin reads recognized fields for safe runtime use, logs warnings, keeps `shouldPersist = false`, and enables a session-level settings persistence lock for all later save paths.
 - While that persistence lock is active, settings UI changes, pin persistence updates, and **Restore all defaults** still affect the current session runtime state but do not write back to `data.json`.
 - A future nested feature namespace remains deferred to schema `2` or later.
+- If NestKit later adds multiple reading or editor-assist modules beyond Heading Progress, the settings information architecture can revisit whether those controls still belong in `General` or should move into a shared `Reading aids` / `Editor aids` tab.
 - Spaced Review is planned as a separate feature module, but this phase intentionally adds no Spaced Review settings keys or placeholder namespaces.
 
 ## Spaced Review Phase 1

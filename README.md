@@ -1,6 +1,6 @@
 # NestKit
 
-NestKit is a desktop-only Obsidian community plugin for modular workspace enhancements. The current `0.3.2` line includes the released right sidebar drawer and Spaced Review modules, while newer independent modules such as Heading Progress remain in planning.
+NestKit is a desktop-only Obsidian community plugin for modular workspace enhancements. The current `0.3.2` line includes the released right sidebar drawer and Spaced Review modules, while Heading Progress is already implemented on the current branch as a status bar MVP and remains not yet released.
 
 ## Desktop only
 
@@ -25,13 +25,13 @@ NestKit currently targets desktop Obsidian only. The right sidebar drawer depend
 
 - `right-sidebar-drawer`: released
 - `spaced-review`: released
-- `heading-progress`: planned
+- `heading-progress`: implemented on current branch / not released
 
-See `docs/FEATURE_STATUS.md` for a fuller project snapshot, including summary and next-step notes for released, planned, and future modules.
+See `docs/FEATURE_STATUS.md` for a fuller project snapshot, including summary and next-step notes for released, current-branch, and future modules.
 
 ## Planned roadmap
 
-- Heading Progress: a planned standalone feature module for showing reading or editing progress inside the current top-level heading block in the Obsidian status bar
+- Heading Progress: implemented on the current branch as a disabled-by-default status bar MVP that reads only the active Markdown editor and does not perform any vault-wide scan
 - Workspace panel system / dock router / floating drawer: future architecture work beyond the currently released modules
 
 ## Local development

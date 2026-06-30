@@ -8,7 +8,7 @@ This document is the quickest status snapshot for NestKit feature work. It recor
 | --- | --- | --- | --- | --- |
 | `right-sidebar-drawer` | released | released module on the current `0.3.2` line | Desktop-only right sidebar hover drawer with settings, pinning, positioning, live CSS updates, and bilingual UI support | Keep stable while later independent modules are added around it |
 | `spaced-review` | released | released module on the current `0.3.2` line | Review task creation, overview, lightweight management, Daily Note sync, and related workflow polish are already shipped | Continue with incremental polish and keep it decoupled from unrelated future modules |
-| `heading-progress` | in development | Phase 1A current-branch MVP | Independent status bar module for showing line-based progress inside the current top-level heading block of the active Markdown editor | Validate the Phase 1A status bar MVP, keep startup impact low, and decide later whether to widen presentation or release scope |
+| `heading-progress` | implemented on current branch / not released | Phase 1A current-branch status bar MVP | Independent status bar module for showing line-based progress inside the current top-level heading block of the active Markdown editor, with default-off startup behavior and no vault-wide scan | Manually validate the MVP, keep startup impact low, and decide later whether to widen presentation or release scope |
 | `workspace-panel-system` | future | future architecture | Stable registry-facing umbrella concept for broader toolbox surfaces beyond the currently released modules | Define when a real shared panel system is needed instead of keeping features independent |
 | `dock-router` | future | future architecture | Placeholder concept for routing future docked surfaces without coupling them to the current right sidebar drawer | Clarify actual navigation and placement needs before designing APIs or settings |
 | `floating-drawer` | future | future architecture | Placeholder concept for a future floating surface separate from the released right sidebar drawer | Re-evaluate only after clearer workspace-surface requirements exist |
@@ -29,14 +29,14 @@ This document is the quickest status snapshot for NestKit feature work. It recor
 - Summary: Spaced Review is already a shipped independent feature area. The current docs and architecture notes cover task creation, overview flows, lightweight management actions, Daily Note sync, and follow-up polish around those surfaces.
 - Next step: Continue small, scoped improvements without turning it into a dependency for unrelated modules such as Heading Progress or future workspace-surface work.
 
-## Current-branch module in development
+## Current-branch module not yet released
 
 ### heading-progress
 
-- Status: in development
-- Version / phase: Phase 1A current-branch MVP
-- Summary: Heading Progress now has a first minimal implementation on the current branch. It stays independent from Spaced Review and the right sidebar drawer, remains disabled by default, and limits its work to the active Markdown editor plus a compact status bar item.
-- Next step: Keep the MVP stable, validate listener cleanup and debounce behaviour, and defer broader UI surfaces or richer progress models until after this low-risk path is proven.
+- Status: implemented on current branch / not released
+- Version / phase: Phase 1A current-branch status bar MVP
+- Summary: Heading Progress now has a first minimal implementation on the current branch. It stays independent from Spaced Review and the right sidebar drawer, remains disabled by default, reads only the active Markdown editor, and does not perform any vault-wide scan.
+- Next step: Keep the MVP stable, validate listener cleanup and debounce behaviour, and if more reading or editor-assist features arrive later, consider a shared `Reading aids` or `Editor aids` settings tab instead of growing `General` indefinitely.
 
 ## Future architecture directions
 
