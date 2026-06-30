@@ -1,6 +1,6 @@
 # NestKit
 
-NestKit is a desktop-only Obsidian community plugin for modular workspace enhancements. The current development branch extends the `0.1.0` right sidebar drawer with live customization controls for drawer behaviour and positioning.
+NestKit is a desktop-only Obsidian community plugin for modular workspace enhancements. The current `0.3.2` line includes the released right sidebar drawer and Spaced Review modules, while newer independent modules such as Heading Progress remain in planning.
 
 ## Desktop only
 
@@ -21,6 +21,19 @@ NestKit currently targets desktop Obsidian only. The right sidebar drawer depend
 - Per-slider reset buttons for restoring each numeric setting to its own default value
 - Restore all defaults action for resetting the NestKit language, toggles, pinned state, and positioning values
 
+## Feature status
+
+- `right-sidebar-drawer`: released
+- `spaced-review`: released
+- `heading-progress`: planned
+
+See `docs/FEATURE_STATUS.md` for a fuller project snapshot, including summary and next-step notes for released, planned, and future modules.
+
+## Planned roadmap
+
+- Heading Progress: a planned standalone feature module for showing reading or editing progress inside the current top-level heading block in the Obsidian status bar
+- Workspace panel system / dock router / floating drawer: future architecture work beyond the currently released modules
+
 ## Local development
 
 ```bash
@@ -35,9 +48,9 @@ npm run dev
 ## Enable in Obsidian
 
 1. Build the plugin so `main.js`, `manifest.json`, and `styles.css` exist in the plugin root.
-2. Open Obsidian and go to **Settings → Community plugins**.
+2. Open Obsidian and go to **Settings > Community plugins**.
 3. Refresh community plugins if needed, then enable **NestKit**.
-4. Open **Settings → NestKit** and turn on **Enable right sidebar hover drawer**.
+4. Open **Settings > NestKit** and turn on **Enable right sidebar hover drawer**.
 
 ## Migration note for the legacy snippet
 
@@ -67,3 +80,4 @@ NestKit is currently prepared for local development and manual validation. A lat
 - `docs/TEST_PLAN.md`
 - `docs/RELEASE_CHECKLIST.md`
 - `docs/MIGRATION_NOTES.md`
+- `docs/FEATURE_STATUS.md`

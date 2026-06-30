@@ -1,5 +1,13 @@
 # Migration notes
 
+- `heading-progress-docs-planning` is a documentation-only planning round for a future `heading-progress` feature module.
+- This round does not change the plugin version, release artifacts, or any runtime behavior.
+- This round does not change the plugin settings schema version and does not add new persisted settings keys.
+- This round does not add commands, status bar items, editor listeners, or feature registration code.
+- This round does not change `src/**`, `styles.css`, `manifest.json`, `versions.json`, `package.json`, `package-lock.json`, `main.js`, or any released feature runtime.
+- Future Heading Progress implementation may need new settings such as progress source selection.
+- If those settings are added later, they must be introduced through the existing settings migration path so default values and older `data.json` compatibility are handled explicitly rather than assumed implicitly.
+
 - NestKit is now beginning its toolbox-core transition, but this phase does not change any user-visible drawer behavior.
 - A lightweight `FeatureRegistry` and `FeatureManager` now sit between `main.ts` and feature instances.
 - The existing right sidebar drawer is now registered under the stable feature id `workspace-panel-system`.

@@ -1,5 +1,29 @@
 # NestKit test plan
 
+## Heading Progress planned implementation focus
+
+1. Confirm a file with `H1` headings treats `H1` as the top-level heading level.
+2. Confirm a file with no `H1` and only `H2` headings treats `H2` as the top-level heading level.
+3. Confirm a file with no `H1` or `H2` and only `H3` headings treats `H3` as the top-level heading level.
+4. Confirm a file with `H2` sections containing `H3` and `H4` content still keeps the whole nested content inside the current `H2` main block.
+5. Confirm the current main block starts from the nearest top-level heading above the current position.
+6. Confirm the current main block ends before the next heading of the same top-level level.
+7. Confirm lower-level subheadings do not split the current main block when they are below the file's detected top-level level.
+8. Confirm `viewport-center` mode uses the editor viewport center as the progress source.
+9. Confirm `cursor-position` mode uses the active cursor line as the progress source.
+10. Confirm the default progress source is `viewport-center`.
+11. Confirm a file with no headings hides the status bar item.
+12. Confirm switching the active file updates the status bar item to the new file's current main block or hides it when appropriate.
+13. Confirm scroll-driven updates are debounced so rapid scrolling does not trigger excessive recalculation.
+14. Confirm cursor movement updates the progress display in `cursor-position` mode.
+15. Confirm editor content changes update heading boundaries and progress results for the current file.
+16. Confirm disabling the feature removes its status bar item and any feature-owned listeners or timers cleanly.
+17. Confirm the feature reads only the active Markdown editor and does not perform any vault-wide scan.
+18. Confirm the first implementation keeps progress line-based and does not claim pixel-based progress.
+19. Confirm the status bar item stays in the bottom-right status bar area.
+20. Confirm the compact status bar display can show a heading level label, percentage, and small progress bar without expanding into a large panel.
+21. Confirm the tooltip can expose the current main heading title, heading level, line range, progress source, and exact percentage.
+
 ## Spaced Review Phase 1 core focus
 
 1. Confirm there are exactly 3 built-in review presets.

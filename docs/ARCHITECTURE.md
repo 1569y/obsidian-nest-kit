@@ -30,6 +30,47 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/spaced-review/vault-storage-adapter.ts`: Obsidian Vault adapter for the Spaced Review store boundary
 - `src/features/spaced-review/task-factory.ts`: pure task creation and interval selection helpers
 
+## Planned feature modules
+
+### Heading Progress
+
+- Planned stable feature id: `heading-progress`
+- Planned source directory: `src/features/heading-progress/`
+- Planned responsibility: show the user's current progress inside the active Markdown editor's current top-level heading block through a compact bottom-right status bar item
+- Planned first display form: compact status bar text such as `H2 43%` plus a small progress bar
+- Planned first tooltip fields: current heading title, heading level, line range, progress source, and exact percentage
+
+Heading Progress is planned as an independent feature module. It does not belong to `right-sidebar-drawer`, does not belong to `spaced-review`, and should not depend on the right sidebar, Daily Note sync, or any vault-wide task or review data.
+
+The planned data boundary is intentionally narrow:
+
+- Read only the current active Markdown editor
+- Derive heading structure from the current file content already open in that editor
+- Do not scan the whole vault
+- Do not read unrelated Markdown files
+- Hide the status bar item when the active file has no headings
+
+The planned top-level heading rule is content-driven rather than fixed to `H1`:
+
+- If the file contains `H1`, then `H1` is the top-level heading level
+- If the file has no `H1` but contains `H2`, then `H2` is the top-level heading level
+- If the file has no `H1` or `H2` but contains `H3`, then `H3` is the top-level heading level
+- The same fallback pattern continues to the highest heading level that actually exists in the current file
+- The current main block starts at the nearest top-level heading above the current reading or editing position
+- The current main block ends before the next heading of that same top-level level
+- Lower-level subheadings remain part of that same main block
+
+The planned MVP calculation is line-based only. Documentation for this phase must not imply pixel-based progress is already implemented. Future extensions may add pixel-based or character-based progress later, but they are out of scope for the first implementation target.
+
+The planned progress source is settings-driven:
+
+- `viewport-center`
+- `cursor-position`
+
+The recommended default is `viewport-center`.
+
+When this feature is implemented later, it should register through the existing feature registry and remain lifecycle-isolated from the released modules. This planning round documents that intended boundary only; it does not implement registration, settings, or runtime hooks.
+
 ## Current registration
 
 - Stable feature id: `workspace-panel-system`
@@ -226,6 +267,7 @@ The stable feature id is now future-facing and already reflects the intended top
 - Spaced Review startup stays lazy-first: `onload()` only loads settings, registers features, commands, settings UI, ribbon entry points, and one editor-menu listener. It does not read the task store, build the overview model, scan vault Markdown files, or sync Daily Notes.
 - Target-link file suggestions remain modal-local. `app.vault.getMarkdownFiles()` is only called when the create or edit modal opens, and the suggestion list is kept only for that modal session.
 - Daily Note sync remains user-driven or overview-open-driven only. Plugin startup does not read or rewrite Daily Notes.
+- Heading Progress is planned to stay editor-local as well: it should derive progress only from the active Markdown editor state and must not introduce vault-wide scanning, background indexing, or cross-file heading caches.
 - Preset display labels now reflect the actual intervals that would be used for new tasks, including an optional leading `0` when the settings toggle enables review-on-creation-day behavior.
 - Custom presets are stored only in plugin settings as a textarea string, parsed on demand, and compiled into modal dropdown options at runtime. They do not add a new task-store schema field.
 - New tasks may persist a custom preset id such as `custom:...`, but scheduling still relies on the saved `intervalsSnapshot`, so later deleting that settings preset does not break existing tasks.
