@@ -2,6 +2,7 @@ import { Plugin, normalizePath, TFile, type TAbstractFile } from 'obsidian';
 import { FeatureManager } from './core/feature-manager';
 import { FeatureRegistry } from './core/feature-registry';
 import { migrateSettings } from './core/settings-migration';
+import { HeadingProgressFeature } from './features/heading-progress';
 import {
 	buildDailyNotePath,
 	importCheckedReviewsForToday,
@@ -23,6 +24,7 @@ import {
 import { getDictionary, type NestKitDictionary } from './i18n';
 
 export const WORKSPACE_PANEL_SYSTEM_FEATURE_ID = 'workspace-panel-system';
+export const HEADING_PROGRESS_FEATURE_ID = 'heading-progress';
 export const SPACED_REVIEW_FEATURE_ID = 'spaced-review';
 
 export default class NestKitPlugin extends Plugin {
@@ -53,6 +55,14 @@ export default class NestKitPlugin extends Plugin {
 			order: 100,
 			nameKey: 'features.workspacePanelSystem.name',
 			descriptionKey: 'features.workspacePanelSystem.description',
+		});
+		this.featureManager.register({
+			id: HEADING_PROGRESS_FEATURE_ID,
+			isEnabled: (settings) => settings.enableHeadingProgress,
+			create: () => new HeadingProgressFeature(this),
+			order: 150,
+			nameKey: 'features.headingProgress.name',
+			descriptionKey: 'features.headingProgress.description',
 		});
 		this.featureManager.register({
 			id: SPACED_REVIEW_FEATURE_ID,
@@ -86,6 +96,12 @@ export default class NestKitPlugin extends Plugin {
 		key: K,
 		value: NestKitSettings[K],
 	): Promise<void> {
+		const shouldRefreshHeadingProgress =
+			this.settings.enableHeadingProgress &&
+			(key === 'headingProgressSource' ||
+				key === 'headingProgressDisplayMode' ||
+				key === 'hideHeadingProgressWhenNoHeading');
+
 		if (key === 'rightSidebarPinButtonEnabled' && value === false) {
 			await this.clearPinnedState({
 				clearRuntime: true,
@@ -99,6 +115,10 @@ export default class NestKitPlugin extends Plugin {
 
 		await this.saveSettings();
 		this.applyFeatureSettings();
+
+		if (shouldRefreshHeadingProgress) {
+			this.getHeadingProgressFeature()?.refresh();
+		}
 	}
 
 	async updateRememberPinnedState(enabled: boolean): Promise<void> {
@@ -253,6 +273,14 @@ export default class NestKitPlugin extends Plugin {
 		| undefined {
 		return this.featureManager.get<RightSidebarDrawerFeature>(
 			WORKSPACE_PANEL_SYSTEM_FEATURE_ID,
+		);
+	}
+
+	private getHeadingProgressFeature():
+		| HeadingProgressFeature
+		| undefined {
+		return this.featureManager.get<HeadingProgressFeature>(
+			HEADING_PROGRESS_FEATURE_ID,
 		);
 	}
 

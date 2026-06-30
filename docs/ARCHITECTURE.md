@@ -16,6 +16,9 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/right-sidebar-drawer/index.ts`: feature lifecycle, workspace refresh logic, CSS variable application and cleanup, observer setup, and teardown
 - `src/features/right-sidebar-drawer/pin-button.ts`: pin button creation, icon updates, aria state, and click behavior
 - `src/features/right-sidebar-drawer/selectors.ts`: central selector and class constants for the feature
+- `src/features/heading-progress/index.ts`: Heading Progress Phase 1A feature lifecycle, status bar rendering, active-editor binding, debounced updates, and cleanup
+- `src/features/heading-progress/progress.ts`: heading parsing plus top-level section and line-based progress derivation
+- `src/features/heading-progress/types.ts`: Heading Progress settings union types
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
 - `src/features/spaced-review/presets.ts`: built-in review presets and default preset lookup
 - `src/features/spaced-review/intervals.ts`: interval parsing and validation for cumulative review offsets
@@ -30,27 +33,27 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/spaced-review/vault-storage-adapter.ts`: Obsidian Vault adapter for the Spaced Review store boundary
 - `src/features/spaced-review/task-factory.ts`: pure task creation and interval selection helpers
 
-## Planned feature modules
+## Heading Progress Phase 1A
 
-### Heading Progress
+- Stable feature id: `heading-progress`
+- Source directory: `src/features/heading-progress/`
+- Current enable selector: `settings.enableHeadingProgress`
+- Phase 1A responsibility: show the user's current progress inside the active Markdown editor's current top-level heading block through a compact bottom-right status bar item
+- Phase 1A display modes: `bar-and-percent`, `percent-only`, `bar-only`
+- Phase 1A progress sources: `viewport-center`, `cursor-position`
 
-- Planned stable feature id: `heading-progress`
-- Planned source directory: `src/features/heading-progress/`
-- Planned responsibility: show the user's current progress inside the active Markdown editor's current top-level heading block through a compact bottom-right status bar item
-- Planned first display form: compact status bar text such as `H2 43%` plus a small progress bar
-- Planned first tooltip fields: current heading title, heading level, line range, progress source, and exact percentage
+Heading Progress Phase 1A is implemented as an independent feature module. It does not belong to `right-sidebar-drawer`, does not belong to `spaced-review`, and does not depend on the right sidebar, Daily Note sync, or any vault-wide task or review data.
 
-Heading Progress is planned as an independent feature module. It does not belong to `right-sidebar-drawer`, does not belong to `spaced-review`, and should not depend on the right sidebar, Daily Note sync, or any vault-wide task or review data.
-
-The planned data boundary is intentionally narrow:
+The Phase 1A data boundary is intentionally narrow:
 
 - Read only the current active Markdown editor
 - Derive heading structure from the current file content already open in that editor
 - Do not scan the whole vault
 - Do not read unrelated Markdown files
-- Hide the status bar item when the active file has no headings
+- Do not build a vault-wide heading cache
+- Hide the status bar item when the active file has no active top-level heading and the hide setting is enabled
 
-The planned top-level heading rule is content-driven rather than fixed to `H1`:
+The top-level heading rule is content-driven rather than fixed to `H1`:
 
 - If the file contains `H1`, then `H1` is the top-level heading level
 - If the file has no `H1` but contains `H2`, then `H2` is the top-level heading level
@@ -60,16 +63,15 @@ The planned top-level heading rule is content-driven rather than fixed to `H1`:
 - The current main block ends before the next heading of that same top-level level
 - Lower-level subheadings remain part of that same main block
 
-The planned MVP calculation is line-based only. Documentation for this phase must not imply pixel-based progress is already implemented. Future extensions may add pixel-based or character-based progress later, but they are out of scope for the first implementation target.
+The Phase 1A calculation is line-based only. Pixel-based or character-based progress remains future work and is intentionally not part of the first implementation target.
 
-The planned progress source is settings-driven:
+Phase 1A runtime behavior stays low-impact:
 
-- `viewport-center`
-- `cursor-position`
-
-The recommended default is `viewport-center`.
-
-When this feature is implemented later, it should register through the existing feature registry and remain lifecycle-isolated from the released modules. This planning round documents that intended boundary only; it does not implement registration, settings, or runtime hooks.
+- The feature is registered through the existing feature registry but stays disabled by default
+- Plugin `onload()` does not parse headings or Markdown files for this feature
+- Parsing happens only when the feature is enabled and an active Markdown editor is available
+- High-frequency editor signals feed a single short debounce path instead of immediate recalculation
+- Disabling the feature or unloading the plugin removes status bar UI, DOM listeners, workspace listeners, and pending timers
 
 ## Current registration
 
@@ -104,6 +106,11 @@ The stable feature id is now future-facing and already reflects the intended top
 - Legacy `0.2.0` settings without `schemaVersion` are treated as schema `0`.
 - The current schema is `1`, stored in `settings.schemaVersion`.
 - Schema `1` intentionally keeps the existing flat settings keys so runtime logic, settings UI, and feature registration selectors do not need to change in this phase.
+- Heading Progress Phase 1A adds four more flat settings keys without a schema-version bump:
+  - `enableHeadingProgress`
+  - `headingProgressSource`
+  - `headingProgressDisplayMode`
+  - `hideHeadingProgressWhenNoHeading`
 - `src/core/settings-migration.ts` validates every known field by type and, for numeric slider-backed settings, by the same `min` / `max` ranges used by the current settings UI.
 - Missing fields are filled from `DEFAULT_SETTINGS`.
 - Invalid booleans, unknown languages, `NaN`, `Infinity`, and out-of-range numeric values fall back to defaults.
@@ -267,7 +274,8 @@ The stable feature id is now future-facing and already reflects the intended top
 - Spaced Review startup stays lazy-first: `onload()` only loads settings, registers features, commands, settings UI, ribbon entry points, and one editor-menu listener. It does not read the task store, build the overview model, scan vault Markdown files, or sync Daily Notes.
 - Target-link file suggestions remain modal-local. `app.vault.getMarkdownFiles()` is only called when the create or edit modal opens, and the suggestion list is kept only for that modal session.
 - Daily Note sync remains user-driven or overview-open-driven only. Plugin startup does not read or rewrite Daily Notes.
-- Heading Progress is planned to stay editor-local as well: it should derive progress only from the active Markdown editor state and must not introduce vault-wide scanning, background indexing, or cross-file heading caches.
+- Heading Progress Phase 1A also stays lazy-first: `onload()` only registers the feature. It does not parse headings, does not scan vault Markdown files, and does not attach active-editor listeners until the feature is enabled.
+- Once enabled, Heading Progress stays editor-local: it derives progress only from the active Markdown editor state and does not introduce vault-wide scanning, background indexing, or cross-file heading caches.
 - Preset display labels now reflect the actual intervals that would be used for new tasks, including an optional leading `0` when the settings toggle enables review-on-creation-day behavior.
 - Custom presets are stored only in plugin settings as a textarea string, parsed on demand, and compiled into modal dropdown options at runtime. They do not add a new task-store schema field.
 - New tasks may persist a custom preset id such as `custom:...`, but scheduling still relies on the saved `intervalsSnapshot`, so later deleting that settings preset does not break existing tasks.

@@ -1,5 +1,17 @@
 # Migration notes
 
+- `heading-progress-phase1a-statusbar-mvp` adds the first implemented Heading Progress runtime on the current branch.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round adds four new flat plugin settings keys with default-backed normalization:
+  - `enableHeadingProgress`
+  - `headingProgressSource`
+  - `headingProgressDisplayMode`
+  - `hideHeadingProgressWhenNoHeading`
+- Older settings data that lacks those keys is normalized with defaults through the existing settings migration path.
+- This round adds a new independently registered `heading-progress` feature module, but it remains disabled by default.
+- Heading Progress Phase 1A does not add commands, ribbon buttons, vault scans, Markdown file enumeration, background polling, or startup heading parsing.
+- Heading Progress Phase 1A reads only the current active Markdown editor when the feature is enabled and an editor is available.
+
 - `heading-progress-docs-planning` is a documentation-only planning round for a future `heading-progress` feature module.
 - This round does not change the plugin version, release artifacts, or any runtime behavior.
 - This round does not change the plugin settings schema version and does not add new persisted settings keys.

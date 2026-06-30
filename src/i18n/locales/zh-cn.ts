@@ -215,6 +215,36 @@ export const zhCnDictionary = {
 				skip: '\u8df3\u8fc7',
 			},
 		},
+		headingProgress: {
+			heading: '\u6807\u9898\u8fdb\u5ea6',
+			description:
+				'\u53ea\u9488\u5bf9\u5f53\u524d active Markdown editor\uff0c\u663e\u793a\u5f53\u524d\u6700\u9ad8\u5c42\u6807\u9898\u533a\u5757\u7684\u8fdb\u5ea6\u3002',
+			enable: {
+				name: '\u542f\u7528\u6807\u9898\u8fdb\u5ea6',
+				description:
+					'\u4e3a\u5f53\u524d active Markdown editor \u663e\u793a\u4e00\u4e2a\u7d27\u51d1\u7684\u72b6\u6001\u680f\u8fdb\u5ea6\u9879\u3002',
+			},
+			source: {
+				name: '\u8fdb\u5ea6\u6765\u6e90',
+				description:
+					'\u9009\u62e9\u4f7f\u7528 viewport center \u8fd8\u662f\u5f53\u524d cursor line \u4f5c\u4e3a\u8fdb\u5ea6\u4f4d\u7f6e\u3002',
+				viewportCenter: 'Viewport center',
+				cursorPosition: 'Cursor position',
+			},
+			displayMode: {
+				name: '\u663e\u793a\u6a21\u5f0f',
+				description:
+					'\u9009\u62e9\u72b6\u6001\u680f\u8fdb\u5ea6\u9879\u663e\u793a\u8fdb\u5ea6\u6761\u3001\u767e\u5206\u6bd4\u6216\u4e24\u8005\u3002',
+				barAndPercent: '\u8fdb\u5ea6\u6761 + \u767e\u5206\u6bd4',
+				percentOnly: '\u4ec5\u767e\u5206\u6bd4',
+				barOnly: '\u4ec5\u8fdb\u5ea6\u6761',
+			},
+			hideWhenNoHeading: {
+				name: '\u65e0 active \u6807\u9898\u65f6\u9690\u85cf',
+				description:
+					'\u5f53\u5f53\u524d cursor \u6216 viewport \u4e0d\u5728\u6700\u9ad8\u5c42\u6807\u9898\u533a\u5757\u5185\u65f6\uff0c\u9690\u85cf\u72b6\u6001\u680f\u8fdb\u5ea6\u9879\u3002',
+			},
+		},
 		sliders: {
 			edgeTriggerWidth: {
 				name: '\u8fb9\u7f18\u89e6\u53d1\u5bbd\u5ea6',
@@ -288,10 +318,28 @@ export const zhCnDictionary = {
 		unpin: '\u53d6\u6d88\u56fa\u5b9a\u53f3\u4fa7\u680f',
 	},
 	features: {
+		headingProgress: {
+			name: '\u6807\u9898\u8fdb\u5ea6',
+			description:
+				'\u5728 active Markdown editor \u4e2d\uff0c\u4e3a\u5f53\u524d\u6700\u9ad8\u5c42\u6807\u9898\u533a\u5757\u63d0\u4f9b\u72b6\u6001\u680f\u8fdb\u5ea6\u663e\u793a\u3002',
+		},
 		spacedReview: {
 			name: '\u95f4\u9694\u590d\u4e60',
 			description:
 				'\u521b\u5efa\u95f4\u9694\u590d\u4e60\u4efb\u52a1\u5e76\u8bbf\u95ee\u53ea\u8bfb\u603b\u89c8\u3002',
+		},
+	},
+	headingProgress: {
+		statusBar: {
+			noHeading: '\u65e0\u6807\u9898',
+			noEditor: '\u65e0 Editor',
+			sourceViewportCenter: 'Viewport center',
+			sourceCursorPosition: 'Cursor position',
+			tooltipHeadingTitle: '\u6807\u9898',
+			tooltipHeadingLevel: '\u7ea7\u522b',
+			tooltipLineRange: '\u884c\u8303\u56f4',
+			tooltipProgressSource: '\u6765\u6e90',
+			tooltipPercentage: '\u8fdb\u5ea6',
 		},
 	},
 	commands: {

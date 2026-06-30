@@ -209,6 +209,36 @@ export const enDictionary = {
 				skip: 'Skip',
 			},
 		},
+		headingProgress: {
+			heading: 'Heading Progress',
+			description:
+				'Show progress for the current top-level heading section in the active Markdown editor only.',
+			enable: {
+				name: 'Enable Heading Progress',
+				description:
+					'Show a compact status bar progress item for the active Markdown editor.',
+			},
+			source: {
+				name: 'Progress source',
+				description:
+					'Choose whether progress follows the viewport center or the active cursor line.',
+				viewportCenter: 'Viewport center',
+				cursorPosition: 'Cursor position',
+			},
+			displayMode: {
+				name: 'Display mode',
+				description:
+					'Choose whether the status bar item shows the bar, the percentage, or both.',
+				barAndPercent: 'Bar and percent',
+				percentOnly: 'Percent only',
+				barOnly: 'Bar only',
+			},
+			hideWhenNoHeading: {
+				name: 'Hide when no active heading',
+				description:
+					'Hide the status bar item when the current cursor or viewport position is not inside a top-level heading section.',
+			},
+		},
 		sliders: {
 			edgeTriggerWidth: {
 				name: 'Edge trigger width',
@@ -273,10 +303,28 @@ export const enDictionary = {
 		unpin: 'Unpin right sidebar',
 	},
 	features: {
+		headingProgress: {
+			name: 'Heading Progress',
+			description:
+				'Status bar progress for the current top-level heading section in the active Markdown editor.',
+		},
 		spacedReview: {
 			name: 'Spaced Review',
 			description:
 				'Spaced review task creation and read-only overview access.',
+		},
+	},
+	headingProgress: {
+		statusBar: {
+			noHeading: 'No heading',
+			noEditor: 'No editor',
+			sourceViewportCenter: 'Viewport center',
+			sourceCursorPosition: 'Cursor position',
+			tooltipHeadingTitle: 'Heading',
+			tooltipHeadingLevel: 'Level',
+			tooltipLineRange: 'Lines',
+			tooltipProgressSource: 'Source',
+			tooltipPercentage: 'Progress',
 		},
 	},
 	commands: {

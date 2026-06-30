@@ -1,4 +1,8 @@
 import type { NestKitLanguage } from '../i18n';
+import type {
+	HeadingProgressDisplayMode,
+	HeadingProgressSource,
+} from '../features/heading-progress/types';
 import { DEFAULT_REVIEW_PRESET_ID } from '../features/spaced-review/presets';
 import type {
 	CompletedOccurrenceDisplay,
@@ -71,6 +75,16 @@ const TARGET_LINK_OPEN_MODE_VALUES = new Set<TargetLinkOpenMode>([
 	'current',
 	'newTab',
 ]);
+const HEADING_PROGRESS_SOURCE_VALUES = new Set<HeadingProgressSource>([
+	'viewport-center',
+	'cursor-position',
+]);
+const HEADING_PROGRESS_DISPLAY_MODE_VALUES =
+	new Set<HeadingProgressDisplayMode>([
+		'bar-and-percent',
+		'percent-only',
+		'bar-only',
+	]);
 const BUILT_IN_PRESET_IDS = new Set<string>([
 	'fast-review',
 	'standard-review',
@@ -312,6 +326,32 @@ function normalizeSettings(
 			raw,
 			'rightSidebarPinRightPx',
 			DEFAULT_SETTINGS.rightSidebarPinRightPx,
+			invalidFieldWarnings,
+		),
+		enableHeadingProgress: readBoolean(
+			raw,
+			'enableHeadingProgress',
+			DEFAULT_SETTINGS.enableHeadingProgress,
+			invalidFieldWarnings,
+		),
+		headingProgressSource: readEnumSetting(
+			raw,
+			'headingProgressSource',
+			DEFAULT_SETTINGS.headingProgressSource,
+			HEADING_PROGRESS_SOURCE_VALUES,
+			invalidFieldWarnings,
+		),
+		headingProgressDisplayMode: readEnumSetting(
+			raw,
+			'headingProgressDisplayMode',
+			DEFAULT_SETTINGS.headingProgressDisplayMode,
+			HEADING_PROGRESS_DISPLAY_MODE_VALUES,
+			invalidFieldWarnings,
+		),
+		hideHeadingProgressWhenNoHeading: readBoolean(
+			raw,
+			'hideHeadingProgressWhenNoHeading',
+			DEFAULT_SETTINGS.hideHeadingProgressWhenNoHeading,
 			invalidFieldWarnings,
 		),
 		spacedReviewEnabled: readBoolean(

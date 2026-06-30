@@ -1,6 +1,6 @@
 # NestKit feature status
 
-This document is the quickest status snapshot for NestKit feature work. It records what is already released, what is only planned in docs, and what remains future architecture direction.
+This document is the quickest status snapshot for NestKit feature work. It records what is already released, what is implemented on the current branch but not yet released, and what remains future architecture direction.
 
 ## Snapshot
 
@@ -8,7 +8,7 @@ This document is the quickest status snapshot for NestKit feature work. It recor
 | --- | --- | --- | --- | --- |
 | `right-sidebar-drawer` | released | released module on the current `0.3.2` line | Desktop-only right sidebar hover drawer with settings, pinning, positioning, live CSS updates, and bilingual UI support | Keep stable while later independent modules are added around it |
 | `spaced-review` | released | released module on the current `0.3.2` line | Review task creation, overview, lightweight management, Daily Note sync, and related workflow polish are already shipped | Continue with incremental polish and keep it decoupled from unrelated future modules |
-| `heading-progress` | planned | docs planning | Planned standalone module for showing progress inside the current top-level heading block in the active Markdown editor status bar | Implement the editor-local module boundary, line-based progress MVP, and progress source setting when the planning round turns into feature work |
+| `heading-progress` | in development | Phase 1A current-branch MVP | Independent status bar module for showing line-based progress inside the current top-level heading block of the active Markdown editor | Validate the Phase 1A status bar MVP, keep startup impact low, and decide later whether to widen presentation or release scope |
 | `workspace-panel-system` | future | future architecture | Stable registry-facing umbrella concept for broader toolbox surfaces beyond the currently released modules | Define when a real shared panel system is needed instead of keeping features independent |
 | `dock-router` | future | future architecture | Placeholder concept for routing future docked surfaces without coupling them to the current right sidebar drawer | Clarify actual navigation and placement needs before designing APIs or settings |
 | `floating-drawer` | future | future architecture | Placeholder concept for a future floating surface separate from the released right sidebar drawer | Re-evaluate only after clearer workspace-surface requirements exist |
@@ -29,14 +29,14 @@ This document is the quickest status snapshot for NestKit feature work. It recor
 - Summary: Spaced Review is already a shipped independent feature area. The current docs and architecture notes cover task creation, overview flows, lightweight management actions, Daily Note sync, and follow-up polish around those surfaces.
 - Next step: Continue small, scoped improvements without turning it into a dependency for unrelated modules such as Heading Progress or future workspace-surface work.
 
-## Planned module
+## Current-branch module in development
 
 ### heading-progress
 
-- Status: planned
-- Version / phase: docs planning
-- Summary: Heading Progress is planned as a standalone feature module for showing reading or editing progress inside the current top-level heading block of the active Markdown editor. The current planning scope keeps it editor-local, line-based, and status-bar-first.
-- Next step: When implementation starts, add the independent feature module, status bar item, tooltip, and settings-backed progress source selection without introducing vault-wide scanning.
+- Status: in development
+- Version / phase: Phase 1A current-branch MVP
+- Summary: Heading Progress now has a first minimal implementation on the current branch. It stays independent from Spaced Review and the right sidebar drawer, remains disabled by default, and limits its work to the active Markdown editor plus a compact status bar item.
+- Next step: Keep the MVP stable, validate listener cleanup and debounce behaviour, and defer broader UI surfaces or richer progress models until after this low-risk path is proven.
 
 ## Future architecture directions
 

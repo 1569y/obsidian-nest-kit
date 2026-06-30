@@ -13,6 +13,10 @@ import {
 	withTodayAsFirstReview,
 } from './features/spaced-review/presets';
 import type {
+	HeadingProgressDisplayMode,
+	HeadingProgressSource,
+} from './features/heading-progress/types';
+import type {
 	CompletedOccurrenceDisplay,
 	DailyNoteSyncMode,
 	OverduePolicy,
@@ -204,9 +208,40 @@ interface SpacedReviewSettingsDictionaryExtension {
 	};
 }
 
+interface HeadingProgressSettingsDictionaryExtension {
+	settings: {
+		headingProgress: {
+			heading: string;
+			description: string;
+			enable: {
+				name: string;
+				description: string;
+			};
+			source: {
+				name: string;
+				description: string;
+				viewportCenter: string;
+				cursorPosition: string;
+			};
+			displayMode: {
+				name: string;
+				description: string;
+				barAndPercent: string;
+				percentOnly: string;
+				barOnly: string;
+			};
+			hideWhenNoHeading: {
+				name: string;
+				description: string;
+			};
+		};
+	};
+}
+
 type SettingsPageDictionary = NestKitDictionary &
 	SettingsTabDictionaryExtension &
-	SpacedReviewSettingsDictionaryExtension;
+	SpacedReviewSettingsDictionaryExtension &
+	HeadingProgressSettingsDictionaryExtension;
 
 export const NUMERIC_SETTING_LIMITS: Record<
 	SliderSettingKey,
@@ -298,6 +333,10 @@ export interface NestKitSettings {
 	rightSidebarTopControlOffsetPx: number;
 	rightSidebarPinTopPx: number;
 	rightSidebarPinRightPx: number;
+	enableHeadingProgress: boolean;
+	headingProgressSource: HeadingProgressSource;
+	headingProgressDisplayMode: HeadingProgressDisplayMode;
+	hideHeadingProgressWhenNoHeading: boolean;
 	spacedReviewEnabled: boolean;
 	spacedReviewDailyNoteSyncEnabled: boolean;
 	spacedReviewDailyNoteFolder: string;
@@ -340,6 +379,10 @@ export const DEFAULT_SETTINGS: NestKitSettings = {
 	rightSidebarTopControlOffsetPx: 110,
 	rightSidebarPinTopPx: 6,
 	rightSidebarPinRightPx: 8,
+	enableHeadingProgress: false,
+	headingProgressSource: 'viewport-center',
+	headingProgressDisplayMode: 'bar-and-percent',
+	hideHeadingProgressWhenNoHeading: true,
 	spacedReviewEnabled: false,
 	spacedReviewDailyNoteSyncEnabled: false,
 	spacedReviewDailyNoteFolder: '',
@@ -625,6 +668,90 @@ export class NestKitSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						await this.plugin.updateSetting('spacedReviewEnabled', value);
 						this.display();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.headingProgress.heading)
+			.setHeading();
+		this.renderTabDescription(
+			containerEl,
+			dictionary.settings.headingProgress.description,
+		);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.headingProgress.enable.name)
+			.setDesc(dictionary.settings.headingProgress.enable.description)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.enableHeadingProgress)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting('enableHeadingProgress', value);
+						this.display();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.headingProgress.source.name)
+			.setDesc(dictionary.settings.headingProgress.source.description)
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption(
+						'viewport-center',
+						dictionary.settings.headingProgress.source.viewportCenter,
+					)
+					.addOption(
+						'cursor-position',
+						dictionary.settings.headingProgress.source.cursorPosition,
+					)
+					.setValue(this.plugin.settings.headingProgressSource)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'headingProgressSource',
+							value as HeadingProgressSource,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.headingProgress.displayMode.name)
+			.setDesc(dictionary.settings.headingProgress.displayMode.description)
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption(
+						'bar-and-percent',
+						dictionary.settings.headingProgress.displayMode.barAndPercent,
+					)
+					.addOption(
+						'percent-only',
+						dictionary.settings.headingProgress.displayMode.percentOnly,
+					)
+					.addOption(
+						'bar-only',
+						dictionary.settings.headingProgress.displayMode.barOnly,
+					)
+					.setValue(this.plugin.settings.headingProgressDisplayMode)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'headingProgressDisplayMode',
+							value as HeadingProgressDisplayMode,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.headingProgress.hideWhenNoHeading.name)
+			.setDesc(
+				dictionary.settings.headingProgress.hideWhenNoHeading.description,
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.hideHeadingProgressWhenNoHeading)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'hideHeadingProgressWhenNoHeading',
+							value,
+						);
 					}),
 			);
 	}

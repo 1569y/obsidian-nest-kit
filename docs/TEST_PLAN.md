@@ -1,28 +1,42 @@
 # NestKit test plan
 
-## Heading Progress planned implementation focus
+## Heading Progress Phase 1A status bar MVP
 
-1. Confirm a file with `H1` headings treats `H1` as the top-level heading level.
-2. Confirm a file with no `H1` and only `H2` headings treats `H2` as the top-level heading level.
-3. Confirm a file with no `H1` or `H2` and only `H3` headings treats `H3` as the top-level heading level.
-4. Confirm a file with `H2` sections containing `H3` and `H4` content still keeps the whole nested content inside the current `H2` main block.
-5. Confirm the current main block starts from the nearest top-level heading above the current position.
-6. Confirm the current main block ends before the next heading of the same top-level level.
-7. Confirm lower-level subheadings do not split the current main block when they are below the file's detected top-level level.
-8. Confirm `viewport-center` mode uses the editor viewport center as the progress source.
-9. Confirm `cursor-position` mode uses the active cursor line as the progress source.
-10. Confirm the default progress source is `viewport-center`.
-11. Confirm a file with no headings hides the status bar item.
-12. Confirm switching the active file updates the status bar item to the new file's current main block or hides it when appropriate.
-13. Confirm scroll-driven updates are debounced so rapid scrolling does not trigger excessive recalculation.
-14. Confirm cursor movement updates the progress display in `cursor-position` mode.
-15. Confirm editor content changes update heading boundaries and progress results for the current file.
-16. Confirm disabling the feature removes its status bar item and any feature-owned listeners or timers cleanly.
-17. Confirm the feature reads only the active Markdown editor and does not perform any vault-wide scan.
-18. Confirm the first implementation keeps progress line-based and does not claim pixel-based progress.
-19. Confirm the status bar item stays in the bottom-right status bar area.
-20. Confirm the compact status bar display can show a heading level label, percentage, and small progress bar without expanding into a large panel.
-21. Confirm the tooltip can expose the current main heading title, heading level, line range, progress source, and exact percentage.
+1. Confirm Heading Progress is disabled by default in settings.
+2. Confirm enabling Heading Progress creates a compact bottom-right status bar item only for the active Markdown editor path.
+3. Confirm disabling Heading Progress removes its status bar item immediately.
+4. Confirm disabling Heading Progress also removes feature-owned workspace listeners, editor DOM listeners, and pending debounce timers.
+5. Confirm plugin `onload()` does not parse headings or Markdown files for Heading Progress while the feature remains disabled.
+6. Confirm a file with `H1` headings treats `H1` as the top-level heading level.
+7. Confirm a file with no `H1` and only `H2` headings treats `H2` as the top-level heading level.
+8. Confirm a file with no `H1` or `H2` and only `H3` headings treats `H3` as the top-level heading level.
+9. Confirm a file with `H2` sections containing `H3` and `H4` content still keeps the whole nested content inside the current `H2` main block.
+10. Confirm the current main block starts from the nearest top-level heading above the current position.
+11. Confirm the current main block ends before the next heading of the same top-level level.
+12. Confirm lower-level subheadings do not split the current main block when they are below the file's detected top-level level.
+13. Confirm `viewport-center` mode uses the editor viewport center as the progress source.
+14. Confirm `cursor-position` mode uses the active cursor line as the progress source.
+15. Confirm the default progress source is `viewport-center`.
+16. Confirm the default display mode is `bar-and-percent`.
+17. Confirm `percent-only` shows the heading label plus percentage without the mini bar.
+18. Confirm `bar-only` shows the heading label plus mini bar without the percentage text.
+19. Confirm `bar-and-percent` shows the heading label, percentage, and mini bar together.
+20. Confirm a file with no headings hides the status bar item when `hideHeadingProgressWhenNoHeading` is enabled.
+21. Confirm a file with no active top-level heading position above the first heading also hides the status bar item when the hide setting is enabled.
+22. Confirm switching the active file updates the status bar item to the new file's current main block or hides it when appropriate.
+23. Confirm scroll-driven updates are debounced so rapid scrolling does not trigger excessive recalculation.
+24. Confirm cursor movement updates the progress display in `cursor-position` mode.
+25. Confirm editor content changes update heading boundaries and progress results for the current file.
+26. Confirm active-editor content changes still trigger a reparse when the `editor-change` event arrives through a `MarkdownFileInfo` path that matches the current active Markdown file.
+27. Confirm switching `headingProgressSource` while Heading Progress is enabled refreshes the status bar item immediately.
+28. Confirm switching `headingProgressDisplayMode` while Heading Progress is enabled refreshes the status bar item immediately.
+29. Confirm switching `hideHeadingProgressWhenNoHeading` while Heading Progress is enabled refreshes the status bar item immediately.
+30. Confirm layout changes rebind the active editor safely without leaving duplicate listeners behind.
+31. Confirm the feature reads only the active Markdown editor and does not perform any vault-wide scan.
+32. Confirm the first implementation keeps progress line-based and does not claim pixel-based progress.
+33. Confirm the status bar item stays in the bottom-right status bar area.
+34. Confirm the compact status bar display can show a heading level label, percentage, and small progress bar without expanding into a large panel.
+35. Confirm the tooltip can expose the current main heading title, heading level, line range, progress source, and exact percentage.
 
 ## Spaced Review Phase 1 core focus
 

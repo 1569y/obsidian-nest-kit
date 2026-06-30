@@ -258,6 +258,54 @@ body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
   background: var(--background-modifier-hover) !important;
 }
 
+.nest-kit-heading-progress-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.nest-kit-heading-progress-status.is-hidden {
+  display: none;
+}
+
+.nest-kit-heading-progress-status.is-percent-hidden
+  .nest-kit-heading-progress-status__percentage,
+.nest-kit-heading-progress-status.is-bar-hidden
+  .nest-kit-heading-progress-status__bar {
+  display: none;
+}
+
+.nest-kit-heading-progress-status__label {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.nest-kit-heading-progress-status__percentage {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.nest-kit-heading-progress-status__bar {
+  position: relative;
+  width: 32px;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--background-modifier-border);
+}
+
+.nest-kit-heading-progress-status__bar-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--interactive-accent);
+  transition: width 120ms ease;
+}
+
 body.nest-kit-sidebar-drawer-enabled:not(.is-mobile)
   .nest-kit-sidebar-pin-button svg {
   width: 16px;
