@@ -1,5 +1,12 @@
 # Migration notes
 
+- `release-0.4.0-heading-progress` releases Heading Progress Phase 1A as part of NestKit `0.4.0`.
+- Heading Progress Phase 1A now ships as a released status bar MVP that shows progress inside the current top-level heading section.
+- The released MVP supports `viewport-center` and `cursor-position` source modes.
+- The released MVP supports `bar-and-percent`, `percent-only`, and `bar-only` display modes.
+- Heading Progress remains disabled by default after release.
+- Heading Progress still reads only the current active Markdown editor and does not scan the vault.
+
 - `heading-progress-phase1a-statusbar-mvp` adds the first implemented Heading Progress runtime on the current branch.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
 - This round adds four new flat plugin settings keys with default-backed normalization:

@@ -44,7 +44,7 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 
 Heading Progress Phase 1A is implemented as an independent feature module. It does not belong to `right-sidebar-drawer`, does not belong to `spaced-review`, and does not depend on the right sidebar, Daily Note sync, or any vault-wide task or review data.
 
-Its current delivery state is branch-local rather than released: the Phase 1A status bar MVP is implemented on the current branch, remains disabled by default, and is not yet part of the released `0.3.2` line.
+Its current delivery state is released in `0.4.0`: the Phase 1A status bar MVP remains disabled by default, reads only the active Markdown editor, and is now part of the released plugin line without adding any vault-wide scan.
 
 The Phase 1A data boundary is intentionally narrow:
 

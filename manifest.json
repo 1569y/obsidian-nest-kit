@@ -1,7 +1,7 @@
 {
 	"id": "nest-kit",
 	"name": "NestKit",
-	"version": "0.3.2",
+	"version": "0.4.0",
 	"minAppVersion": "1.12.7",
 	"description": "A modular toolkit for personal Obsidian workspace enhancements.",
 	"author": "aslina",

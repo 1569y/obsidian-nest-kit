@@ -27,17 +27,18 @@ export const enDictionary = {
 			phase25:
 				'Added Spaced Review task creation, overview management, and Daily Note sync.',
 			later:
-				'Added Heading Progress Phase 1A status bar MVP on the current branch. It is disabled by default and only reads the active Markdown editor.',
+				'Added Heading Progress Phase 1A status bar MVP. It shows progress inside the current top-level heading section, supports viewport-center and cursor-position source modes, supports bar and percent, percent only, and bar only display modes, stays disabled by default, reads only the active Markdown editor, and does not scan the vault.',
 		},
 		about: {
 			title: 'About',
 			version: 'Version',
 			description: 'NestKit is a local-first Obsidian toolbox.',
 			released: 'Released',
-			releasedSummary: 'Right Sidebar Drawer, Spaced Review',
-			currentBranch: 'Current branch',
+			releasedSummary:
+				'Right Sidebar Drawer, Spaced Review, Heading Progress Phase 1A',
+			currentBranch: 'Current release',
 			currentBranchSummary:
-				'Heading Progress Phase 1A status bar MVP is implemented but not released',
+				'Heading Progress Phase 1A status bar MVP is released in 0.4.0',
 			performance:
 				'This phase keeps settings fast to open and fully offline.',
 		},
