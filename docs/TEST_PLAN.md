@@ -37,6 +37,11 @@
 33. Confirm the status bar item stays in the bottom-right status bar area.
 34. Confirm the compact status bar display can show a heading level label, percentage, and small progress bar without expanding into a large panel.
 35. Confirm the tooltip can expose the current main heading title, heading level, line range, progress source, and exact percentage.
+36. Confirm the `General` / `常规` tab contains the top-level feature toggles, including `Enable Heading Progress`.
+37. Confirm the dedicated `Heading Progress` / `标题内进度` tab contains only progress source, display mode, and hide-when-no-active-heading controls.
+38. Confirm the Heading Progress tab no longer repeats the long intro paragraph or the enable toggle.
+39. Confirm the About tab summary reflects the released modules and the current-branch Heading Progress Phase 1A status.
+40. Confirm the About page and **What's New** modal show the same changelog items.
 
 ## Spaced Review Phase 1 core focus
 

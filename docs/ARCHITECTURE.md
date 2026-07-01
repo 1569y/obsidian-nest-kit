@@ -74,6 +74,7 @@ Phase 1A runtime behavior stays low-impact:
 - Parsing happens only when the feature is enabled and an active Markdown editor is available
 - High-frequency editor signals feed a single short debounce path instead of immediate recalculation
 - Disabling the feature or unloading the plugin removes status bar UI, DOM listeners, workspace listeners, and pending timers
+- The Phase 1A settings UI now uses its own `Heading Progress` settings tab instead of mixing feature-specific controls into `General`
 
 ## Current registration
 
@@ -120,7 +121,8 @@ The stable feature id is now future-facing and already reflects the intended top
 - Unsupported future schema versions are never overwritten by this branch: the plugin reads recognized fields for safe runtime use, logs warnings, keeps `shouldPersist = false`, and enables a session-level settings persistence lock for all later save paths.
 - While that persistence lock is active, settings UI changes, pin persistence updates, and **Restore all defaults** still affect the current session runtime state but do not write back to `data.json`.
 - A future nested feature namespace remains deferred to schema `2` or later.
-- If NestKit later adds multiple reading or editor-assist modules beyond Heading Progress, the settings information architecture can revisit whether those controls still belong in `General` or should move into a shared `Reading aids` / `Editor aids` tab.
+ - Heading Progress now keeps its detail settings in a dedicated tab, while its module enable toggle lives in `General` with the other core feature switches.
+ - If NestKit later adds multiple reading or editor-assist modules beyond Heading Progress, the settings information architecture can revisit whether those controls should stay in a shared `Heading Progress` / `Reading aids` / `Editor aids` area or split into more specific tabs.
 - Spaced Review is planned as a separate feature module, but this phase intentionally adds no Spaced Review settings keys or placeholder namespaces.
 
 ## Spaced Review Phase 1
@@ -204,13 +206,14 @@ The stable feature id is now future-facing and already reflects the intended top
 
 ## Settings UI
 
-- The settings page is split into `General`, `Workspace Panel`, `Spaced Review`, and `About` tabs.
+- The settings page is split into `General`, `Workspace Panel`, `Heading Progress`, `Spaced Review`, and `About` tabs.
 - The top-right action group contains **What's New**, **Language**, and **Restore defaults**.
 - Only the active tab is rendered; inactive tab content is not created until selected.
-- The General tab keeps user-facing Workspace Panel and Spaced Review enable toggles without exposing internal performance wording.
+- The General tab keeps the top-level feature toggles for Workspace Panel, Spaced Review, and Heading Progress without exposing internal performance wording.
 - The Workspace Panel tab keeps the drawer controls and slider groups.
+- The Heading Progress tab keeps only progress source, display mode, and hide-when-no-active-heading controls.
 - The Spaced Review tab keeps review settings only and intentionally avoids reading `.nestkit/spaced-review/tasks.json` when the settings page opens.
-- The About tab shows local static version and phase 2.5 text without any network requests.
+- The About tab shows the local static version, released modules, current-branch status, and the synced changelog without any network requests.
 - Opening settings does not create `.nestkit` and does not scan the vault.
 
 ## Transition constraints

@@ -47,13 +47,19 @@ interface NumericSettingLimit {
 	unit: 'px' | 'ms' | '%';
 }
 
-type SettingsTabId = 'general' | 'workspace-panel' | 'spaced-review' | 'about';
+type SettingsTabId =
+	| 'general'
+	| 'workspace-panel'
+	| 'heading-progress'
+	| 'spaced-review'
+	| 'about';
 
 interface SettingsTabDictionaryExtension {
 	settings: {
 		tabs: {
 			general: string;
 			workspacePanel: string;
+			headingProgress: string;
 			spacedReview: string;
 			about: string;
 		};
@@ -79,6 +85,10 @@ interface SettingsTabDictionaryExtension {
 			title: string;
 			version: string;
 			description: string;
+			released: string;
+			releasedSummary: string;
+			currentBranch: string;
+			currentBranchSummary: string;
 			performance: string;
 		};
 		notices: {
@@ -213,6 +223,11 @@ interface HeadingProgressSettingsDictionaryExtension {
 		headingProgress: {
 			heading: string;
 			description: string;
+			sections: {
+				general: string;
+				source: string;
+				display: string;
+			};
 			enable: {
 				name: string;
 				description: string;
@@ -584,6 +599,10 @@ export class NestKitSettingTab extends PluginSettingTab {
 				id: 'workspace-panel',
 				label: dictionary.settings.tabs.workspacePanel,
 			},
+			{
+				id: 'heading-progress',
+				label: dictionary.settings.tabs.headingProgress,
+			},
 			{ id: 'spaced-review', label: dictionary.settings.tabs.spacedReview },
 			{ id: 'about', label: dictionary.settings.tabs.about },
 		];
@@ -625,6 +644,9 @@ export class NestKitSettingTab extends PluginSettingTab {
 				break;
 			case 'workspace-panel':
 				this.renderWorkspacePanelTab(contentEl, dictionary);
+				break;
+			case 'heading-progress':
+				this.renderHeadingProgressTab(contentEl, dictionary);
 				break;
 			case 'spaced-review':
 				this.renderSpacedReviewTab(contentEl, dictionary);
@@ -672,24 +694,28 @@ export class NestKitSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName(dictionary.settings.headingProgress.heading)
-			.setHeading();
-		this.renderTabDescription(
-			containerEl,
-			dictionary.settings.headingProgress.description,
-		);
-
-		new Setting(containerEl)
 			.setName(dictionary.settings.headingProgress.enable.name)
 			.setDesc(dictionary.settings.headingProgress.enable.description)
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.enableHeadingProgress)
 					.onChange(async (value) => {
-						await this.plugin.updateSetting('enableHeadingProgress', value);
+						await this.plugin.updateSetting(
+							'enableHeadingProgress',
+							value,
+						);
 						this.display();
 					}),
 			);
+	}
+
+	private renderHeadingProgressTab(
+		containerEl: HTMLElement,
+		dictionary: SettingsPageDictionary,
+	): void {
+		new Setting(containerEl)
+			.setName(dictionary.settings.headingProgress.sections.source)
+			.setHeading();
 
 		new Setting(containerEl)
 			.setName(dictionary.settings.headingProgress.source.name)
@@ -712,6 +738,10 @@ export class NestKitSettingTab extends PluginSettingTab {
 						);
 					}),
 			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.headingProgress.sections.display)
+			.setHeading();
 
 		new Setting(containerEl)
 			.setName(dictionary.settings.headingProgress.displayMode.name)
@@ -1248,6 +1278,12 @@ export class NestKitSettingTab extends PluginSettingTab {
 			text: `${dictionary.settings.about.version}: ${manifestVersion}`,
 		});
 		detailsListEl.createEl('li', {
+			text: `${dictionary.settings.about.released}: ${dictionary.settings.about.releasedSummary}`,
+		});
+		detailsListEl.createEl('li', {
+			text: `${dictionary.settings.about.currentBranch}: ${dictionary.settings.about.currentBranchSummary}`,
+		});
+		detailsListEl.createEl('li', {
 			text: dictionary.settings.about.performance,
 		});
 
@@ -1257,15 +1293,9 @@ export class NestKitSettingTab extends PluginSettingTab {
 		const changelogListEl = containerEl.createEl('ul', {
 			cls: 'nest-kit-settings__info-list',
 		});
-		changelogListEl.createEl('li', {
-			text: dictionary.settings.whatsNew.phase2,
-		});
-		changelogListEl.createEl('li', {
-			text: dictionary.settings.whatsNew.phase25,
-		});
-		changelogListEl.createEl('li', {
-			text: dictionary.settings.whatsNew.later,
-		});
+		for (const entry of getWhatsNewItems(dictionary)) {
+			changelogListEl.createEl('li', { text: entry });
+		}
 	}
 
 	private addSliderGroup(
@@ -1400,6 +1430,14 @@ export class NestKitSettingTab extends PluginSettingTab {
 	}
 }
 
+function getWhatsNewItems(dictionary: SettingsPageDictionary): string[] {
+	return [
+		dictionary.settings.whatsNew.phase2,
+		dictionary.settings.whatsNew.phase25,
+		dictionary.settings.whatsNew.later,
+	];
+}
+
 class WhatsNewModal extends Modal {
 	constructor(
 		app: App,
@@ -1419,15 +1457,9 @@ class WhatsNewModal extends Modal {
 		const listEl = contentEl.createEl('ul', {
 			cls: 'nest-kit-settings__info-list',
 		});
-		listEl.createEl('li', {
-			text: this.dictionary.settings.whatsNew.phase2,
-		});
-		listEl.createEl('li', {
-			text: this.dictionary.settings.whatsNew.phase25,
-		});
-		listEl.createEl('li', {
-			text: this.dictionary.settings.whatsNew.later,
-		});
+		for (const entry of getWhatsNewItems(this.dictionary)) {
+			listEl.createEl('li', { text: entry });
+		}
 	}
 
 	onClose(): void {

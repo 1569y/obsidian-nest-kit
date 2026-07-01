@@ -3,6 +3,7 @@ export const enDictionary = {
 		tabs: {
 			general: 'General',
 			workspacePanel: 'Workspace Panel',
+			headingProgress: 'Heading Progress',
 			spacedReview: 'Spaced Review',
 			about: 'About',
 		},
@@ -13,7 +14,8 @@ export const enDictionary = {
 		},
 		general: {
 			title: 'General',
-			description: 'Manage NestKit feature toggles.',
+			description:
+				'Manage feature overview and core feature toggles.',
 		},
 		workspacePanel: {
 			description:
@@ -21,16 +23,23 @@ export const enDictionary = {
 		},
 		whatsNew: {
 			title: "What's New",
-			phase2: 'Spaced Review create-task workflow added.',
-			phase25: 'Settings tabs and performance guardrails added.',
-			later: 'Spaced Review now includes overview management and Daily Note sync.',
+			phase2: 'Added Right Sidebar Drawer.',
+			phase25:
+				'Added Spaced Review task creation, overview management, and Daily Note sync.',
+			later:
+				'Added Heading Progress Phase 1A status bar MVP on the current branch. It is disabled by default and only reads the active Markdown editor.',
 		},
 		about: {
 			title: 'About',
 			version: 'Version',
 			description: 'NestKit is a local-first Obsidian toolbox.',
+			released: 'Released',
+			releasedSummary: 'Right Sidebar Drawer, Spaced Review',
+			currentBranch: 'Current branch',
+			currentBranchSummary:
+				'Heading Progress Phase 1A status bar MVP is implemented but not released',
 			performance:
-				'This phase keeps settings opening fast and offline.',
+				'This phase keeps settings fast to open and fully offline.',
 		},
 		notices: {
 			languageComingSoon:
@@ -212,7 +221,12 @@ export const enDictionary = {
 		headingProgress: {
 			heading: 'Heading Progress',
 			description:
-				'Show progress for the current top-level heading section in the active Markdown editor only.',
+				'Disabled by default. Show progress for the current top-level heading section in the active Markdown editor only, and do not scan the whole vault.',
+			sections: {
+				general: 'General',
+				source: 'Progress source',
+				display: 'Display',
+			},
 			enable: {
 				name: 'Enable Heading Progress',
 				description:
@@ -306,7 +320,7 @@ export const enDictionary = {
 		headingProgress: {
 			name: 'Heading Progress',
 			description:
-				'Status bar progress for the current top-level heading section in the active Markdown editor.',
+				'Status bar progress for the current top-level heading section in the active Markdown editor only.',
 		},
 		spacedReview: {
 			name: 'Spaced Review',

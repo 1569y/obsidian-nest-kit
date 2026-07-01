@@ -35,8 +35,8 @@ This document is the quickest status snapshot for NestKit feature work. It recor
 
 - Status: implemented on current branch / not released
 - Version / phase: Phase 1A current-branch status bar MVP
-- Summary: Heading Progress now has a first minimal implementation on the current branch. It stays independent from Spaced Review and the right sidebar drawer, remains disabled by default, reads only the active Markdown editor, and does not perform any vault-wide scan.
-- Next step: Keep the MVP stable, validate listener cleanup and debounce behaviour, and if more reading or editor-assist features arrive later, consider a shared `Reading aids` or `Editor aids` settings tab instead of growing `General` indefinitely.
+- Summary: Heading Progress now has a first minimal implementation on the current branch. It stays independent from Spaced Review and the right sidebar drawer, remains disabled by default, reads only the active Markdown editor, does not perform any vault-wide scan, keeps its module toggle in `General`, and keeps its detail options in its own dedicated settings tab.
+- Next step: Keep the MVP stable, validate listener cleanup and debounce behaviour, and if more reading or editor-assist features arrive later, decide whether to keep extending the dedicated tab or regroup those tools under a broader `Reading aids` or `Editor aids` area.
 
 ## Future architecture directions
 
