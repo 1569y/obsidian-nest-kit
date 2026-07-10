@@ -19,6 +19,9 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/heading-progress/index.ts`: Heading Progress Phase 1A feature lifecycle, status bar rendering, active-editor binding, debounced updates, and cleanup
 - `src/features/heading-progress/progress.ts`: heading parsing plus top-level section and line-based progress derivation
 - `src/features/heading-progress/types.ts`: Heading Progress settings union types
+- `src/features/reward-reader/index.ts`: Reward Reader Phase 1A foundation feature shell with default-off lifecycle only and no runtime UI or file IO
+- `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
+- `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
 - `src/features/spaced-review/presets.ts`: built-in review presets and default preset lookup
 - `src/features/spaced-review/intervals.ts`: interval parsing and validation for cumulative review offsets
@@ -76,6 +79,67 @@ Phase 1A runtime behavior stays low-impact:
 - Disabling the feature or unloading the plugin removes status bar UI, DOM listeners, workspace listeners, and pending timers
 - The Phase 1A settings UI now uses its own `Heading Progress` settings tab instead of mixing feature-specific controls into `General`
 
+## Reward Reader Phase 1A foundation
+
+- Stable feature id: `reward-reader`
+- Source directory: `src/features/reward-reader/`
+- Current enable selector: `settings.enableRewardReader`
+- Phase 1A responsibility: add only the default-off module shell, foundational settings, pure data types, and pure store normalization helpers for a future study-to-unlock novel reading module
+
+Reward Reader Phase 1A is intentionally foundation-only. It does not register commands, an `ItemView`, a view type, a status bar item, a ribbon button, a sidebar entry, a timer, a layout-change listener, or a Vault file listener. It does not scan the vault, read any novel source file, or create `.nestkit/reward-reader` during startup or feature enablement.
+
+Its current data boundary is split deliberately:
+
+- Plugin `data.json` stores only Reward Reader settings
+- Future state store path: `.nestkit/reward-reader/state.json`
+- Future chapter-index cache folder: `.nestkit/reward-reader/indexes/`
+- Future chapter-index cache path shape: `.nestkit/reward-reader/indexes/<novel-id>.json`
+
+The first implementation round keeps those boundaries pure and declarative only:
+
+- Define Reward Reader store schema `1`
+- Define Reward Reader chapter-index cache schema `1`
+- Normalize known fields into safe runtime models
+- Expose future-version protection through `shouldPersist = false` and `hasUnsupportedFutureVersion = true`
+- Do not add a storage adapter
+- Do not read or write real files
+
+The Reward Reader data boundary is now intentionally asymmetric:
+
+- State store data is user-owned progress and history
+- Chapter-index cache data is rebuildable derivative metadata
+- Invalid root state data may fall back to an empty default runtime store for the current session, but damaged source data must not be auto-overwritten
+- Invalid chapter-index cache data must not normalize into a placeholder cache with empty identity fields
+- An unusable chapter-index cache now returns `null`, keeps `shouldPersist = false`, and requires a rebuild instead of writing back an empty stand-in cache
+
+The current chapter-cache metadata boundary is intentionally explicit:
+
+- `sourceSize` is the source-file byte size and is reserved for future cache invalidation or change detection only
+- `sourceTextLength` is the JavaScript `sourceText.length` value in UTF-16 code units
+- `startOffset` and `endOffset` use that same UTF-16 code-unit unit so future reader code can slice with `String.slice(...)`
+- Chapter-offset upper bounds now validate against `sourceTextLength`, not against `sourceSize`
+- `sourceTextLength = 0` allows only an empty `chapters` list, while `sourceTextLength > 0` may still legitimately pair with `chapters = []`
+- Missing `chapters`, non-array `chapters`, or any invalid chapter entry now makes the whole cache rebuild-required instead of preserving a partial cache
+
+The current reading-position boundary is also intentionally split:
+
+- `currentChapterScrollOffset` remains mutable per-novel progress state
+- Reading history is now reserved for lower-frequency semantic events only
+- High-frequency scroll updates do not belong in persisted reading history records
+
+The chapter-index cache path boundary is also intentionally defensive:
+
+- Cache paths are derived only from validated safe ids
+- Valid ids are limited to ASCII letters, digits, `_`, and `-`
+- Ids containing dots, slashes, backslashes, spaces, or other path-like separators are rejected before a cache path is generated
+
+MVP file-boundary decisions are now confirmed for the current plan:
+
+- Reward Reader novel sources are Vault-local only
+- Planned source kinds are `vault-txt` and `vault-markdown`
+- External absolute paths are intentionally rejected by the current normalization boundary
+- The future reader surface is planned as a leaf-backed `ItemView`, but that view is intentionally deferred beyond Phase 1A
+
 ## Current registration
 
 - Stable feature id: `workspace-panel-system`
@@ -84,6 +148,13 @@ Phase 1A runtime behavior stays low-impact:
 - Current enable selector: `settings.rightSidebarDrawerEnabled`
 
 The stable feature id is now future-facing and already reflects the intended top-level toolbox concept, even though the source folder remains `right-sidebar-drawer` during this phase.
+
+Reward Reader now also follows the same registration style:
+
+- Stable feature id: `reward-reader`
+- Current runtime implementation class: `RewardReaderFeature`
+- Current enable selector: `settings.enableRewardReader`
+- Current lifecycle scope: enable or disable only, with no attached runtime listeners or surfaces yet
 
 ## Runtime behavior
 
@@ -114,6 +185,15 @@ The stable feature id is now future-facing and already reflects the intended top
   - `headingProgressSource`
   - `headingProgressDisplayMode`
   - `hideHeadingProgressWhenNoHeading`
+- Reward Reader Phase 1A adds eight more flat settings keys without a schema-version bump:
+  - `enableRewardReader`
+  - `rewardReaderMinutesPerUnit`
+  - `rewardReaderChaptersPerUnit`
+  - `rewardReaderCarryOverMinutes`
+  - `rewardReaderDailyUnlockCap`
+  - `rewardReaderUnreadInventoryCap`
+  - `rewardReaderRequireStudyContent`
+  - `rewardReaderDefaultReadingMode`
 - `src/core/settings-migration.ts` validates every known field by type and, for numeric slider-backed settings, by the same `min` / `max` ranges used by the current settings UI.
 - Missing fields are filled from `DEFAULT_SETTINGS`.
 - Invalid booleans, unknown languages, `NaN`, `Infinity`, and out-of-range numeric values fall back to defaults.
@@ -122,6 +202,7 @@ The stable feature id is now future-facing and already reflects the intended top
 - While that persistence lock is active, settings UI changes, pin persistence updates, and **Restore all defaults** still affect the current session runtime state but do not write back to `data.json`.
 - A future nested feature namespace remains deferred to schema `2` or later.
  - Heading Progress now keeps its detail settings in a dedicated tab, while its module enable toggle lives in `General` with the other core feature switches.
+ - Reward Reader now follows the same pattern: its enable toggle lives in `General`, while its module-specific foundation settings live in a dedicated `Reward Reader` tab.
  - If NestKit later adds multiple reading or editor-assist modules beyond Heading Progress, the settings information architecture can revisit whether those controls should stay in a shared `Heading Progress` / `Reading aids` / `Editor aids` area or split into more specific tabs.
 - Spaced Review is planned as a separate feature module, but this phase intentionally adds no Spaced Review settings keys or placeholder namespaces.
 

@@ -1,5 +1,59 @@
 # Migration notes
 
+- `reward-reader-phase1a-final-boundary-fix` is a final Phase 1A boundary cleanup on top of the existing Reward Reader foundation and hardening worktree.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys and no new runtime surfaces.
+- Reward Reader chapter-index cache metadata now distinguishes `sourceSize` from `sourceTextLength`: `sourceSize` remains file byte size, while `sourceTextLength` is the JavaScript UTF-16 code-unit length used for chapter-offset validation.
+- Reward Reader chapter caches now treat missing `chapters`, non-array `chapters`, or any invalid chapter entry as rebuild-required cache damage instead of normalizing a partial cache.
+- Reward Reader store normalization no longer auto-overwrites an invalid root store with an empty state; invalid root data now falls back to an empty runtime default with `shouldPersist = false`.
+- Reward Reader reading history now removes the pre-persistence `position-updated` action and no longer persists `scrollOffset` in reading records; scroll position remains only in mutable progress state.
+- Reward Reader progress entries whose internal `novelId` does not match the `progressByNovelId` key are now discarded immediately instead of being returned and ignored later.
+- This round still does not add a storage adapter, does not use Vault API persistence, does not create `.nestkit`, and does not perform any real file migration.
+- This round does not change Reward Reader UI layout, feature registration, commands, views, status bar behavior, or any other NestKit feature runtime.
+
+- `reward-reader-phase1a-hardening` is a follow-up hardening round on top of the existing Reward Reader Phase 1A foundation worktree.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys and no new runtime surfaces.
+- Reward Reader numeric exchange and cap settings now normalize as integers during settings migration, but keep the same ranges and defaults as the earlier Phase 1A foundation round.
+- Reward Reader novel ids, history record ids, and unlock `studyRecordId` references now follow a conservative safe-id validation rule before they are allowed into normalized runtime models.
+- Reward Reader chapter-index caches no longer normalize into placeholder objects with empty identity fields; invalid or unusable caches now normalize to `null` and require a rebuild.
+- Reward Reader progress normalization now rejects contradictory cross-field states instead of inferring repairs.
+- Reward Reader unlock history now rejects duplicate ids, missing study-record references, and cross-novel `studyRecordId` mismatches.
+- This round still does not add a storage adapter, does not use Vault API persistence, does not create `.nestkit`, and does not perform any real file migration.
+- This round does not change Reward Reader UI layout, feature registration, commands, views, status bar behavior, or any other NestKit feature runtime.
+
+- `reward-reader-phase1a-foundation` adds the first implemented Reward Reader foundation on the current branch.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round adds eight new flat plugin settings keys with default-backed normalization:
+  - `enableRewardReader`
+  - `rewardReaderMinutesPerUnit`
+  - `rewardReaderChaptersPerUnit`
+  - `rewardReaderCarryOverMinutes`
+  - `rewardReaderDailyUnlockCap`
+  - `rewardReaderUnreadInventoryCap`
+  - `rewardReaderRequireStudyContent`
+  - `rewardReaderDefaultReadingMode`
+- Older settings data that lacks those keys is normalized with defaults through the existing settings migration path.
+- This round adds a new independently registered `reward-reader` feature module, but it remains disabled by default.
+- The Reward Reader feature shell does not register commands, views, status-bar items, ribbons, sidebars, timers, layout listeners, or Vault listeners.
+- The Reward Reader feature shell does not read novel files, scan the vault, create `.nestkit/reward-reader`, or write `state.json` or chapter-index cache files.
+- This round adds Reward Reader store schema `1` and chapter-index cache schema `1` pure helper types plus normalization functions only; it does not add a storage adapter or real persistence.
+- Future Reward Reader state is planned for `.nestkit/reward-reader/state.json`.
+- Future Reward Reader chapter-index caches are planned for `.nestkit/reward-reader/indexes/<novel-id>.json`.
+- This round does not change `styles.css`, `manifest.json`, `versions.json`, `package.json`, `package-lock.json`, or the behavior of the released drawer, Spaced Review, or Heading Progress modules.
+
+- `reward-reader-docs-planning` is a documentation-only planning round for a future optional `reward-reader` feature module.
+- This round does not change the plugin version, release artifacts, or any runtime behavior.
+- This round does not change the plugin settings schema version and does not add new persisted settings keys.
+- This round does not add commands, views, ribbon buttons, status-bar items, feature registration, file listeners, or chapter indexing runtime.
+- This round does not change `src/**`, `styles.css`, `manifest.json`, `versions.json`, `package.json`, `package-lock.json`, `main.js`, or any released feature runtime.
+- This round adds planning documentation for Reward Reader, including the initial feature scope, phase plan, and pre-implementation technical questions.
+- Future Reward Reader implementation should stay default-off, lazily enabled, and isolated from unrelated NestKit modules unless a later integration is intentionally designed.
+
 - `release-0.4.0-heading-progress` releases Heading Progress Phase 1A as part of NestKit `0.4.0`.
 - Heading Progress Phase 1A now ships as a released status bar MVP that shows progress inside the current top-level heading section.
 - The released MVP supports `viewport-center` and `cursor-position` source modes.

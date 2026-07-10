@@ -3,6 +3,7 @@ import { FeatureManager } from './core/feature-manager';
 import { FeatureRegistry } from './core/feature-registry';
 import { migrateSettings } from './core/settings-migration';
 import { HeadingProgressFeature } from './features/heading-progress';
+import { RewardReaderFeature } from './features/reward-reader';
 import {
 	buildDailyNotePath,
 	importCheckedReviewsForToday,
@@ -25,6 +26,7 @@ import { getDictionary, type NestKitDictionary } from './i18n';
 
 export const WORKSPACE_PANEL_SYSTEM_FEATURE_ID = 'workspace-panel-system';
 export const HEADING_PROGRESS_FEATURE_ID = 'heading-progress';
+export const REWARD_READER_FEATURE_ID = 'reward-reader';
 export const SPACED_REVIEW_FEATURE_ID = 'spaced-review';
 
 export default class NestKitPlugin extends Plugin {
@@ -63,6 +65,14 @@ export default class NestKitPlugin extends Plugin {
 			order: 150,
 			nameKey: 'features.headingProgress.name',
 			descriptionKey: 'features.headingProgress.description',
+		});
+		this.featureManager.register({
+			id: REWARD_READER_FEATURE_ID,
+			isEnabled: (settings) => settings.enableRewardReader,
+			create: () => new RewardReaderFeature(),
+			order: 175,
+			nameKey: 'features.rewardReader.name',
+			descriptionKey: 'features.rewardReader.description',
 		});
 		this.featureManager.register({
 			id: SPACED_REVIEW_FEATURE_ID,

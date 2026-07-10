@@ -1,6 +1,6 @@
 # NestKit feature status
 
-This document is the quickest status snapshot for NestKit feature work. It records what is already released and what remains future architecture direction.
+This document is the quickest status snapshot for NestKit feature work. It records what is already released, what is being documented for future feature work, and what remains future architecture direction.
 
 ## Snapshot
 
@@ -9,6 +9,7 @@ This document is the quickest status snapshot for NestKit feature work. It recor
 | `right-sidebar-drawer` | released | released module on the current `0.4.0` line | Desktop-only right sidebar hover drawer with settings, pinning, positioning, live CSS updates, and bilingual UI support | Keep stable while later independent modules are added around it |
 | `spaced-review` | released | released module on the current `0.4.0` line | Review task creation, overview, lightweight management, Daily Note sync, and related workflow polish are already shipped | Continue with incremental polish and keep it decoupled from unrelated future modules |
 | `heading-progress` | released | released in `0.4.0` as Phase 1A status bar MVP | Independent status bar module for showing line-based progress inside the current top-level heading block of the active Markdown editor, with default-off startup behavior, dual source modes, multiple display modes, and no vault-wide scan | Keep the released MVP stable, validate startup impact in real use, and decide later whether to widen presentation or release scope |
+| `reward-reader` | in development | Phase 1A foundation on the current branch | Optional study-to-unlock novel reading module with a default-off feature shell, foundational settings, pure data types, and pure store normalization | Keep the foundation isolated and move next into import, parser, exchange, and reader implementation only after the Phase 1A boundary is stable |
 | `workspace-panel-system` | future | future architecture | Stable registry-facing umbrella concept for broader toolbox surfaces beyond the currently released modules | Define when a real shared panel system is needed instead of keeping features independent |
 | `dock-router` | future | future architecture | Placeholder concept for routing future docked surfaces without coupling them to the current right sidebar drawer | Clarify actual navigation and placement needs before designing APIs or settings |
 | `floating-drawer` | future | future architecture | Placeholder concept for a future floating surface separate from the released right sidebar drawer | Re-evaluate only after clearer workspace-surface requirements exist |
@@ -37,6 +38,15 @@ This document is the quickest status snapshot for NestKit feature work. It recor
 - Version / phase: released in `0.4.0` as Phase 1A status bar MVP
 - Summary: Heading Progress is now a released independent module. It stays separate from Spaced Review and the right sidebar drawer, remains disabled by default, shows progress inside the current top-level heading section, supports `viewport-center` and `cursor-position` source modes, supports `bar + percent`, `percent only`, and `bar only` display modes, reads only the active Markdown editor, and does not perform any vault-wide scan.
 - Next step: Keep the released MVP stable, validate startup impact in real vault use, and if more reading or editor-assist features arrive later, decide whether to keep extending the dedicated tab or regroup those tools under a broader `Reading aids` or `Editor aids` area.
+
+## Planned future feature modules
+
+### reward-reader
+
+- Status: in development
+- Version / phase: Phase 1A foundation on the current branch
+- Summary: Reward Reader now has its initial implementation foundation in the repo. The current branch adds a default-off independent feature shell, flat plugin settings fields, a dedicated Reward Reader settings tab, pure TypeScript data types, and pure store normalization helpers for the planned `.nestkit/reward-reader/state.json` plus chapter-index cache boundary. This phase intentionally does not add import, chapter parsing, study exchange, reader UI, sidebar UI, status-bar UI, commands, ribbons, or file persistence.
+- Next step: Keep Phase 1A scoped to the foundation boundary, validate the new settings and normalization behavior, and only then move into file import, chapter indexing, exchange logic, and the later leaf-backed reader surface. Detailed planning now lives in `docs/REWARD_READER_PLAN.md`.
 
 ## Future architecture directions
 

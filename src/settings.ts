@@ -16,6 +16,7 @@ import type {
 	HeadingProgressDisplayMode,
 	HeadingProgressSource,
 } from './features/heading-progress/types';
+import type { RewardReaderReadingMode } from './features/reward-reader/types';
 import type {
 	CompletedOccurrenceDisplay,
 	DailyNoteSyncMode,
@@ -38,19 +39,24 @@ type SliderSettingKey =
 	| 'rightSidebarAnimationDurationMs'
 	| 'rightSidebarTopControlOffsetPx'
 	| 'rightSidebarPinTopPx'
-	| 'rightSidebarPinRightPx';
+	| 'rightSidebarPinRightPx'
+	| 'rewardReaderMinutesPerUnit'
+	| 'rewardReaderChaptersPerUnit'
+	| 'rewardReaderDailyUnlockCap'
+	| 'rewardReaderUnreadInventoryCap';
 
 interface NumericSettingLimit {
 	min: number;
 	max: number;
 	step: number;
-	unit: 'px' | 'ms' | '%';
+	unit: string;
 }
 
 type SettingsTabId =
 	| 'general'
 	| 'workspace-panel'
 	| 'heading-progress'
+	| 'reward-reader'
 	| 'spaced-review'
 	| 'about';
 
@@ -60,6 +66,7 @@ interface SettingsTabDictionaryExtension {
 			general: string;
 			workspacePanel: string;
 			headingProgress: string;
+			rewardReader: string;
 			spacedReview: string;
 			about: string;
 		};
@@ -218,6 +225,54 @@ interface SpacedReviewSettingsDictionaryExtension {
 	};
 }
 
+interface RewardReaderSettingsDictionaryExtension {
+	settings: {
+		toggles: {
+			enableRewardReaderName: string;
+			enableRewardReaderDesc: string;
+		};
+		rewardReader: {
+			name: string;
+			description: string;
+			sections: {
+				exchange: string;
+				limits: string;
+				reading: string;
+			};
+			minutesPerUnit: {
+				name: string;
+				description: string;
+			};
+			chaptersPerUnit: {
+				name: string;
+				description: string;
+			};
+			carryOverMinutes: {
+				name: string;
+				description: string;
+			};
+			dailyUnlockCap: {
+				name: string;
+				description: string;
+			};
+			unreadInventoryCap: {
+				name: string;
+				description: string;
+			};
+			requireStudyContent: {
+				name: string;
+				description: string;
+			};
+			defaultReadingMode: {
+				name: string;
+				description: string;
+				continuous: string;
+				singleChapter: string;
+			};
+		};
+	};
+}
+
 interface HeadingProgressSettingsDictionaryExtension {
 	settings: {
 		headingProgress: {
@@ -256,6 +311,7 @@ interface HeadingProgressSettingsDictionaryExtension {
 type SettingsPageDictionary = NestKitDictionary &
 	SettingsTabDictionaryExtension &
 	SpacedReviewSettingsDictionaryExtension &
+	RewardReaderSettingsDictionaryExtension &
 	HeadingProgressSettingsDictionaryExtension;
 
 export const NUMERIC_SETTING_LIMITS: Record<
@@ -328,6 +384,30 @@ export const NUMERIC_SETTING_LIMITS: Record<
 		step: 1,
 		unit: 'px',
 	},
+	rewardReaderMinutesPerUnit: {
+		min: 1,
+		max: 1440,
+		step: 1,
+		unit: 'm',
+	},
+	rewardReaderChaptersPerUnit: {
+		min: 1,
+		max: 100,
+		step: 1,
+		unit: 'ch',
+	},
+	rewardReaderDailyUnlockCap: {
+		min: 0,
+		max: 100,
+		step: 1,
+		unit: 'ch',
+	},
+	rewardReaderUnreadInventoryCap: {
+		min: 0,
+		max: 100,
+		step: 1,
+		unit: 'ch',
+	},
 };
 
 export interface NestKitSettings {
@@ -352,6 +432,14 @@ export interface NestKitSettings {
 	headingProgressSource: HeadingProgressSource;
 	headingProgressDisplayMode: HeadingProgressDisplayMode;
 	hideHeadingProgressWhenNoHeading: boolean;
+	enableRewardReader: boolean;
+	rewardReaderMinutesPerUnit: number;
+	rewardReaderChaptersPerUnit: number;
+	rewardReaderCarryOverMinutes: boolean;
+	rewardReaderDailyUnlockCap: number;
+	rewardReaderUnreadInventoryCap: number;
+	rewardReaderRequireStudyContent: boolean;
+	rewardReaderDefaultReadingMode: RewardReaderReadingMode;
 	spacedReviewEnabled: boolean;
 	spacedReviewDailyNoteSyncEnabled: boolean;
 	spacedReviewDailyNoteFolder: string;
@@ -398,6 +486,14 @@ export const DEFAULT_SETTINGS: NestKitSettings = {
 	headingProgressSource: 'viewport-center',
 	headingProgressDisplayMode: 'bar-and-percent',
 	hideHeadingProgressWhenNoHeading: true,
+	enableRewardReader: false,
+	rewardReaderMinutesPerUnit: 30,
+	rewardReaderChaptersPerUnit: 1,
+	rewardReaderCarryOverMinutes: true,
+	rewardReaderDailyUnlockCap: 4,
+	rewardReaderUnreadInventoryCap: 3,
+	rewardReaderRequireStudyContent: true,
+	rewardReaderDefaultReadingMode: 'continuous',
 	spacedReviewEnabled: false,
 	spacedReviewDailyNoteSyncEnabled: false,
 	spacedReviewDailyNoteFolder: '',
@@ -424,12 +520,12 @@ export const DEFAULT_SETTINGS: NestKitSettings = {
 
 interface SliderSettingConfig {
 	key: SliderSettingKey;
-	name: (dictionary: NestKitDictionary) => string;
-	description: (dictionary: NestKitDictionary) => string;
+	name: (dictionary: SettingsPageDictionary) => string;
+	description: (dictionary: SettingsPageDictionary) => string;
 	min: number;
 	max: number;
 	step: number;
-	unit: 'px' | 'ms' | '%';
+	unit: string;
 }
 
 const BEHAVIOUR_SLIDERS: SliderSettingConfig[] = [
@@ -519,6 +615,42 @@ const ADVANCED_SLIDERS: SliderSettingConfig[] = [
 	},
 ];
 
+const REWARD_READER_EXCHANGE_SLIDERS: SliderSettingConfig[] = [
+	{
+		key: 'rewardReaderMinutesPerUnit',
+		name: (dictionary) => dictionary.settings.rewardReader.minutesPerUnit.name,
+		description: (dictionary) =>
+			dictionary.settings.rewardReader.minutesPerUnit.description,
+		...NUMERIC_SETTING_LIMITS.rewardReaderMinutesPerUnit,
+	},
+	{
+		key: 'rewardReaderChaptersPerUnit',
+		name: (dictionary) =>
+			dictionary.settings.rewardReader.chaptersPerUnit.name,
+		description: (dictionary) =>
+			dictionary.settings.rewardReader.chaptersPerUnit.description,
+		...NUMERIC_SETTING_LIMITS.rewardReaderChaptersPerUnit,
+	},
+];
+
+const REWARD_READER_LIMIT_SLIDERS: SliderSettingConfig[] = [
+	{
+		key: 'rewardReaderDailyUnlockCap',
+		name: (dictionary) => dictionary.settings.rewardReader.dailyUnlockCap.name,
+		description: (dictionary) =>
+			dictionary.settings.rewardReader.dailyUnlockCap.description,
+		...NUMERIC_SETTING_LIMITS.rewardReaderDailyUnlockCap,
+	},
+	{
+		key: 'rewardReaderUnreadInventoryCap',
+		name: (dictionary) =>
+			dictionary.settings.rewardReader.unreadInventoryCap.name,
+		description: (dictionary) =>
+			dictionary.settings.rewardReader.unreadInventoryCap.description,
+		...NUMERIC_SETTING_LIMITS.rewardReaderUnreadInventoryCap,
+	},
+];
+
 export class NestKitSettingTab extends PluginSettingTab {
 	plugin: NestKitPlugin;
 	private activeTab: SettingsTabId = 'general';
@@ -603,6 +735,10 @@ export class NestKitSettingTab extends PluginSettingTab {
 				id: 'heading-progress',
 				label: dictionary.settings.tabs.headingProgress,
 			},
+			{
+				id: 'reward-reader',
+				label: dictionary.settings.tabs.rewardReader,
+			},
 			{ id: 'spaced-review', label: dictionary.settings.tabs.spacedReview },
 			{ id: 'about', label: dictionary.settings.tabs.about },
 		];
@@ -647,6 +783,9 @@ export class NestKitSettingTab extends PluginSettingTab {
 				break;
 			case 'heading-progress':
 				this.renderHeadingProgressTab(contentEl, dictionary);
+				break;
+			case 'reward-reader':
+				this.renderRewardReaderTab(contentEl, dictionary);
 				break;
 			case 'spaced-review':
 				this.renderSpacedReviewTab(contentEl, dictionary);
@@ -704,6 +843,18 @@ export class NestKitSettingTab extends PluginSettingTab {
 							'enableHeadingProgress',
 							value,
 						);
+						this.display();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.toggles.enableRewardReaderName)
+			.setDesc(dictionary.settings.toggles.enableRewardReaderDesc)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.enableRewardReader)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting('enableRewardReader', value);
 						this.display();
 					}),
 			);
@@ -849,6 +1000,95 @@ export class NestKitSettingTab extends PluginSettingTab {
 			.setName(dictionary.settings.sections.advanced)
 			.setHeading();
 		this.addSliderGroup(containerEl, ADVANCED_SLIDERS, dictionary);
+	}
+
+	private renderRewardReaderTab(
+		containerEl: HTMLElement,
+		dictionary: SettingsPageDictionary,
+	): void {
+		this.renderTabDescription(
+			containerEl,
+			dictionary.settings.rewardReader.description,
+		);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.toggles.enableRewardReaderName)
+			.setDesc(dictionary.settings.toggles.enableRewardReaderDesc)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.enableRewardReader)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting('enableRewardReader', value);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.rewardReader.sections.exchange)
+			.setHeading();
+		this.addSliderGroup(containerEl, REWARD_READER_EXCHANGE_SLIDERS, dictionary);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.rewardReader.carryOverMinutes.name)
+			.setDesc(dictionary.settings.rewardReader.carryOverMinutes.description)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.rewardReaderCarryOverMinutes)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'rewardReaderCarryOverMinutes',
+							value,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.rewardReader.sections.limits)
+			.setHeading();
+		this.addSliderGroup(containerEl, REWARD_READER_LIMIT_SLIDERS, dictionary);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.rewardReader.requireStudyContent.name)
+			.setDesc(
+				dictionary.settings.rewardReader.requireStudyContent.description,
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.rewardReaderRequireStudyContent)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'rewardReaderRequireStudyContent',
+							value,
+						);
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.rewardReader.sections.reading)
+			.setHeading();
+
+		new Setting(containerEl)
+			.setName(dictionary.settings.rewardReader.defaultReadingMode.name)
+			.setDesc(
+				dictionary.settings.rewardReader.defaultReadingMode.description,
+			)
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption(
+						'continuous',
+						dictionary.settings.rewardReader.defaultReadingMode.continuous,
+					)
+					.addOption(
+						'single-chapter',
+						dictionary.settings.rewardReader.defaultReadingMode.singleChapter,
+					)
+					.setValue(this.plugin.settings.rewardReaderDefaultReadingMode)
+					.onChange(async (value) => {
+						await this.plugin.updateSetting(
+							'rewardReaderDefaultReadingMode',
+							value as RewardReaderReadingMode,
+						);
+					}),
+			);
 	}
 
 	private renderSpacedReviewTab(
@@ -1301,7 +1541,7 @@ export class NestKitSettingTab extends PluginSettingTab {
 	private addSliderGroup(
 		containerEl: HTMLElement,
 		configs: SliderSettingConfig[],
-		dictionary: NestKitDictionary,
+		dictionary: SettingsPageDictionary,
 	): void {
 		for (const config of configs) {
 			this.addSliderSetting(containerEl, config, dictionary);
@@ -1342,7 +1582,7 @@ export class NestKitSettingTab extends PluginSettingTab {
 	private addSliderSetting(
 		containerEl: HTMLElement,
 		config: SliderSettingConfig,
-		dictionary: NestKitDictionary,
+		dictionary: SettingsPageDictionary,
 	): void {
 		const setting = new Setting(containerEl)
 			.setName(config.name(dictionary))
@@ -1377,7 +1617,7 @@ export class NestKitSettingTab extends PluginSettingTab {
 
 	private formatSliderDescription(
 		config: SliderSettingConfig,
-		dictionary: NestKitDictionary,
+		dictionary: SettingsPageDictionary,
 		value = this.plugin.settings[config.key],
 	): string {
 		return `${config.description(dictionary)} ${dictionary.settings.currentValue(

@@ -4,6 +4,7 @@ export const enDictionary = {
 			general: 'General',
 			workspacePanel: 'Workspace Panel',
 			headingProgress: 'Heading Progress',
+			rewardReader: 'Reward Reader',
 			spacedReview: 'Spaced Review',
 			about: 'About',
 		},
@@ -70,9 +71,59 @@ export const enDictionary = {
 			rememberPinnedStateName: 'Remember pinned state',
 			rememberPinnedStateDesc:
 				'Restore the last pinned state after restarting Obsidian, re-enabling the plugin, or reopening the right sidebar.',
+			enableRewardReaderName: 'Enable Reward Reader',
+			enableRewardReaderDesc:
+				'Turn the Reward Reader foundation module on or off.',
 			enableSpacedReviewName: 'Enable Spaced Review',
 			enableSpacedReviewDesc:
 				'Turn Spaced Review core features on or off.',
+		},
+		rewardReader: {
+			name: 'Reward Reader',
+			description:
+				'Configure the default-off Reward Reader foundation settings for study-to-unlock reading rules only. This phase does not yet add import, reader, status bar, or sidebar UI.',
+			sections: {
+				exchange: 'Exchange rules',
+				limits: 'Limits',
+				reading: 'Reading',
+			},
+			minutesPerUnit: {
+				name: 'Study minutes per unit',
+				description:
+					'How many study minutes are required for one exchange unit.',
+			},
+			chaptersPerUnit: {
+				name: 'Unlocked chapters per unit',
+				description:
+					'How many chapters one exchange unit unlocks.',
+			},
+			carryOverMinutes: {
+				name: 'Carry over leftover minutes',
+				description:
+					'Keep remaining study minutes in balance instead of discarding them after conversion.',
+			},
+			dailyUnlockCap: {
+				name: 'Daily unlock cap',
+				description:
+					'Maximum chapters that can be unlocked per day. Set 0 for no cap.',
+			},
+			unreadInventoryCap: {
+				name: 'Unread inventory cap',
+				description:
+					'Maximum unlocked-but-unread chapters to keep available. Set 0 for no cap.',
+			},
+			requireStudyContent: {
+				name: 'Require study content',
+				description:
+					'Require a non-empty study-content note when recording study in later phases.',
+			},
+			defaultReadingMode: {
+				name: 'Default reading mode',
+				description:
+					'Choose which Reward Reader mode should be used by default once the reader view exists.',
+				continuous: 'Continuous',
+				singleChapter: 'Single chapter',
+			},
 		},
 		spacedReview: {
 			name: 'Spaced Review',
@@ -322,6 +373,11 @@ export const enDictionary = {
 			name: 'Heading Progress',
 			description:
 				'Status bar progress for the current top-level heading section in the active Markdown editor only.',
+		},
+		rewardReader: {
+			name: 'Reward Reader',
+			description:
+				'Foundation-only study-to-unlock reading feature shell with no reader or import runtime yet.',
 		},
 		spacedReview: {
 			name: 'Spaced Review',

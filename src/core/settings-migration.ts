@@ -3,6 +3,7 @@ import type {
 	HeadingProgressDisplayMode,
 	HeadingProgressSource,
 } from '../features/heading-progress/types';
+import type { RewardReaderReadingMode } from '../features/reward-reader/types';
 import { DEFAULT_REVIEW_PRESET_ID } from '../features/spaced-review/presets';
 import type {
 	CompletedOccurrenceDisplay,
@@ -29,6 +30,11 @@ export interface SettingsMigrationResult {
 
 type SettingsRecord = Record<string, unknown>;
 type KnownSettingsKey = keyof NestKitSettings;
+type RewardReaderIntegerSettingKey =
+	| 'rewardReaderMinutesPerUnit'
+	| 'rewardReaderChaptersPerUnit'
+	| 'rewardReaderDailyUnlockCap'
+	| 'rewardReaderUnreadInventoryCap';
 
 type SchemaVersionState =
 	| {
@@ -85,6 +91,10 @@ const HEADING_PROGRESS_DISPLAY_MODE_VALUES =
 		'percent-only',
 		'bar-only',
 	]);
+const REWARD_READER_READING_MODE_VALUES = new Set<RewardReaderReadingMode>([
+	'continuous',
+	'single-chapter',
+]);
 const BUILT_IN_PRESET_IDS = new Set<string>([
 	'fast-review',
 	'standard-review',
@@ -354,6 +364,55 @@ function normalizeSettings(
 			DEFAULT_SETTINGS.hideHeadingProgressWhenNoHeading,
 			invalidFieldWarnings,
 		),
+		enableRewardReader: readBoolean(
+			raw,
+			'enableRewardReader',
+			DEFAULT_SETTINGS.enableRewardReader,
+			invalidFieldWarnings,
+		),
+		rewardReaderMinutesPerUnit: readRewardReaderIntegerInRange(
+			raw,
+			'rewardReaderMinutesPerUnit',
+			DEFAULT_SETTINGS.rewardReaderMinutesPerUnit,
+			invalidFieldWarnings,
+		),
+		rewardReaderChaptersPerUnit: readRewardReaderIntegerInRange(
+			raw,
+			'rewardReaderChaptersPerUnit',
+			DEFAULT_SETTINGS.rewardReaderChaptersPerUnit,
+			invalidFieldWarnings,
+		),
+		rewardReaderCarryOverMinutes: readBoolean(
+			raw,
+			'rewardReaderCarryOverMinutes',
+			DEFAULT_SETTINGS.rewardReaderCarryOverMinutes,
+			invalidFieldWarnings,
+		),
+		rewardReaderDailyUnlockCap: readRewardReaderIntegerInRange(
+			raw,
+			'rewardReaderDailyUnlockCap',
+			DEFAULT_SETTINGS.rewardReaderDailyUnlockCap,
+			invalidFieldWarnings,
+		),
+		rewardReaderUnreadInventoryCap: readRewardReaderIntegerInRange(
+			raw,
+			'rewardReaderUnreadInventoryCap',
+			DEFAULT_SETTINGS.rewardReaderUnreadInventoryCap,
+			invalidFieldWarnings,
+		),
+		rewardReaderRequireStudyContent: readBoolean(
+			raw,
+			'rewardReaderRequireStudyContent',
+			DEFAULT_SETTINGS.rewardReaderRequireStudyContent,
+			invalidFieldWarnings,
+		),
+		rewardReaderDefaultReadingMode: readEnumSetting(
+			raw,
+			'rewardReaderDefaultReadingMode',
+			DEFAULT_SETTINGS.rewardReaderDefaultReadingMode,
+			REWARD_READER_READING_MODE_VALUES,
+			invalidFieldWarnings,
+		),
 		spacedReviewEnabled: readBoolean(
 			raw,
 			'spacedReviewEnabled',
@@ -575,6 +634,43 @@ function readFiniteNumberInRange(
 	if (typeof value !== 'number' || !Number.isFinite(value)) {
 		warnings.push(
 			`Settings field "${key}" must be a finite number; falling back to default.`,
+		);
+		return defaultValue;
+	}
+
+	const limit = NUMERIC_SETTING_LIMITS[key];
+	if (value < limit.min || value > limit.max) {
+		warnings.push(
+			`Settings field "${key}" is outside the supported range ${limit.min}..${limit.max}; falling back to default.`,
+		);
+		return defaultValue;
+	}
+
+	return value;
+}
+
+function readRewardReaderIntegerInRange(
+	raw: SettingsRecord,
+	key: RewardReaderIntegerSettingKey,
+	defaultValue: number,
+	warnings: string[],
+): number {
+	const value = raw[key];
+
+	if (value === undefined) {
+		return defaultValue;
+	}
+
+	if (typeof value !== 'number' || !Number.isFinite(value)) {
+		warnings.push(
+			`Settings field "${key}" must be a finite number; falling back to default.`,
+		);
+		return defaultValue;
+	}
+
+	if (!Number.isInteger(value)) {
+		warnings.push(
+			`Settings field "${key}" must be an integer; falling back to default.`,
 		);
 		return defaultValue;
 	}

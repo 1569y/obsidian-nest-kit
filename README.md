@@ -26,12 +26,14 @@ NestKit currently targets desktop Obsidian only. The right sidebar drawer depend
 - `right-sidebar-drawer`: released
 - `spaced-review`: released
 - `heading-progress`: released in `0.4.0`
+- `reward-reader`: in development as Phase 1A foundation on the current branch
 
 See `docs/FEATURE_STATUS.md` for a fuller project snapshot, including summary and next-step notes for released, current-branch, and future modules.
 
 ## Planned roadmap
 
 - Heading Progress: released in `0.4.0` as a disabled-by-default status bar MVP that shows progress inside the current top-level heading section, supports `viewport-center` and `cursor-position` source modes, supports `bar + percent` / `percent only` / `bar only` display modes, reads only the active Markdown editor, and does not perform any vault-wide scan
+- Reward Reader: Phase 1A foundation is now in development on the current branch with a default-off feature shell, foundational settings, pure data types, and pure store normalization; import, parser, exchange, reader, sidebar, and status bar remain future phases
 - Workspace panel system / dock router / floating drawer: future architecture work beyond the currently released modules
 
 ## Local development
@@ -81,3 +83,4 @@ NestKit is currently prepared for local development and manual validation. A lat
 - `docs/RELEASE_CHECKLIST.md`
 - `docs/MIGRATION_NOTES.md`
 - `docs/FEATURE_STATUS.md`
+- `docs/REWARD_READER_PLAN.md`

@@ -1,5 +1,105 @@
 # NestKit test plan
 
+## Reward Reader Phase 1A foundation
+
+1. Confirm Reward Reader is disabled by default in settings.
+2. Confirm plugin `onload()` registers the `reward-reader` feature through the existing `FeatureRegistry` and `FeatureManager` path only.
+3. Confirm enabling Reward Reader activates the feature shell without registering commands.
+4. Confirm enabling Reward Reader activates the feature shell without registering a view.
+5. Confirm enabling Reward Reader activates the feature shell without creating a status bar item.
+6. Confirm enabling Reward Reader activates the feature shell without creating a ribbon button.
+7. Confirm enabling Reward Reader activates the feature shell without creating a sidebar entry.
+8. Confirm enabling Reward Reader does not add a Vault listener.
+9. Confirm enabling Reward Reader does not add a layout-change listener.
+10. Confirm enabling Reward Reader does not start a timer.
+11. Confirm disabling Reward Reader leaves no runtime side effects behind.
+12. Confirm plugin `onload()` does not scan the vault for Reward Reader while the feature remains disabled.
+13. Confirm plugin `onload()` does not read any novel source file for Reward Reader.
+14. Confirm plugin `onload()` does not create `.nestkit/reward-reader`.
+15. Confirm plugin `onload()` does not create `.nestkit/reward-reader/state.json`.
+16. Confirm plugin `onload()` does not create `.nestkit/reward-reader/indexes`.
+17. Confirm the `General` / `常规` tab contains `Enable Reward Reader` alongside the other top-level feature toggles.
+18. Confirm the dedicated `Reward Reader` / `小说解锁阅读` tab contains only the foundational settings from Phase 1A.
+19. Confirm the Reward Reader tab does not expose novel file path, status bar, sidebar, quick-duration, undo, export, rebuild-index, or clear-progress controls yet.
+20. Confirm missing Reward Reader settings fields migrate to defaults without bumping plugin settings schema `1`.
+21. Confirm `rewardReaderMinutesPerUnit` defaults to `30`.
+22. Confirm `rewardReaderChaptersPerUnit` defaults to `1`.
+23. Confirm `rewardReaderCarryOverMinutes` defaults to `true`.
+24. Confirm `rewardReaderDailyUnlockCap` defaults to `4`.
+25. Confirm `rewardReaderUnreadInventoryCap` defaults to `3`.
+26. Confirm `rewardReaderRequireStudyContent` defaults to `true`.
+27. Confirm `rewardReaderDefaultReadingMode` defaults to `continuous`.
+28. Confirm invalid Reward Reader booleans fall back to defaults during settings migration.
+29. Confirm `NaN`, `Infinity`, negative values, and out-of-range Reward Reader numeric settings fall back to defaults during settings migration.
+30. Confirm `rewardReaderDailyUnlockCap = 0` is accepted as a valid unlimited setting value.
+31. Confirm `rewardReaderUnreadInventoryCap = 0` is accepted as a valid unlimited setting value.
+32. Confirm an invalid `rewardReaderDefaultReadingMode` falls back to `continuous`.
+33. Confirm Reward Reader store schema helpers use `schemaVersion = 1`.
+34. Confirm Reward Reader chapter-index cache helpers use `schemaVersion = 1`.
+35. Confirm `normalizeRewardReaderStore(undefined)` or another invalid raw input returns the default store shape without auto-persisting a replacement.
+36. Confirm a valid schema-`1` Reward Reader store round-trips without forced future-version protection.
+37. Confirm a future Reward Reader store schema returns `hasUnsupportedFutureVersion = true`.
+38. Confirm a future Reward Reader store schema returns `shouldPersist = false`.
+39. Confirm duplicate Reward Reader novel ids are handled deterministically instead of overwriting unpredictably.
+40. Confirm a dangling `primaryNovelId` normalizes to `null`.
+41. Confirm progress entries for unknown novels are discarded during Reward Reader store normalization.
+42. Confirm invalid study, unlock, and reading history records are filtered out during Reward Reader store normalization.
+43. Confirm external absolute paths do not pass Reward Reader source-path normalization.
+44. Confirm only Vault-relative `.txt` and `.md` source paths remain valid in the current Reward Reader source model.
+45. Confirm chapter-index cache entries normalize into ascending, continuous `chapterIndex` order starting at `0`.
+46. Confirm invalid chapter-index offsets are filtered or cause the cache to normalize safely.
+47. Confirm this phase still does not implement a Reward Reader storage adapter, file IO, chapter parser, exchange engine, or reader view.
+
+## Reward Reader Phase 1A hardening
+
+1. Confirm UUID-style safe ids such as `550e8400-e29b-41d4-a716-446655440000` pass Reward Reader id validation.
+2. Confirm a novel id such as `../../x` is rejected.
+3. Confirm a novel id such as `a/b` is rejected.
+4. Confirm `getRewardReaderChapterIndexCachePath(...)` throws instead of generating a path for an invalid novel id.
+5. Confirm `rewardReaderMinutesPerUnit = 30.5` falls back to the default value during settings migration.
+6. Confirm `rewardReaderChaptersPerUnit = 1.5` falls back to the default value during settings migration.
+7. Confirm `rewardReaderDailyUnlockCap = 0` remains valid.
+8. Confirm `rewardReaderUnreadInventoryCap = 0` remains valid.
+9. Confirm a completely invalid raw chapter-index cache returns `cache = null`.
+10. Confirm a cache with an invalid `sourcePath` returns `cache = null`.
+11. Confirm a future chapter-index cache keeps `shouldPersist = false`.
+12. Confirm duplicate or overlapping chapter offsets make the cache unusable.
+13. Confirm a chapter `endOffset` beyond the text-offset upper bound makes the cache unusable.
+14. Confirm a valid non-overlapping chapter cache still passes normalization.
+15. Confirm `unlockedThroughChapterIndex = null` together with non-null read progress discards the progress entry.
+16. Confirm `currentChapterIndex` beyond the unlock boundary discards the progress entry.
+17. Confirm `studyMinuteBalance > totalStudyMinutes` discards the progress entry.
+18. Confirm `todayUnlockDate = null` together with `todayUnlockedChapters > 0` discards the progress entry.
+19. Confirm duplicate study-record ids keep only the first retained record.
+20. Confirm unlock records with dangling `studyRecordId` references are discarded.
+21. Confirm unlock records whose referenced study record belongs to another novel are discarded.
+22. Confirm a future Reward Reader store still keeps `shouldPersist = false`.
+
+## Reward Reader Phase 1A final boundary cleanup
+
+1. Confirm `sourceSize` may be larger than `sourceTextLength` for multibyte source text without invalidating an otherwise valid cache.
+2. Confirm a Chinese sample text proves `Buffer.byteLength(text, 'utf8') !== text.length`.
+3. Confirm valid chapter offsets now validate against `sourceTextLength`, not against `sourceSize`.
+4. Confirm `endOffset <= sourceTextLength` passes normalization.
+5. Confirm `endOffset > sourceTextLength` makes the cache unusable.
+6. Confirm `endOffset > sourceTextLength` still fails even when `endOffset < sourceSize`.
+7. Confirm `sourceTextLength = 0` with non-empty `chapters` makes the cache unusable.
+8. Confirm `sourceTextLength > 0` with `chapters = []` remains a valid normalized cache state.
+9. Confirm missing `chapters` makes the cache unusable.
+10. Confirm non-array `chapters` makes the cache unusable.
+11. Confirm any invalid single chapter entry makes the whole cache unusable instead of preserving a partial chapter list.
+12. Confirm a complete but unordered chapter list can still be sorted by `chapterIndex` and retained.
+13. Confirm an invalid raw Reward Reader root store returns the default runtime store.
+14. Confirm an invalid raw Reward Reader root store keeps `shouldPersist = false`.
+15. Confirm a future Reward Reader store still keeps `shouldPersist = false`.
+16. Confirm a future Reward Reader chapter-index cache still keeps `shouldPersist = false`.
+17. Confirm reading action `opened` remains valid.
+18. Confirm reading action `marked-read` remains valid.
+19. Confirm reading action `position-updated` is rejected.
+20. Confirm normalized reading records no longer retain `scrollOffset`.
+21. Confirm a `progressByNovelId` key mismatch with the internal `novelId` discards that progress entry immediately.
+22. Confirm the earlier Phase 1A foundation and hardening assertions still pass after this final boundary cleanup.
+
 ## Heading Progress Phase 1A status bar MVP
 
 1. Confirm Heading Progress is disabled by default in settings.
