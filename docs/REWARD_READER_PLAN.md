@@ -60,6 +60,16 @@ Confirmed Phase 1A final-boundary decisions:
 - A damaged root Reward Reader store now falls back to an empty runtime default with `shouldPersist = false`, so older code does not auto-overwrite an unreadable source file
 - Reading history is now intentionally low-frequency only: MVP reading records keep `opened` and `marked-read`, while scroll position lives only in mutable progress state
 
+Confirmed Phase 2A parser decisions:
+
+- Phase 2A adds only a detached pure chapter parser and does not add Vault file reading, import UI, cache persistence, exchange logic, or reader UI
+- Parser input is one complete source string already in memory
+- Parser output is a `RewardReaderChapterIndexEntry[]` plus lightweight parse metadata and warnings
+- Parser offsets must stay in the original JavaScript UTF-16 string coordinate space and must work directly with `sourceText.slice(...)`
+- Parser ignores leading preface text before the first detected chapter instead of inventing a synthetic chapter `0`
+- Parser uses built-in heading rules only in this phase; custom regex configuration stays deferred
+- Parser does not validate whether chapter numbers are continuous, unique, or semantically correct; internal `chapterIndex` is always reassigned from textual appearance order
+
 This follows the current NestKit architecture direction where independent features are lazily created and enabled through the shared `FeatureRegistry` and `FeatureManager`, rather than being always-on during `onload()`.
 
 ## Reading source model
@@ -96,6 +106,29 @@ Initial chapter-title matching should support common formats such as:
 - `Chapter 1`
 
 Phase 1 should ship with built-in automatic matching rules only. Advanced per-book custom chapter regex support should stay deferred until later.
+
+Phase 2A parser scope is intentionally narrower than full import:
+
+- Parse one complete source string only
+- Detect chapter-title lines and generate UTF-16 offsets only
+- Do not read from Vault
+- Do not write chapter-index cache files
+- Do not derive `sourceSize`, `sourceMtime`, or other file metadata
+- Do not keep chapter body copies inside the parse result
+
+Built-in heading formats now targeted by Phase 2A:
+
+- Chinese Arabic-number headings such as `第1章`, `第 1 章`, `第01章`, and `第１章`
+- Chinese numeral headings such as `第一章`, `第二十三章`, `第一百零二章`, and `第一千章`
+- English headings such as `Chapter 1`, `chapter 1`, `CHAPTER 1`, and `Chapter 1: Introduction`
+- Optional Markdown heading prefixes such as `# 第一章` or `### Chapter 3`
+
+Built-in false-positive boundaries now targeted by Phase 2A:
+
+- Chapter headings must occupy a whole logical line
+- Ordinary body text mentioning `第一章`, `第3章`, or `Chapter 2` inside a paragraph must not be treated as a chapter heading
+- Chinese matches stop at `章`, so forms such as `第1章节` or `第一章鱼` must not match
+- English matches require the standalone word `Chapter`, so forms such as `Chapterhouse 1` must not match
 
 Index invalidation should initially be lightweight:
 
@@ -314,6 +347,11 @@ The following should stay out of the first implementation phase:
 - Detect chapter boundaries with built-in rules
 - Persist chapter-index metadata
 - Add lightweight index rebuild checks based on file-change signals
+
+Phase 2A status inside Phase 2:
+
+- Implemented now: detached pure chapter parser only
+- Deferred to later Phase 2 work: Vault file reading, import flow assembly, chapter-index persistence, and file-change-based invalidation checks
 
 ### Phase 3: study records and exchange engine
 

@@ -1,5 +1,14 @@
 # Migration notes
 
+- `reward-reader-phase2a-pure-chapter-parser` adds the first detached Reward Reader chapter parser on top of the existing Phase 1A foundation worktree.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys and no new runtime surfaces.
+- This round adds a detached pure parser only: it accepts one complete source string, detects built-in chapter-heading lines, and returns UTF-16 chapter offsets plus lightweight parse metadata.
+- This round does not add Vault file reading, does not add a storage adapter, does not create `.nestkit`, does not create real chapter-index cache files, and does not perform any file migration.
+- This round does not add commands, views, status bar behavior, sidebar behavior, timers, listeners, or any other Reward Reader runtime startup path.
+
 - `reward-reader-phase1a-final-boundary-fix` is a final Phase 1A boundary cleanup on top of the existing Reward Reader foundation and hardening worktree.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
 - This round keeps Reward Reader store schema at `1`.

@@ -100,6 +100,27 @@
 21. Confirm a `progressByNovelId` key mismatch with the internal `novelId` discards that progress entry immediately.
 22. Confirm the earlier Phase 1A foundation and hardening assertions still pass after this final boundary cleanup.
 
+## Reward Reader Phase 2A pure chapter parser
+
+1. Confirm `parseRewardReaderChapters(sourceText)` stays detached pure logic and can be exercised without `Vault`, a storage adapter, or feature startup wiring.
+2. Confirm an empty source string returns `chapters = []`, `sourceTextLength = 0`, `detectedHeadingCount = 0`, `ignoredPrefixLength = 0`, and one warning instead of throwing.
+3. Confirm a non-empty source with no detected chapter heading returns `chapters = []`, `detectedHeadingCount = 0`, `ignoredPrefixLength = sourceText.length`, and one warning instead of auto-wrapping the full text as a chapter.
+4. Confirm Chinese Arabic-number headings such as `第1章`, `第 1 章`, `第001章`, `第 001 章`, and `第１章` are detected.
+5. Confirm Chinese numeral headings such as `第一章`, `第二十三章`, `第一百零二章`, and `第一千章` are detected.
+6. Confirm English headings such as `Chapter 1`, `chapter 1`, `CHAPTER 1`, `Chapter 001`, and `Chapter 1: Introduction` are detected.
+7. Confirm built-in separators also accept title forms such as `第1章 初见`, `第 1 章：初见`, `第一章、初见`, and `Chapter 1 Introduction`.
+8. Confirm Markdown heading forms such as `# 第一章`, `## 第2章 离开`, and `### Chapter 3 Return` are detected, while `#第一章` without a separating space is not.
+9. Confirm headings may be indented with leading spaces or tabs, but `startOffset` still points to the real raw line start including that indent and any Markdown marker.
+10. Confirm `title` normalization removes a leading BOM, leading indent, Markdown heading prefix, and outer whitespace, while preserving the original chapter wording and punctuation.
+11. Confirm `sourceTextLength` always equals the original `sourceText.length` in JavaScript UTF-16 code units and that offsets are not recomputed from byte length or a normalized copy.
+12. Confirm `LF`, `CRLF`, standalone `CR`, a final line without newline, and a final line with trailing newline all keep valid `startOffset` / `endOffset` behavior.
+13. Confirm `sourceText.slice(startOffset, endOffset)` returns the original raw chapter slice, including original Markdown markers and indentation when present.
+14. Confirm `ignoredPrefixLength` equals the exact raw prefix length before the first detected heading and that preface content does not create a synthetic chapter `0`.
+15. Confirm ordinary body-text mentions such as `我读到了第一章`, `查看第3章内容`, and `The phrase Chapter 2 appears in this paragraph.` do not produce headings.
+16. Confirm false-positive forms such as `第1章节`, `第一章鱼`, and `Chapterhouse 1` do not produce headings.
+17. Confirm duplicate visible chapter numbers and chapter-number gaps still produce sequential internal `chapterIndex` values starting at `0`, in textual appearance order only.
+18. Confirm a large synthetic novel with roughly `1000` to `3000` chapters parses successfully, returns the expected chapter count, keeps the final chapter `endOffset = sourceText.length`, and does not copy chapter bodies into the parse result.
+
 ## Heading Progress Phase 1A status bar MVP
 
 1. Confirm Heading Progress is disabled by default in settings.

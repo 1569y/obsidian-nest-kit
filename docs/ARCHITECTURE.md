@@ -20,6 +20,7 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/heading-progress/progress.ts`: heading parsing plus top-level section and line-based progress derivation
 - `src/features/heading-progress/types.ts`: Heading Progress settings union types
 - `src/features/reward-reader/index.ts`: Reward Reader Phase 1A foundation feature shell with default-off lifecycle only and no runtime UI or file IO
+- `src/features/reward-reader/chapter-parser.ts`: Reward Reader Phase 2A detached pure chapter parser for built-in heading detection and UTF-16 chapter-offset generation
 - `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
 - `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
@@ -126,6 +127,14 @@ The current reading-position boundary is also intentionally split:
 - `currentChapterScrollOffset` remains mutable per-novel progress state
 - Reading history is now reserved for lower-frequency semantic events only
 - High-frequency scroll updates do not belong in persisted reading history records
+
+The current chapter-parser boundary is intentionally detached:
+
+- The parser is a pure function that accepts one in-memory source string and returns chapter entries plus lightweight parse metadata
+- The parser does not enter the feature startup path and is not imported by `src/features/reward-reader/index.ts`
+- The parser does not access Vault, does not read files, does not write cache files, and does not keep chapter body copies in its result
+- The parser emits offsets in the original UTF-16 string coordinate space, so later code can slice raw chapter text directly from the same source string
+- The parser currently supports only built-in chapter-heading formats; custom per-book regex settings remain deferred
 
 The chapter-index cache path boundary is also intentionally defensive:
 
