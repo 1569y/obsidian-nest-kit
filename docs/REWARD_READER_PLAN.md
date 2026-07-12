@@ -70,6 +70,21 @@ Confirmed Phase 2A parser decisions:
 - Parser uses built-in heading rules only in this phase; custom regex configuration stays deferred
 - Parser does not validate whether chapter numbers are continuous, unique, or semantically correct; internal `chapterIndex` is always reassigned from textual appearance order
 
+Confirmed Phase 2B1 Vault source boundary decisions:
+
+- Phase 2B1 adds only a detached Vault-local source inspection boundary plus a pure in-memory chapter-cache builder
+- Vault-local inspection supports only one explicit TXT or Markdown file path per call and does not scan the vault
+- Source inspection uses `vault.read(file)` exactly once per successful read path and does not use `cachedRead`
+- Unsupported extensions are rejected from the normalized Vault-relative path before any Vault lookup or `vault.read`
+- Inspection results do not return `sourceText` and do not keep chapter body copies
+- Phase 2B1 still does not create `RewardReaderNovel`, does not register imported novels into state, does not write chapter-index cache files, and does not create `.nestkit`
+- The pure builder validates cheap metadata first; invalid metadata returns `cache = null` and `parseResult = null` without scanning the full source text
+- Files with no detected chapters fail inspection instead of being wrapped into an empty or synthetic cache
+- `vault.read(...)` failures now return one stable generic user-facing message instead of surfacing raw adapter or path details
+- Chapter-index assembly failures now stay separate from source-read failures so later import UI can react to them differently
+- Leading preface content still only produces warnings and does not become part of the first chapter in this phase
+- MB-scale Vault-local novels should be accepted as long as one explicit read plus one linear parse can complete; no low hard size cap is introduced in this phase
+
 This follows the current NestKit architecture direction where independent features are lazily created and enabled through the shared `FeatureRegistry` and `FeatureManager`, rather than being always-on during `onload()`.
 
 ## Reading source model
@@ -115,6 +130,17 @@ Phase 2A parser scope is intentionally narrower than full import:
 - Do not write chapter-index cache files
 - Do not derive `sourceSize`, `sourceMtime`, or other file metadata
 - Do not keep chapter body copies inside the parse result
+
+Phase 2B1 Vault source boundary scope stays intentionally narrower than full import:
+
+- Validate one Vault-local source path only when the future user-driven import flow explicitly asks for it
+- Support only `.txt` and `.md` source files in this phase
+- Use `vault.read` rather than `cachedRead`
+- Read the source file at most once per inspection call
+- Return structured success or failure results plus an in-memory chapter cache only
+- Do not return `sourceText`
+- Do not create `RewardReaderNovel`
+- Do not persist state or chapter-index cache files
 
 Built-in heading formats now targeted by Phase 2A:
 
@@ -352,6 +378,11 @@ Phase 2A status inside Phase 2:
 
 - Implemented now: detached pure chapter parser only
 - Deferred to later Phase 2 work: Vault file reading, import flow assembly, chapter-index persistence, and file-change-based invalidation checks
+
+Phase 2B1 status inside Phase 2:
+
+- Implemented now: detached Vault-local source inspection plus pure in-memory chapter-cache assembly
+- Deferred to later Phase 2 work: explicit import UI, novel registration, chapter-index persistence, state persistence, and file-change-based invalidation checks
 
 ### Phase 3: study records and exchange engine
 

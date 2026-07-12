@@ -121,6 +121,48 @@
 17. Confirm duplicate visible chapter numbers and chapter-number gaps still produce sequential internal `chapterIndex` values starting at `0`, in textual appearance order only.
 18. Confirm a large synthetic novel with roughly `1000` to `3000` chapters parses successfully, returns the expected chapter count, keeps the final chapter `endOffset = sourceText.length`, and does not copy chapter bodies into the parse result.
 
+## Reward Reader Phase 2B1 Vault source boundary
+
+1. Confirm the pure chapter-cache builder can assemble an in-memory `RewardReaderChapterIndexCache` from a valid TXT source string plus explicit metadata without importing Obsidian.
+2. Confirm the pure chapter-cache builder can assemble an in-memory `RewardReaderChapterIndexCache` from a valid Markdown source string plus explicit metadata.
+3. Confirm the pure chapter-cache builder keeps `sourceTextLength = sourceText.length`.
+4. Confirm the pure chapter-cache builder keeps `sourceSize` equal to the caller-provided file byte size rather than recomputing it from `sourceText.length`.
+5. Confirm the pure chapter-cache builder reuses parser chapter entries rather than creating a second chapter-body copy.
+6. Confirm the pure chapter-cache builder result does not include `sourceText`.
+7. Confirm the pure chapter-cache builder trims `generatedAt` before writing it into the assembled cache.
+8. Confirm an invalid `generatedAt` causes the pure chapter-cache builder to return `cache = null` and `parseResult = null`.
+9. Confirm an invalid novel id causes the pure chapter-cache builder to return `cache = null` and `parseResult = null` without creating a synthetic cache.
+10. Confirm an invalid normalized `sourcePath` causes the pure chapter-cache builder to return `cache = null` and `parseResult = null`.
+11. Confirm invalid `sourceMtime` and invalid `sourceSize` each cause the pure chapter-cache builder to return `cache = null` and `parseResult = null`.
+12. Confirm a no-chapter parse result causes the pure chapter-cache builder to return `cache = null` while preserving a real non-null parser result and parser warnings.
+13. Confirm preface text before the first heading still allows cache creation and preserves the ignored-prefix warning.
+14. Confirm a builder-created cache still passes the existing chapter-cache normalization boundary.
+15. Confirm the builder trims `sourcePath` before writing it into the assembled cache.
+16. Confirm a large invalid-metadata input returns quickly without requiring a full parse and still returns `parseResult = null`.
+17. Confirm Vault-relative path validation accepts paths such as `Books/novel.txt`, `小说/长篇小说.txt`, `novel.TXT`, and `novel.MD`.
+18. Confirm Vault-relative path validation rejects empty strings, leading `/`, Windows absolute paths, traversal forms such as `../novel.txt`, URLs, `file://` paths, and NUL-containing strings before Vault lookup.
+19. Confirm a Vault-relative backslash path such as `Books\\novel.txt` follows the implemented `normalizePath(...)` rule and is handled consistently.
+20. Confirm the post-normalization path cannot contain traversal segments before Vault lookup.
+21. Confirm a supported TXT source maps to `sourceKind = vault-txt`.
+22. Confirm a supported Markdown source maps to `sourceKind = vault-markdown`.
+23. Confirm unsupported extensions such as `.pdf`, `.epub`, or no-extension files fail before Vault lookup and before `vault.read`.
+24. Confirm a folder path returns `source-not-file`.
+25. Confirm a missing file returns `source-not-found`.
+26. Confirm a thrown `vault.read(...)` error returns `source-read-failed` with the stable generic read-failure message.
+27. Confirm the stable read-failure message and warnings do not leak raw adapter text such as absolute paths, usernames, or `ENOENT`.
+28. Confirm one successful inspection call uses `vault.read(...)` exactly once.
+29. Confirm the inspection path never calls `cachedRead(...)`.
+30. Confirm the inspection path never calls `adapter.read(...)`.
+31. Confirm unsupported source types perform zero Vault lookup and zero `vault.read(...)` calls.
+32. Confirm invalid source paths perform zero Vault lookup and zero `vault.read(...)` calls.
+33. Confirm a file with no detected chapters returns `ok = false` and `code = no-chapters-detected`.
+34. Confirm a cache-assembly failure after a successful read returns `ok = false` and `code = chapter-index-build-failed`.
+35. Confirm a cache-assembly failure no longer reuses `source-read-failed`.
+36. Confirm a successful inspection result does not include `sourceText`.
+37. Confirm a successful inspection result includes correct `sourceMtime`, `sourceSize`, `sourceTextLength`, `chapterCount`, and `ignoredPrefixLength`.
+38. Confirm a successful inspection result returns an assembled cache without chapter-body copies.
+39. Confirm a 5 MB scale mock Vault source with at least `5000` chapters succeeds, uses one `vault.read(...)` call, returns the expected chapter count, keeps `cache.sourceTextLength`, keeps `cache.sourceSize`, keeps `last endOffset = sourceText.length`, and still does not return `sourceText`.
+
 ## Heading Progress Phase 1A status bar MVP
 
 1. Confirm Heading Progress is disabled by default in settings.

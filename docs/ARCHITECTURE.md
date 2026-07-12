@@ -21,6 +21,8 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/heading-progress/types.ts`: Heading Progress settings union types
 - `src/features/reward-reader/index.ts`: Reward Reader Phase 1A foundation feature shell with default-off lifecycle only and no runtime UI or file IO
 - `src/features/reward-reader/chapter-parser.ts`: Reward Reader Phase 2A detached pure chapter parser for built-in heading detection and UTF-16 chapter-offset generation
+- `src/features/reward-reader/chapter-cache-builder.ts`: Reward Reader Phase 2B1 pure chapter-cache assembly from one in-memory source string plus explicit metadata
+- `src/features/reward-reader/vault-source-reader.ts`: Reward Reader Phase 2B1 detached Vault-local source inspection boundary with single-read assembly flow
 - `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
 - `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
@@ -135,6 +137,17 @@ The current chapter-parser boundary is intentionally detached:
 - The parser does not access Vault, does not read files, does not write cache files, and does not keep chapter body copies in its result
 - The parser emits offsets in the original UTF-16 string coordinate space, so later code can slice raw chapter text directly from the same source string
 - The parser currently supports only built-in chapter-heading formats; custom per-book regex settings remain deferred
+
+The current source-inspection boundary is now intentionally split into two detached layers:
+
+- `chapter-cache-builder.ts` is a pure function layer that accepts one in-memory source string plus explicit metadata, validates cheap metadata before any full-text parse, reuses the detached parser only after metadata passes, assembles an in-memory `RewardReaderChapterIndexCache`, and returns lightweight warnings without persisting anything
+- `vault-source-reader.ts` is the explicit Obsidian boundary that validates one Vault-local path, rejects unsupported or escaping paths before file lookup, reads one `TFile` once with `vault.read`, and then hands the text to the pure builder
+- The builder does not import Obsidian, does not call `new Date()`, does not read files, and does not keep chapter body copies
+- Invalid builder metadata returns `cache = null` and `parseResult = null` instead of fabricating a placeholder parse result
+- The Vault reader does not enter the startup path, does not scan the vault, does not use `cachedRead`, does not call `adapter.read`, does not leak raw `vault.read(...)` error text, and does not return `sourceText` in its result
+- Source text exists only during the inspection call; the returned inspection result keeps only the assembled cache plus lightweight metadata such as source size, text length, chapter count, ignored-prefix length, and warnings
+- Read failures, no-chapter parse results, and chapter-index assembly failures now stay distinct in the structured inspection result instead of collapsing into one generic read-error bucket
+- Cache persistence, state persistence, and future import UI remain deferred to later Reward Reader phases
 
 The chapter-index cache path boundary is also intentionally defensive:
 

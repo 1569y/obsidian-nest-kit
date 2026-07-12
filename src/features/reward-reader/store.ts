@@ -55,7 +55,7 @@ function isNonEmptyString(value: unknown): value is string {
 	return typeof value === 'string' && value.trim().length > 0;
 }
 
-function isSafeRewardReaderId(value: string): boolean {
+export function isSafeRewardReaderId(value: string): boolean {
 	return REWARD_READER_SAFE_ID_REGEX.test(value);
 }
 
@@ -92,13 +92,17 @@ function isIsoDateString(value: string): boolean {
 	);
 }
 
-function isValidVaultRelativePath(value: unknown): value is string {
+export function isValidVaultRelativePath(value: unknown): value is string {
 	if (typeof value !== 'string') {
 		return false;
 	}
 
 	const normalizedValue = value.trim();
 	if (normalizedValue.length === 0) {
+		return false;
+	}
+
+	if (normalizedValue.includes('\0')) {
 		return false;
 	}
 

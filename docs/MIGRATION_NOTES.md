@@ -1,5 +1,16 @@
 # Migration notes
 
+- `reward-reader-phase2b1-vault-source-boundary` adds the first detached Reward Reader Vault-local source inspection boundary on top of the existing Phase 2A parser worktree.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys and no new runtime surfaces.
+- This round adds a pure in-memory chapter-cache builder plus a detached Vault reader that validates one Vault-local TXT or Markdown path, reads it once with `vault.read`, and assembles an in-memory chapter cache result without persisting it.
+- This round also hardens the same Phase 2B1 boundary: shared Vault-relative path validation now rejects NUL consistently, unsupported extensions are rejected before Vault lookup, invalid builder metadata no longer triggers a full parse, and `vault.read(...)` failures no longer surface raw adapter error text.
+- This round keeps read failures, no-chapter parse results, and chapter-index assembly failures as separate structured outcomes so later import flows can react without guessing.
+- This round does not create `.nestkit`, does not create state or cache files, does not add a storage write adapter, and does not perform any real data migration.
+- This round does not register commands, views, ribbons, status bar behavior, sidebar behavior, timers, listeners, or any other Reward Reader runtime startup path.
+
 - `reward-reader-phase2a-pure-chapter-parser` adds the first detached Reward Reader chapter parser on top of the existing Phase 1A foundation worktree.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
 - This round keeps Reward Reader store schema at `1`.
