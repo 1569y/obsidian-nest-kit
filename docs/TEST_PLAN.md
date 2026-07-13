@@ -291,6 +291,45 @@
 124. Confirm the original warnings array remains unchanged after the hardening pass.
 125. Confirm success warnings still use a distinct array instance after the hardening pass.
 
+## Reward Reader Phase 2B3 pure store patch application
+
+1. Confirm a valid existing store plus valid prepared import success applies successfully.
+2. Confirm the success result returns a new `nextStore` root object.
+3. Confirm `nextStore.schemaVersion` stays at the current Reward Reader store schema.
+4. Confirm `nextStore.primaryNovelId` uses the validated prepared primary result.
+5. Confirm `nextStore.novels` adds exactly one novel.
+6. Confirm `nextStore.progressByNovelId` adds exactly one progress entry for the new novel id.
+7. Confirm `result.cache === preparedImport.payload.cache`.
+8. Confirm `result.cache.chapters === preparedImport.payload.cache.chapters`.
+9. Confirm success warnings preserve legal prepared warnings in a distinct array.
+10. Confirm the new novel object is a shallow copy and not the same object as `payload.novel`.
+11. Confirm the new progress object is a shallow copy and not the same object as `payload.progress`.
+12. Confirm existing novel object references are preserved.
+13. Confirm existing progress entry references are preserved.
+14. Confirm `studyRecords`, `unlockRecords`, and `readingRecords` keep the same array references.
+15. Confirm `existingStore`, `preparedImport`, payload objects, cache, chapters, and original warnings are not mutated.
+16. Confirm `existingStore = null` and `existingStore = undefined` do not throw.
+17. Confirm unsupported store schema returns `unsupported-store-schema`.
+18. Confirm malformed existing store roots, arrays, progress map, history arrays, primary id, novels, duplicate novel ids, and duplicate source paths return `invalid-existing-store`.
+19. Confirm `preparedImport = null` and `preparedImport = undefined` do not throw.
+20. Confirm malformed prepared import roots, missing payload, missing warnings, non-array warnings, or non-string warning entries return `invalid-prepared-import` without a partial `nextStore`.
+21. Confirm invalid novel id, title, source path, source kind, source metadata, or created/updated timestamps return `invalid-prepared-import`.
+22. Confirm invalid initial progress values, mismatched `progress.novelId`, or mismatched `progress.updatedAt` return `invalid-prepared-import`.
+23. Confirm invalid cache schema, identity fields, text length, generated timestamp, empty chapters, first chapter boundary, or last chapter boundary return `invalid-prepared-import`.
+24. Confirm duplicate current novel id is rechecked and returns `duplicate-novel-id`.
+25. Confirm duplicate current source path is rechecked with exact string comparison and returns `duplicate-source-path`.
+26. Confirm an orphan current progress entry for the new novel id is rechecked and returns `conflicting-existing-progress`.
+27. Confirm stale or invalid `primaryNovelIdAfterImport` returns `invalid-primary-after-import`.
+28. Confirm the first novel must become primary.
+29. Confirm an existing non-null primary may stay unchanged or switch to the new novel only.
+30. Confirm an existing `null` primary may stay `null` or switch to the new novel only.
+31. Confirm applying the same prepared import to the first success `nextStore` fails with `duplicate-novel-id` and does not add a second novel.
+32. Confirm a large cache with `5000` chapters preserves cache and chapters identity without cloning chapter entries.
+33. Confirm large existing history arrays preserve identity, do not gain records, and are not copied.
+34. Confirm the result and `nextStore` do not include `sourceText` or chapter body text.
+35. Confirm the `nextStore` does not include the chapter-index cache.
+36. Confirm store patch application does not create `.nestkit`, write state or cache files, register runtime surfaces, or enter startup.
+
 ## Heading Progress Phase 1A status bar MVP
 
 1. Confirm Heading Progress is disabled by default in settings.

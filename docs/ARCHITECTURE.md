@@ -24,6 +24,7 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/reward-reader/chapter-cache-builder.ts`: Reward Reader Phase 2B1 pure chapter-cache assembly from one in-memory source string plus explicit metadata
 - `src/features/reward-reader/vault-source-reader.ts`: Reward Reader Phase 2B1 detached Vault-local source inspection boundary with single-read assembly flow
 - `src/features/reward-reader/import-assembly.ts`: Reward Reader Phase 2B2 detached pure import-payload preparation from normalized store state plus successful source inspection
+- `src/features/reward-reader/store-patch-application.ts`: Reward Reader Phase 2B3 detached pure in-memory store application from a prepared import payload
 - `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
 - `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
@@ -150,7 +151,7 @@ The current source-inspection boundary is now intentionally split into two detac
 - Read failures, no-chapter parse results, and chapter-index assembly failures now stay distinct in the structured inspection result instead of collapsing into one generic read-error bucket
 - Cache persistence, state persistence, and future import UI remain deferred to later Reward Reader phases
 
-The current import-preparation boundary is now intentionally a third detached layer:
+The current import-preparation boundary is intentionally a third detached layer:
 
 - `import-assembly.ts` is a pure function layer that accepts one normalized existing Reward Reader store plus one successful source-inspection result and prepares an import payload without mutating either input
 - The import assembly uses a type-only import of the successful inspection shape and does not depend on Obsidian runtime classes or helpers
@@ -159,7 +160,18 @@ The current import-preparation boundary is now intentionally a third detached la
 - The import assembly keeps its inspection self-consistency checks lightweight by validating only metadata plus O(1) first-chapter and last-chapter boundaries instead of re-normalizing or re-walking the entire cache
 - The import assembly reuses `inspection.cache` directly instead of cloning the cache or duplicating the chapters array
 - The import assembly returns only one new novel object, one initial locked progress object, one recommended `primaryNovelIdAfterImport`, and warnings; it does not return a full copied `nextStore`
-- Import action runtime, persistence, `.nestkit` creation, and later patch application remain deferred to later Reward Reader phases
+- Import action runtime, persistence, `.nestkit` creation, and later write transactions remain deferred to later Reward Reader phases
+
+The current store patch application boundary is intentionally a fourth detached layer:
+
+- `store-patch-application.ts` is a pure function layer that accepts the current normalized Reward Reader store plus one successful prepared import result and returns a new in-memory `RewardReaderStore`
+- The patch application does not import Obsidian, does not read Vault files, does not execute IO, does not create `.nestkit`, and does not enter the feature startup path
+- The patch application defensively validates the current store, validates the prepared payload, and rechecks duplicate novel id, duplicate source path, conflicting progress, and stale primary-result rules before building any next store
+- The next store uses a new root object, a new `novels` array, and a new `progressByNovelId` object, while existing novel objects and existing progress entries preserve their references
+- The patch application shallow-copies only the new novel and new progress objects so the resulting store is not directly aliased to those mutable prepared-payload objects
+- The patch application reuses `studyRecords`, `unlockRecords`, `readingRecords`, the chapter-index cache object, and the cache `chapters` array directly instead of cloning long-lived or large data
+- The patch application does not return `sourceText`, does not copy chapter body text, and does not place the cache inside `nextStore`
+- State persistence, cache persistence, runtime import commands, and UI remain deferred to later Reward Reader phases
 
 The chapter-index cache path boundary is also intentionally defensive:
 

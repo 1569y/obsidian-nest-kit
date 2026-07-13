@@ -101,6 +101,19 @@ Confirmed Phase 2B2 import-assembly decisions:
 - Phase 2B2 keeps inspection consistency lightweight by checking that the first chapter starts at `ignoredPrefixLength` and the last chapter ends exactly at `sourceTextLength`
 - Phase 2B2 does not call `new Date()`, `Date.now()`, Vault APIs, storage adapters, or any runtime UI surface
 
+Confirmed Phase 2B3 store-patch application decisions:
+
+- Phase 2B3 adds only a detached pure in-memory store application layer and still does not add import action runtime, import modal, file picker, state persistence, chapter-index persistence, or `.nestkit` creation
+- Input is the current Reward Reader store plus a successful prepared import result from Phase 2B2
+- The application layer defensively validates the current store, validates the prepared payload, and rechecks duplicate novel id, duplicate source path, and conflicting progress against the current store before applying anything
+- The prepared `primaryNovelIdAfterImport` must still be valid for the current store state: the first novel must become primary, an existing non-null primary may only stay unchanged or switch to the new novel, and a current `null` primary may only stay `null` or switch to the new novel
+- The success result returns a new in-memory `nextStore`, the same chapter-index cache reference, and a copied warnings array
+- `nextStore` uses a new root object, a new `novels` array, and a new `progressByNovelId` object
+- The new novel and new progress objects are shallow-copied before entering `nextStore`
+- Existing novel objects, existing progress entries, `studyRecords`, `unlockRecords`, and `readingRecords` preserve their references
+- The cache object and `cache.chapters` array preserve their references and are not placed inside `nextStore`
+- Phase 2B3 must not mutate `existingStore`, mutate `preparedImport`, return `sourceText`, copy chapter body text, call Vault APIs, call current-time APIs, or write any files
+
 This follows the current NestKit architecture direction where independent features are lazily created and enabled through the shared `FeatureRegistry` and `FeatureManager`, rather than being always-on during `onload()`.
 
 ## Reading source model
@@ -418,6 +431,11 @@ Phase 2B2 status inside Phase 2:
 
 - Implemented now: detached pure import-payload preparation from normalized existing store plus successful source inspection
 - Deferred to later Phase 2 work: explicit import action runtime, import modal, file picker, novel registration into real state, chapter-index persistence, state persistence, and file-change-based invalidation checks
+
+Phase 2B3 status inside Phase 2:
+
+- Implemented now: detached pure in-memory store application from a prepared import success result plus the current store
+- Deferred to later Phase 2 work: explicit import action runtime, import modal, file picker, storage write transaction, state persistence, chapter-index persistence, `.nestkit` creation, and file-change-based invalidation checks
 
 ### Phase 3: study records and exchange engine
 

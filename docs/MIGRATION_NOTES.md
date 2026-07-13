@@ -1,5 +1,14 @@
 # Migration notes
 
+- `reward-reader-phase2b3-pure-store-patch-application` adds the detached pure in-memory Reward Reader store application layer on top of the existing Phase 2B2 import-preparation worktree.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys and no new runtime surfaces.
+- This round adds one pure store-patch application module that validates the current store and prepared import payload, rechecks stale duplicate id/source/progress conflicts, validates the prepared primary result, creates a new in-memory store root, shallow-copies only the new novel and progress, and reuses history arrays plus chapter-cache references without persisting anything.
+- This round does not create `.nestkit`, does not create state or cache files, does not add a storage write adapter, and does not perform any real data migration.
+- This round does not register commands, views, ribbons, status bar behavior, sidebar behavior, timers, listeners, or any Reward Reader runtime startup path.
+
 - `reward-reader-phase2b2-boundary-hardening` keeps Phase 2B2 inside the same detached pure import-preparation scope and only hardens runtime validation boundaries before commit.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
 - This round keeps Reward Reader store schema at `1`.
