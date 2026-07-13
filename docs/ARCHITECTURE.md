@@ -28,6 +28,7 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/reward-reader/read-only-storage-adapter.ts`: Reward Reader Phase 2C1 detached read-only `DataAdapter` boundary for state and one explicit chapter-index cache
 - `src/features/reward-reader/write-only-storage-adapter.ts`: Reward Reader Phase 2C2 detached minimal write-only `DataAdapter` boundary for canonical state and one explicit chapter-index cache
 - `src/features/reward-reader/import-persistence-orchestrator.ts`: Reward Reader Phase 2C3 detached cache-first import persistence orchestration across the existing read, apply, and write boundaries
+- `src/features/reward-reader/import-runtime-flow.ts`: Reward Reader Phase 2D1 detached minimal import runtime flow that chains request validation, initial state read, source inspection, import preparation, and persistence orchestration without registering UI
 - `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
 - `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
@@ -210,6 +211,19 @@ The current import persistence boundary is intentionally a seventh detached laye
 - State write failure after a written or reused cache reports the state result as `write-outcome-unknown` and leaves any already-written cache in place for a later retry
 - This phase still does not provide rollback, orphan-cache cleanup, temporary files, backups, atomic rename, compare-and-swap, file locks, revision tracking, or crash-level atomicity
 - The orchestrator does not scan the indexes directory, does not read novel source text, does not register runtime surfaces, and does not enter startup or feature enablement
+
+The current import runtime boundary is intentionally an eighth detached layer:
+
+- `import-runtime-flow.ts` is an application-layer callable function that coordinates the existing initial state read, Vault source inspection, import preparation, and persistence orchestration modules
+- The runtime request must explicitly provide `novelId`, `sourcePath`, `title`, `operationAt`, and `makePrimary`; this layer does not generate ids, infer titles, or read the current time
+- The initial state read is used only as the preparation baseline; the Phase 2C3 persistence orchestrator still reads the latest state again before applying and writing
+- The runtime flow does not directly call `DataAdapter` IO methods, does not access `vault.adapter`, does not parse internal JSON, and does not accept an external `nextStore`
+- Source inspection is called once per runtime import call, and source text remains inside the existing Vault source boundary instead of being returned by the runtime result
+- Persistence partial statuses are preserved for callers so a future command or modal can show retry guidance without guessing
+- Structured Phase 2C3 persistence failures keep their exact persistence code, internal stage, sanitized message, and cache/state persistence statuses
+- If the Phase 2C3 orchestrator itself unexpectedly throws instead of returning a structured result, the runtime returns `persistence-runtime-failed` with unknown cache and state outcomes because the exact internal stage is not knowable
+- The runtime flow does not retry, read back state or cache, write compensation data, or roll back after an unexpected persistence throw
+- The runtime flow remains detached from startup, feature enablement, commands, modals, file pickers, notices, views, sidebars, status bar items, the reader, and the exchange engine
 
 The chapter-index cache path boundary is also intentionally defensive:
 

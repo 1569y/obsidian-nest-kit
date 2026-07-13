@@ -1,5 +1,24 @@
 # Migration notes
 
+- `reward-reader-phase2d1-persistence-throw-hardening` keeps the Phase 2D1 detached import runtime scope and corrects only the classification of unexpected persistence-orchestrator throws.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys, no new file format, and no new runtime registrations.
+- Structured Phase 2C3 persistence failures still pass through with their original code, persistence stage, cache persistence, and state persistence values.
+- If Phase 2C3 unexpectedly throws instead of returning a structured result, Phase 2D1 now reports `persistence-runtime-failed` with unknown cache/state outcomes instead of misclassifying it as `state-write-blocked`.
+- This round does not add retry, read-back, rollback, orphan-cache cleanup, command registration, modal registration, reader UI, or exchange-engine behavior.
+
+- `reward-reader-phase2d1-detached-minimal-import-runtime-flow` adds a detached Reward Reader import runtime function on top of the existing source inspection, import preparation, and cache-first persistence orchestration boundaries.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys and no new user-facing runtime surfaces.
+- This round adds one callable runtime module that validates an explicit import request, reads an initial state baseline for preparation, inspects one Vault-local TXT or Markdown source, prepares the import payload, and delegates final latest-state persistence to Phase 2C3.
+- This round can create Reward Reader internal state/cache files only when a future caller explicitly invokes the detached function; it is still not registered from startup, feature enablement, commands, modals, file pickers, or settings UI.
+- This round does not generate novel ids, does not read the current time, does not accept an external `nextStore`, does not scan indexes, does not add automatic retry, and does not provide rollback, crash atomicity, lock files, or orphan-cache cleanup.
+- This round does not register commands, views, ribbons, status bar behavior, sidebar behavior, timers, listeners, import modals, file pickers, reader UI, or the learning exchange engine.
+
 - `reward-reader-phase2c3-import-persistence-orchestration` adds detached cache-first Reward Reader import persistence orchestration on top of the existing Phase 2C1 read adapter, Phase 2C2 writer, and Phase 2B3 in-memory store application.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
 - This round keeps Reward Reader store schema at `1`.

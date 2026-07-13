@@ -436,6 +436,34 @@
 34. Confirm the large import keeps existing history counts, adds one novel, preserves `5000` chapters, and writes cache before state.
 35. Confirm the orchestrator stays detached from startup, feature enablement, commands, listeners, views, settings UI, import runtime, reader UI, and exchange engine.
 
+## Reward Reader Phase 2D1 detached minimal import runtime flow
+
+1. Confirm invalid runtime request roots, ids, source paths, titles, timestamps, and `makePrimary` values return `invalid-import-request` before Vault or DataAdapter IO.
+2. Confirm initial state read failures return `state-read-blocked` at `initial-state-read` and do not inspect the source or write cache/state files.
+3. Confirm source inspection failures return `source-inspection-blocked`, preserve the inspection cause code, and do not prepare or persist an import.
+4. Confirm preparation failures return `import-preparation-blocked`, preserve the preparation cause code, and do not call the persistence orchestrator.
+5. Confirm a missing initial state plus missing target cache completes successfully through request validation, initial state read, one source inspection, import preparation, and Phase 2C3 persistence.
+6. Confirm success returns `status = imported`, the prepared novel identity fields, inspection chapter counts, persistence store/cache references, and cache/state persistence statuses.
+7. Confirm a ready initial state preserves existing novels and history while appending the imported novel through Phase 2C3.
+8. Confirm a normalized initial state is used for preparation but is not written separately by the runtime flow.
+9. Confirm Phase 2C3 still performs its own latest-state read after preparation and blocks stale duplicate novel id, duplicate source path, conflicting progress, or stale primary outcomes.
+10. Confirm identical orphan cache retry works only when the caller explicitly invokes the runtime flow again; the runtime flow itself does not retry automatically.
+11. Confirm an existing identical ready cache is reused and an existing different cache returns the Phase 2C3 conflict result through the runtime failure shape.
+12. Confirm cache write failure and state write failure propagate Phase 2C3 `cachePersistence`, `statePersistence`, and `persistenceStage` values.
+13. Confirm normal structured Phase 2C3 failures are not converted to `persistence-runtime-failed`.
+14. Confirm an unexpected throw from Phase 2C3 returns `persistence-runtime-failed`, `stage = persistence`, `causeCode = null`, and `persistenceStage = null`.
+15. Confirm unexpected Phase 2C3 throws report both cache and state persistence as `write-outcome-unknown`.
+16. Confirm unexpected Phase 2C3 throws use a stable generic message and do not leak raw exception text, absolute paths, stack traces, or adapter error details into message or warnings.
+17. Confirm unexpected Phase 2C3 throws do not trigger automatic retry, read-back, writer calls, cache deletion, or rollback.
+18. Confirm `operationAt` is passed unchanged to source inspection as `generatedAt` and to import preparation as `preparedAt`.
+19. Confirm the runtime flow does not call current-time APIs, generate novel ids, infer titles, or coerce non-boolean `makePrimary` values.
+20. Confirm warnings aggregate in first-seen order across initial state read, source inspection, preparation, and persistence with duplicate warning text removed.
+21. Confirm unexpected throws from the delegated read, inspection, preparation, or persistence boundaries return sanitized structured failures without leaking raw exception text.
+22. Confirm success preserves persistence `store` and `cache` references instead of cloning store, cache, chapters, or history arrays.
+23. Confirm a large source with roughly 5 MB text and `5000` chapters reads the source once, performs two state baseline reads across runtime plus persistence, writes cache before state, and does not scan indexes.
+24. Confirm the runtime module does not directly call `adapter.exists(...)`, `adapter.read(...)`, `adapter.mkdir(...)`, `adapter.write(...)`, `adapter.list(...)`, `remove`, `rename`, `append`, `copy`, or `rmdir`.
+25. Confirm the runtime module stays detached from startup, feature enablement, command registration, import modal, file picker, notices, views, reader UI, sidebar, status bar, and exchange engine.
+
 ## Heading Progress Phase 1A status bar MVP
 
 1. Confirm Heading Progress is disabled by default in settings.

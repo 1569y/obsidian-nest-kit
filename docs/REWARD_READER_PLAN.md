@@ -158,6 +158,21 @@ Confirmed Phase 2C3 import persistence orchestration decisions:
 - Warnings are aggregated in first-seen order with duplicates removed
 - This phase still does not provide rollback, orphan-cache cleanup, crash atomicity, compare-and-swap, lock files, revision fields, automatic retry, or index scanning
 
+Confirmed Phase 2D1 detached minimal import runtime decisions:
+
+- Phase 2D1 adds only a detached callable import runtime flow and still does not add an import command, import modal, Vault file picker, notices, reader UI, exchange logic, listeners, status bar, sidebar, or startup hydration
+- Runtime callers must explicitly provide `novelId`, `sourcePath`, `title`, `operationAt`, and `makePrimary`; the runtime flow does not generate ids, infer titles, coerce booleans, or read the current time
+- Request validation runs before any Vault or DataAdapter IO and rejects malformed roots, unsafe novel ids, blank or NUL source paths, invalid single-line titles, invalid timestamps, and non-boolean primary flags
+- The runtime flow first reads Reward Reader state to establish the preparation baseline, then inspects exactly one Vault-local TXT/Markdown source, then prepares the import payload
+- The prepared import is passed directly to Phase 2C3, which intentionally reads the latest state again and reapplies the prepared import before cache-first persistence
+- The two state reads are intentional: the first supports preparation, while the second protects the final write from stale-state overwrite
+- Source inspection remains the only source-text read boundary; runtime results do not include source text, raw JSON, adapter instances, Vault instances, physical filesystem paths, or internal write plans
+- Runtime failure results preserve sanitized stage, cause, persistence stage, cache persistence, state persistence, and warnings so a future UI can display partial-success and retry guidance without reinterpreting lower layers
+- The runtime flow does not directly call `adapter.exists(...)`, `adapter.read(...)`, `adapter.mkdir(...)`, `adapter.write(...)`, `adapter.list(...)`, or cache/state writers, and it does not scan indexes or accept an external `nextStore`
+- Structured Phase 2C3 failures remain distinct from runtime-level unexpected throws: normal persistence failures keep their original code, internal persistence stage, message, and cache/state persistence statuses
+- If Phase 2C3 unexpectedly throws, runtime returns `persistence-runtime-failed` instead of pretending the failure is `state-write-blocked`
+- In that unexpected-throw case both cache and state persistence are reported as `write-outcome-unknown`, and callers must reread state before deciding whether to show success, retry, or recovery guidance
+
 This follows the current NestKit architecture direction where independent features are lazily created and enabled through the shared `FeatureRegistry` and `FeatureManager`, rather than being always-on during `onload()`.
 
 ## Reading source model
@@ -495,6 +510,11 @@ Phase 2C3 status inside Phase 2:
 
 - Implemented now: detached cache-first import persistence orchestration that reads the latest state, reapplies a prepared import, safely handles existing target caches, writes or reuses cache first, and writes state second
 - Deferred to later Phase 2 work: explicit import action runtime, import command, import modal, Vault file picker, user-facing partial-success and retry copy, cache rebuild decisions, startup hydration, orphan-cache cleanup, rollback, and stronger concurrency protection
+
+Phase 2D1 status inside Phase 2:
+
+- Implemented now: detached minimal end-to-end import runtime flow that validates an explicit request, reads an initial state baseline, inspects one Vault source, prepares the import payload, and delegates final latest-state cache-first persistence to Phase 2C3
+- Deferred to later Phase 2 work: command registration, import modal, Vault file picker, novel id generation, user-facing Notices, retry copy, cache rebuild decisions, startup hydration, orphan-cache cleanup, rollback, and stronger concurrency protection
 
 ### Phase 3: study records and exchange engine
 
