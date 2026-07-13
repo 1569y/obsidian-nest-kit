@@ -143,6 +143,21 @@ Confirmed Phase 2C2 minimal write-only storage decisions:
 - This phase does not provide crash atomicity, temporary files, backup files, atomic rename, lock files, rollback, or a two-file state/cache transaction
 - State and cache write functions stay independent and do not call each other
 
+Confirmed Phase 2C3 import persistence orchestration decisions:
+
+- Phase 2C3 adds only a detached import persistence orchestrator and still does not add an import command, import modal, Vault file picker, reader UI, exchange logic, listeners, or startup hydration
+- Persistence always reads the latest on-disk Reward Reader state through the read adapter before applying the prepared import
+- The orchestrator re-runs `applyPreparedRewardReaderImport(...)` against that latest state and does not accept an external precomputed `nextStore`
+- Cache persistence is cache-first and state-second so state does not point to a cache that has not been confirmed
+- An existing ready cache that is completely identical to the prepared cache is reused without another cache write
+- An existing safe-normalized cache that becomes identical to the prepared cache is rewritten through the canonical cache writer before state is written
+- Existing different, damaged, unreadable, or future-schema caches block import persistence and are not overwritten, deleted, or rebuilt
+- Cache write failure blocks state write and reports cache persistence as `write-outcome-unknown`
+- State write failure after cache write or reuse reports state persistence as `write-outcome-unknown` and leaves any already-written cache in place
+- Retry after cache-only partial success can reuse the identical orphan cache and attempt the state write again
+- Warnings are aggregated in first-seen order with duplicates removed
+- This phase still does not provide rollback, orphan-cache cleanup, crash atomicity, compare-and-swap, lock files, revision fields, automatic retry, or index scanning
+
 This follows the current NestKit architecture direction where independent features are lazily created and enabled through the shared `FeatureRegistry` and `FeatureManager`, rather than being always-on during `onload()`.
 
 ## Reading source model
@@ -475,6 +490,11 @@ Phase 2C2 status inside Phase 2:
 
 - Implemented now: detached minimal write-only storage adapter for canonical Reward Reader state and one explicit chapter-index cache
 - Deferred to later Phase 2 work: import persistence orchestration, cache/state write ordering, read-before-write checks, partial-success handling, rollback, explicit import action runtime, import modal, file picker, cache rebuild decisions, and startup hydration
+
+Phase 2C3 status inside Phase 2:
+
+- Implemented now: detached cache-first import persistence orchestration that reads the latest state, reapplies a prepared import, safely handles existing target caches, writes or reuses cache first, and writes state second
+- Deferred to later Phase 2 work: explicit import action runtime, import command, import modal, Vault file picker, user-facing partial-success and retry copy, cache rebuild decisions, startup hydration, orphan-cache cleanup, rollback, and stronger concurrency protection
 
 ### Phase 3: study records and exchange engine
 

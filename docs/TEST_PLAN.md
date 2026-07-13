@@ -398,6 +398,44 @@
 35. Confirm malformed writer inputs are no-throw.
 36. Confirm the writer stays detached from startup, feature enablement, commands, listeners, views, settings UI, import runtime, and two-file transaction orchestration.
 
+## Reward Reader Phase 2C3 import persistence orchestration
+
+1. Confirm missing state plus missing cache persists a prepared import successfully.
+2. Confirm the result returns `ok = true`, `status = persisted`, `cachePersistence = written`, and `statePersistence = written`.
+3. Confirm the persisted store contains the imported novel and the returned cache matches the prepared import cache.
+4. Confirm cache write happens before state write.
+5. Confirm an existing ready state is used as the current baseline and preserved while appending the imported novel.
+6. Confirm a safely normalized state baseline is not written separately before import application.
+7. Confirm the final state write is the only state write in a normalized-state success path.
+8. Confirm state read failures such as invalid JSON, invalid data, future schema, and adapter read failure return `state-read-blocked`.
+9. Confirm state read failures keep `cachePersistence = not-checked`, `statePersistence = not-attempted`, and perform no cache read or writes.
+10. Confirm application failures such as malformed prepared import, duplicate novel id, duplicate source path, conflicting progress, and invalid primary result return `store-application-blocked`.
+11. Confirm application failures do not inspect or write the target cache.
+12. Confirm an existing identical ready cache is reused without calling the cache writer.
+13. Confirm an existing different ready cache returns `chapter-cache-conflict` and writes neither cache nor state.
+14. Confirm generatedAt, source metadata, or chapter-offset differences in an existing ready cache are treated as conflicts.
+15. Confirm an existing normalized cache that equals the target after normalization is rewritten through the cache writer before state is written.
+16. Confirm an existing normalized cache that differs from the target returns `chapter-cache-conflict`.
+17. Confirm cache read failures such as invalid JSON, invalid data, future schema, and adapter read failure return `chapter-cache-read-blocked`.
+18. Confirm malformed cache success shapes return `chapter-cache-read-blocked` without throwing.
+19. Confirm cache write failure returns `chapter-cache-write-blocked`, `cachePersistence = write-outcome-unknown`, and does not call the state writer.
+20. Confirm state write failure after a written cache returns `state-write-blocked`, `cachePersistence = written`, and `statePersistence = write-outcome-unknown`.
+21. Confirm state write failure after a reused cache returns `state-write-blocked`, `cachePersistence = reused`, and does not call the cache writer.
+22. Confirm retry after cache-only partial success reuses the identical orphan cache and writes state successfully.
+23. Confirm retry after cache-only partial success does not write the cache a second time.
+24. Confirm write failure statuses use `write-outcome-unknown` rather than pretending the file is unchanged.
+25. Confirm warnings aggregate in first-seen order and deduplicate repeated text across state read, application, cache read, cache write, and state write stages.
+26. Confirm the orchestrator does not mutate `preparedImport`, payload objects, cache chapters, or warning arrays.
+27. Confirm the orchestrator does not accept or use an externally precomputed `nextStore`.
+28. Confirm cache comparison does not use `JSON.stringify(...)`, does not clone inputs, and does not mutate arrays or objects.
+29. Confirm the orchestrator does not call `adapter.exists(...)`, `adapter.read(...)`, `adapter.mkdir(...)`, `adapter.write(...)`, `adapter.list(...)`, `remove`, `rename`, `append`, `copy`, or `rmdir` directly.
+30. Confirm all IO flows through the Phase 2C1 read functions and Phase 2C2 write functions.
+31. Confirm the orchestrator does not scan `.nestkit/reward-reader/indexes`.
+32. Confirm the orchestrator does not implement rollback, compensation delete, orphan-cache cleanup, temporary files, backups, atomic rename, journal files, locks, or automatic retry.
+33. Confirm a large import with thousands of history records and a `5000` chapter cache succeeds without scanning indexes.
+34. Confirm the large import keeps existing history counts, adds one novel, preserves `5000` chapters, and writes cache before state.
+35. Confirm the orchestrator stays detached from startup, feature enablement, commands, listeners, views, settings UI, import runtime, reader UI, and exchange engine.
+
 ## Heading Progress Phase 1A status bar MVP
 
 1. Confirm Heading Progress is disabled by default in settings.

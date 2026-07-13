@@ -27,6 +27,7 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/reward-reader/store-patch-application.ts`: Reward Reader Phase 2B3 detached pure in-memory store application from a prepared import payload
 - `src/features/reward-reader/read-only-storage-adapter.ts`: Reward Reader Phase 2C1 detached read-only `DataAdapter` boundary for state and one explicit chapter-index cache
 - `src/features/reward-reader/write-only-storage-adapter.ts`: Reward Reader Phase 2C2 detached minimal write-only `DataAdapter` boundary for canonical state and one explicit chapter-index cache
+- `src/features/reward-reader/import-persistence-orchestrator.ts`: Reward Reader Phase 2C3 detached cache-first import persistence orchestration across the existing read, apply, and write boundaries
 - `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
 - `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
@@ -196,6 +197,19 @@ The current write-only storage boundary is intentionally a sixth detached layer:
 - Parent directories are derived from the final target file path from shallow to deep; target files are not checked for existence or read back
 - Each successful state or cache call performs one target `write`; directory or write failures return sanitized structured failures without retry, rollback, backup files, temporary files, or atomic rename
 - The writer does not scan the indexes directory, does not coordinate state and cache as a transaction, does not import the read adapter, and does not enter startup or feature enablement
+
+The current import persistence boundary is intentionally a seventh detached layer:
+
+- `import-persistence-orchestrator.ts` coordinates the existing read-only adapter, pure store patch application, and write-only adapter without calling `DataAdapter` IO methods directly
+- The orchestrator always reads the latest on-disk Reward Reader state before reapplying a prepared import, so it does not accept an externally precomputed `nextStore`
+- Persistence is cache-first and state-second: the target chapter cache must be reused or written before the state store is written
+- An identical ready cache is reused without another cache write, which supports retry after a previous cache-only partial success
+- A safe-normalized identical cache is rewritten through the canonical writer before state is written
+- Different, damaged, future-schema, or unreadable caches block import persistence instead of being overwritten or rebuilt
+- Cache write failure prevents state write and reports the cache result as `write-outcome-unknown`
+- State write failure after a written or reused cache reports the state result as `write-outcome-unknown` and leaves any already-written cache in place for a later retry
+- This phase still does not provide rollback, orphan-cache cleanup, temporary files, backups, atomic rename, compare-and-swap, file locks, revision tracking, or crash-level atomicity
+- The orchestrator does not scan the indexes directory, does not read novel source text, does not register runtime surfaces, and does not enter startup or feature enablement
 
 The chapter-index cache path boundary is also intentionally defensive:
 

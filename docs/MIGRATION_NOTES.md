@@ -1,5 +1,16 @@
 # Migration notes
 
+- `reward-reader-phase2c3-import-persistence-orchestration` adds detached cache-first Reward Reader import persistence orchestration on top of the existing Phase 2C1 read adapter, Phase 2C2 writer, and Phase 2B3 in-memory store application.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys and no new runtime surfaces.
+- This round adds one orchestrator module that reads the latest state, reapplies a prepared import to that current state, inspects exactly one target chapter cache, writes or reuses that cache, and then writes state.
+- This round can coordinate both Reward Reader persistence files from production code, but the module remains detached from commands, views, listeners, and startup, so it does not automatically create files for users.
+- This round does not provide rollback, crash atomicity, compare-and-swap, lock files, journal files, store revisions, or orphan-cache cleanup.
+- This round does not scan the indexes folder, does not read novel source TXT or Markdown content, and does not execute migration writes.
+- This round does not register commands, views, ribbons, status bar behavior, sidebar behavior, timers, listeners, import modals, file pickers, or any Reward Reader runtime startup path.
+
 - `reward-reader-phase2c2-minimal-write-storage-adapter` adds the detached minimal write-only Reward Reader storage adapter on top of the existing Phase 2C1 read-only storage adapter.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
 - This round keeps Reward Reader store schema at `1`.
