@@ -114,6 +114,20 @@ Confirmed Phase 2B3 store-patch application decisions:
 - The cache object and `cache.chapters` array preserve their references and are not placed inside `nextStore`
 - Phase 2B3 must not mutate `existingStore`, mutate `preparedImport`, return `sourceText`, copy chapter body text, call Vault APIs, call current-time APIs, or write any files
 
+Confirmed Phase 2C1 read-only storage decisions:
+
+- Phase 2C1 adds only a detached read-only storage adapter and still does not add write persistence, import runtime, import modal, file picker, directory creation, or `.nestkit` creation
+- State reads target `.nestkit/reward-reader/state.json` through an explicit Obsidian `DataAdapter`
+- Chapter cache reads target exactly one `.nestkit/reward-reader/indexes/<novel-id>.json` path derived by the existing cache path helper after the requested novel id passes the existing safe-id rule
+- Missing state is a normal state: it returns a fresh default store, `status = missing`, and `shouldPersist = false` without creating a file
+- Missing chapter cache is a normal state: it returns `cache = null`, `status = missing`, and `shouldPersist = false` without rebuilding or reading the novel source file
+- Invalid JSON and invalid root structures are separate failures and do not return default state or placeholder cache data
+- Future store or cache schemas are failures for this read boundary, even when normalization can recognize some fields, so mutation or persistence flows cannot continue with newer data
+- Safe current-schema normalization may return `status = normalized` plus `shouldPersist = true`, but Phase 2C1 only reports the recommendation and does not write it back
+- Each read function calls `exists` at most once, `read` at most once, parses JSON at most once, and calls the matching normalization at most once
+- The adapter never returns raw JSON, original exceptions, stacks, physical paths, write plans, rollback plans, or adapter references
+- The adapter does not call write operations, list directories, scan indexes, register commands, attach listeners, or enter startup
+
 This follows the current NestKit architecture direction where independent features are lazily created and enabled through the shared `FeatureRegistry` and `FeatureManager`, rather than being always-on during `onload()`.
 
 ## Reading source model
@@ -436,6 +450,11 @@ Phase 2B3 status inside Phase 2:
 
 - Implemented now: detached pure in-memory store application from a prepared import success result plus the current store
 - Deferred to later Phase 2 work: explicit import action runtime, import modal, file picker, storage write transaction, state persistence, chapter-index persistence, `.nestkit` creation, and file-change-based invalidation checks
+
+Phase 2C1 status inside Phase 2:
+
+- Implemented now: detached read-only storage adapter for the Reward Reader state store and one explicit chapter-index cache
+- Deferred to later Phase 2 work: write persistence, directory creation, atomic write transaction, rollback, explicit import action runtime, import modal, file picker, cache rebuild decisions, and startup hydration
 
 ### Phase 3: study records and exchange engine
 

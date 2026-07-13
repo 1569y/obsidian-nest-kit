@@ -1,5 +1,14 @@
 # Migration notes
 
+- `reward-reader-phase2c1-read-only-storage-adapter` adds the detached read-only Reward Reader storage adapter on top of the existing Phase 2B3 in-memory store application worktree.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys and no new runtime surfaces.
+- This round adds one read-only `DataAdapter` module that reads `.nestkit/reward-reader/state.json` and one explicit `.nestkit/reward-reader/indexes/<novel-id>.json` cache, parses JSON once, delegates to existing normalization, and distinguishes missing, ready, normalized, invalid JSON, invalid data, future schema, and read failure results.
+- This round does not create `.nestkit`, does not create state or cache files, does not execute migration writes, does not scan the indexes folder, and does not add write persistence.
+- This round does not register commands, views, ribbons, status bar behavior, sidebar behavior, timers, listeners, or any Reward Reader runtime startup path.
+
 - `reward-reader-phase2b3-pure-store-patch-application` adds the detached pure in-memory Reward Reader store application layer on top of the existing Phase 2B2 import-preparation worktree.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
 - This round keeps Reward Reader store schema at `1`.

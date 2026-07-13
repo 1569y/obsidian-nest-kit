@@ -25,6 +25,7 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/reward-reader/vault-source-reader.ts`: Reward Reader Phase 2B1 detached Vault-local source inspection boundary with single-read assembly flow
 - `src/features/reward-reader/import-assembly.ts`: Reward Reader Phase 2B2 detached pure import-payload preparation from normalized store state plus successful source inspection
 - `src/features/reward-reader/store-patch-application.ts`: Reward Reader Phase 2B3 detached pure in-memory store application from a prepared import payload
+- `src/features/reward-reader/read-only-storage-adapter.ts`: Reward Reader Phase 2C1 detached read-only `DataAdapter` boundary for state and one explicit chapter-index cache
 - `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
 - `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
@@ -172,6 +173,16 @@ The current store patch application boundary is intentionally a fourth detached 
 - The patch application reuses `studyRecords`, `unlockRecords`, `readingRecords`, the chapter-index cache object, and the cache `chapters` array directly instead of cloning long-lived or large data
 - The patch application does not return `sourceText`, does not copy chapter body text, and does not place the cache inside `nextStore`
 - State persistence, cache persistence, runtime import commands, and UI remain deferred to later Reward Reader phases
+
+The current read-only storage boundary is intentionally a fifth detached layer:
+
+- `read-only-storage-adapter.ts` accepts an explicit Obsidian `DataAdapter` and reads only Reward Reader internal JSON data under `.nestkit/reward-reader`
+- State reads target only `.nestkit/reward-reader/state.json`; chapter-cache reads target only one validated safe novel id through `getRewardReaderChapterIndexCachePath(...)`
+- Internal Reward Reader JSON uses `adapter.exists(...)` and `adapter.read(...)`, while novel source TXT or Markdown inspection remains the separate `vault.read(TFile)` boundary in `vault-source-reader.ts`
+- Missing state returns a fresh default store with `shouldPersist = false`; missing cache returns `cache = null` with `shouldPersist = false`
+- Invalid JSON, invalid roots, unusable normalized data, future schemas, and read failures stay structurally distinct so damaged or newer data is not silently replaced by an empty store or placeholder cache
+- Safe current-schema normalization may return `status = normalized` and `shouldPersist = true`, but this phase only reports that fact and does not write files
+- The adapter does not create `.nestkit`, does not write state or cache files, does not scan the indexes directory, does not preload all caches, and does not enter startup or feature enablement
 
 The chapter-index cache path boundary is also intentionally defensive:
 

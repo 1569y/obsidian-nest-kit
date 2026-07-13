@@ -330,6 +330,35 @@
 35. Confirm the `nextStore` does not include the chapter-index cache.
 36. Confirm store patch application does not create `.nestkit`, write state or cache files, register runtime surfaces, or enter startup.
 
+## Reward Reader Phase 2C1 read-only storage adapter
+
+1. Confirm missing state returns `ok = true`, `status = missing`, a fresh default store, `shouldPersist = false`, and no warnings.
+2. Confirm missing state calls `adapter.exists(...)` once and does not call `adapter.read(...)`.
+3. Confirm a valid state JSON returns `status = ready`, preserves normalized store fields, uses one read, and keeps warnings as a distinct array.
+4. Confirm a safely normalizable current-schema state returns `status = normalized`, `shouldPersist = true`, and does not write the normalized data.
+5. Confirm invalid state JSON returns `state-invalid-json` without returning a store or raw JSON.
+6. Confirm state roots such as `null`, arrays, strings, and numbers return `state-invalid-data` without falling back to a successful default store.
+7. Confirm a future state schema returns `state-unsupported-version`, preserves sanitized normalization warnings, and does not expose a writable store.
+8. Confirm state `exists` and `read` failures return `state-read-failed` with stable messages that do not include original paths, stacks, or raw adapter errors.
+9. Confirm invalid cache novel ids are rejected before any adapter IO.
+10. Confirm missing chapter cache returns `ok = true`, `status = missing`, `cache = null`, `shouldPersist = false`, and no warnings.
+11. Confirm missing chapter cache calls `adapter.exists(...)` once and does not call `adapter.read(...)`.
+12. Confirm a valid chapter cache JSON returns `status = ready`, preserves source metadata and chapters, uses one read, and does not write.
+13. Confirm a safely normalizable current-schema chapter cache returns `status = normalized`, `shouldPersist = true`, and does not write the normalized data.
+14. Confirm invalid cache JSON returns `chapter-cache-invalid-json` without returning raw JSON.
+15. Confirm cache roots such as `null`, arrays, and strings return `chapter-cache-invalid-data`.
+16. Confirm unusable normalized cache data such as missing chapters, non-array chapters, overlapping chapters, out-of-bounds offsets, or `sourceTextLength = 0` with chapters returns `chapter-cache-invalid-data`.
+17. Confirm a future chapter-cache schema returns `chapter-cache-unsupported-version` and does not expose a cache for mutation or persistence.
+18. Confirm a chapter cache whose internal `novelId` does not match the requested novel id returns `chapter-cache-invalid-data` without repairing the id.
+19. Confirm chapter cache `exists` and `read` failures return `chapter-cache-read-failed` with stable messages that do not include original paths, stacks, or raw adapter errors.
+20. Confirm each state read calls `exists` at most once and `read` at most once.
+21. Confirm each cache read calls `exists` at most once and `read` at most once.
+22. Confirm the adapter never calls `adapter.list(...)` or write operations.
+23. Confirm the adapter does not scan the indexes folder or read all caches after loading state.
+24. Confirm large state JSON with thousands of study, unlock, and reading records reads successfully without write calls.
+25. Confirm a `5000` chapter cache reads successfully without list, write, stack overflow, or loop failure.
+26. Confirm the module stays detached from startup, feature enablement, commands, listeners, views, and settings UI.
+
 ## Heading Progress Phase 1A status bar MVP
 
 1. Confirm Heading Progress is disabled by default in settings.
