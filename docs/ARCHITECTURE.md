@@ -26,6 +26,7 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/reward-reader/import-assembly.ts`: Reward Reader Phase 2B2 detached pure import-payload preparation from normalized store state plus successful source inspection
 - `src/features/reward-reader/store-patch-application.ts`: Reward Reader Phase 2B3 detached pure in-memory store application from a prepared import payload
 - `src/features/reward-reader/read-only-storage-adapter.ts`: Reward Reader Phase 2C1 detached read-only `DataAdapter` boundary for state and one explicit chapter-index cache
+- `src/features/reward-reader/write-only-storage-adapter.ts`: Reward Reader Phase 2C2 detached minimal write-only `DataAdapter` boundary for canonical state and one explicit chapter-index cache
 - `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
 - `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
@@ -183,6 +184,18 @@ The current read-only storage boundary is intentionally a fifth detached layer:
 - Invalid JSON, invalid roots, unusable normalized data, future schemas, and read failures stay structurally distinct so damaged or newer data is not silently replaced by an empty store or placeholder cache
 - Safe current-schema normalization may return `status = normalized` and `shouldPersist = true`, but this phase only reports that fact and does not write files
 - The adapter does not create `.nestkit`, does not write state or cache files, does not scan the indexes directory, does not preload all caches, and does not enter startup or feature enablement
+
+The current write-only storage boundary is intentionally a sixth detached layer:
+
+- `write-only-storage-adapter.ts` accepts an explicit Obsidian `DataAdapter` and writes only canonical Reward Reader internal JSON data under `.nestkit/reward-reader`
+- State writes target only `.nestkit/reward-reader/state.json`; chapter-cache writes target only one safe novel id through `getRewardReaderChapterIndexCachePath(...)`
+- The write adapter is separate from the read adapter and uses only `adapter.exists(...)`, `adapter.mkdir(...)`, and `adapter.write(...)`
+- The write adapter validates root shape, current schema, future-schema rejection, and canonical normalization before any directory IO
+- Non-canonical data that normalization would repair is rejected instead of being silently normalized and persisted
+- Serialization happens before directory creation, uses the existing pretty JSON plus trailing newline format, and does not expose serialized JSON in results
+- Parent directories are derived from the final target file path from shallow to deep; target files are not checked for existence or read back
+- Each successful state or cache call performs one target `write`; directory or write failures return sanitized structured failures without retry, rollback, backup files, temporary files, or atomic rename
+- The writer does not scan the indexes directory, does not coordinate state and cache as a transaction, does not import the read adapter, and does not enter startup or feature enablement
 
 The chapter-index cache path boundary is also intentionally defensive:
 

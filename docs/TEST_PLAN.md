@@ -359,6 +359,45 @@
 25. Confirm a `5000` chapter cache reads successfully without list, write, stack overflow, or loop failure.
 26. Confirm the module stays detached from startup, feature enablement, commands, listeners, views, and settings UI.
 
+## Reward Reader Phase 2C2 minimal write-only storage adapter
+
+1. Confirm canonical state writes return `ok = true`, `status = written`, and a copied warnings array.
+2. Confirm state writes use `REWARD_READER_STORE_PATH` rather than duplicating the full state path string.
+3. Confirm state parent directories are derived as `.nestkit` then `.nestkit/reward-reader`.
+4. Confirm a successful state write calls `adapter.exists(...)` once per parent directory, calls `adapter.mkdir(...)` only for missing parent directories, and calls `adapter.write(...)` exactly once.
+5. Confirm a state write with existing parent directories calls zero `mkdir`.
+6. Confirm a state write with only `.nestkit` already present creates only `.nestkit/reward-reader`.
+7. Confirm invalid state roots such as `null`, `undefined`, arrays, and primitives return `state-invalid-data`.
+8. Confirm missing, non-integer, old, or otherwise non-current state schema versions return `state-invalid-data`.
+9. Confirm future state schema versions return `state-unsupported-version`.
+10. Confirm state data that normalization would repair returns `state-invalid-data` and is not auto-written.
+11. Confirm invalid, future, non-canonical, and serialization-failed state inputs perform zero `exists`, zero `mkdir`, and zero `write` calls.
+12. Confirm state serialization happens before directory creation and returns `state-serialization-failed` with a sanitized message if `JSON.stringify(...)` fails.
+13. Confirm state directory `exists` or `mkdir` failures return `state-directory-create-failed`, do not write, do not retry, and do not roll back already-created parent directories.
+14. Confirm state target write failures return `state-write-failed`, call write once, do not read back, do not retry, and do not delete parent directories.
+15. Confirm canonical chapter-cache writes return `ok = true`, `status = written`, and a copied warnings array.
+16. Confirm cache paths are derived through `getRewardReaderChapterIndexCachePath(...)` after `isSafeRewardReaderId(...)` accepts the cache `novelId`.
+17. Confirm cache parent directories are derived as `.nestkit`, `.nestkit/reward-reader`, then `.nestkit/reward-reader/indexes`.
+18. Confirm a successful cache write calls `adapter.exists(...)` once per parent directory, calls `adapter.mkdir(...)` only for missing parent directories, and calls `adapter.write(...)` exactly once.
+19. Confirm invalid cache roots return `chapter-cache-invalid-data`.
+20. Confirm unsafe cache novel ids such as `../../x`, `a/b`, and an empty string return `invalid-novel-id` before any IO.
+21. Confirm missing, non-integer, old, or otherwise non-current cache schema versions return `chapter-cache-invalid-data`.
+22. Confirm future cache schema versions return `chapter-cache-unsupported-version`.
+23. Confirm cache data that normalization would repair, remove, sort, or rebuild returns `chapter-cache-invalid-data` and is not auto-written.
+24. Confirm cache serialization failures return `chapter-cache-serialization-failed` with zero directory IO and zero writes.
+25. Confirm cache directory failures return `chapter-cache-directory-create-failed`, do not write, do not retry, and do not clean up parent directories.
+26. Confirm cache target write failures return `chapter-cache-write-failed`, call write once, do not read back, and do not remove files or directories.
+27. Confirm both writer functions use `JSON.stringify(value, null, 2)` with one trailing newline and no BOM, field sorting, replacer, parse round-trip, or second stringify.
+28. Confirm neither writer calls `adapter.read(...)`, `adapter.list(...)`, `adapter.stat(...)`, `append`, `rename`, `remove`, `copy`, `rmdir`, Vault APIs, Node `fs`, Node `path`, `fetch`, or `localStorage`.
+29. Confirm neither writer checks whether the target state/cache file already exists.
+30. Confirm neither writer scans `.nestkit/reward-reader/indexes`.
+31. Confirm neither writer exposes raw serialized JSON, original errors, stacks, physical paths, adapter references, temporary paths, backup paths, or rollback plans in results.
+32. Confirm both writer functions leave input state/cache objects and nested arrays unchanged.
+33. Confirm large canonical state writes with thousands of study, unlock, and reading records serialize and write once without read/list calls.
+34. Confirm a canonical `5000` chapter cache serializes and writes once without read/list calls.
+35. Confirm malformed writer inputs are no-throw.
+36. Confirm the writer stays detached from startup, feature enablement, commands, listeners, views, settings UI, import runtime, and two-file transaction orchestration.
+
 ## Heading Progress Phase 1A status bar MVP
 
 1. Confirm Heading Progress is disabled by default in settings.

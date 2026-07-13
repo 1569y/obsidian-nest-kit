@@ -1,5 +1,16 @@
 # Migration notes
 
+- `reward-reader-phase2c2-minimal-write-storage-adapter` adds the detached minimal write-only Reward Reader storage adapter on top of the existing Phase 2C1 read-only storage adapter.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys and no new runtime surfaces.
+- This round adds one write-only `DataAdapter` module that validates canonical current-schema state/cache data, serializes it, prepares parent directories derived from the target path, and writes either `.nestkit/reward-reader/state.json` or one explicit `.nestkit/reward-reader/indexes/<novel-id>.json` cache.
+- This round is the first production code that can create Reward Reader internal directories and write those two single-file targets, but the module remains detached from runtime, so validation in this round does not create a real user Vault `.nestkit` folder.
+- This round rejects invalid input, future schemas, and non-canonical data before any directory IO; serialization failures also perform zero directory IO and zero writes.
+- This round does not execute migration writes, does not read existing target files, does not scan the indexes folder, does not coordinate state/cache write ordering, and does not provide rollback or transaction semantics.
+- This round does not register commands, views, ribbons, status bar behavior, sidebar behavior, timers, listeners, or any Reward Reader runtime startup path.
+
 - `reward-reader-phase2c1-read-only-storage-adapter` adds the detached read-only Reward Reader storage adapter on top of the existing Phase 2B3 in-memory store application worktree.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
 - This round keeps Reward Reader store schema at `1`.

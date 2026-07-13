@@ -128,6 +128,21 @@ Confirmed Phase 2C1 read-only storage decisions:
 - The adapter never returns raw JSON, original exceptions, stacks, physical paths, write plans, rollback plans, or adapter references
 - The adapter does not call write operations, list directories, scan indexes, register commands, attach listeners, or enter startup
 
+Confirmed Phase 2C2 minimal write-only storage decisions:
+
+- Phase 2C2 adds only a detached write-only storage adapter and still does not add import persistence orchestration, import runtime, import modal, file picker, reader UI, exchange logic, or startup hydration
+- The writer accepts only canonical current-schema state/cache data; data that normalization would repair is rejected instead of silently normalized and written
+- Future state and chapter-cache schemas are rejected and must not be overwritten by older code
+- Input validation and serialization must complete before any `adapter.exists(...)`, `adapter.mkdir(...)`, or `adapter.write(...)` call
+- Parent directories are derived from the final target file path instead of being introduced as new exported path constants
+- State writes prepare `.nestkit` and `.nestkit/reward-reader`; cache writes prepare `.nestkit`, `.nestkit/reward-reader`, and `.nestkit/reward-reader/indexes`
+- Each successful state or cache write performs exactly one target-file `adapter.write(...)`
+- The writer does not read existing target files, does not check target file existence, does not inspect on-disk schema, and does not scan the indexes folder
+- The writer may create or overwrite one target file; Phase 2C3 must provide the read-before-write context before runtime code calls it
+- Directory and write failures return sanitized structured failures, do not retry, and do not roll back already-created parent directories
+- This phase does not provide crash atomicity, temporary files, backup files, atomic rename, lock files, rollback, or a two-file state/cache transaction
+- State and cache write functions stay independent and do not call each other
+
 This follows the current NestKit architecture direction where independent features are lazily created and enabled through the shared `FeatureRegistry` and `FeatureManager`, rather than being always-on during `onload()`.
 
 ## Reading source model
@@ -455,6 +470,11 @@ Phase 2C1 status inside Phase 2:
 
 - Implemented now: detached read-only storage adapter for the Reward Reader state store and one explicit chapter-index cache
 - Deferred to later Phase 2 work: write persistence, directory creation, atomic write transaction, rollback, explicit import action runtime, import modal, file picker, cache rebuild decisions, and startup hydration
+
+Phase 2C2 status inside Phase 2:
+
+- Implemented now: detached minimal write-only storage adapter for canonical Reward Reader state and one explicit chapter-index cache
+- Deferred to later Phase 2 work: import persistence orchestration, cache/state write ordering, read-before-write checks, partial-success handling, rollback, explicit import action runtime, import modal, file picker, cache rebuild decisions, and startup hydration
 
 ### Phase 3: study records and exchange engine
 
