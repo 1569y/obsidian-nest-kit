@@ -163,6 +163,134 @@
 38. Confirm a successful inspection result returns an assembled cache without chapter-body copies.
 39. Confirm a 5 MB scale mock Vault source with at least `5000` chapters succeeds, uses one `vault.read(...)` call, returns the expected chapter count, keeps `cache.sourceTextLength`, keeps `cache.sourceSize`, keeps `last endOffset = sourceText.length`, and still does not return `sourceText`.
 
+## Reward Reader Phase 2B2 pure import assembly
+
+1. Confirm a valid inspection result plus an empty normalized store can prepare an import payload successfully.
+2. Confirm the success result returns `ok = true`.
+3. Confirm `payload.novel.id` comes from `inspection.cache.novelId`.
+4. Confirm `payload.novel.title` uses `title.trim()`.
+5. Confirm `payload.novel.sourcePath` comes from the inspection result.
+6. Confirm `payload.novel.sourceKind` comes from the inspection result.
+7. Confirm `payload.novel.sourceMtime` comes from the inspection result.
+8. Confirm `payload.novel.sourceSize` comes from the inspection result.
+9. Confirm `payload.novel.createdAt` uses `preparedAt.trim()`.
+10. Confirm `payload.novel.updatedAt` initially matches `createdAt`.
+11. Confirm `payload.progress.novelId` matches the prepared novel id.
+12. Confirm `payload.progress.unlockedThroughChapterIndex = null`.
+13. Confirm `payload.progress.readThroughChapterIndex = null`.
+14. Confirm `payload.progress.currentChapterIndex = null`.
+15. Confirm `payload.progress.currentChapterScrollOffset = 0`.
+16. Confirm `payload.progress.studyMinuteBalance = 0`.
+17. Confirm `payload.progress.totalStudyMinutes = 0`.
+18. Confirm `payload.progress.todayUnlockDate = null`.
+19. Confirm `payload.progress.todayUnlockedChapters = 0`.
+20. Confirm `payload.progress.updatedAt` uses the normalized `preparedAt`.
+21. Confirm import preparation does not create any study record.
+22. Confirm import preparation does not create any unlock record.
+23. Confirm import preparation does not create any reading record.
+24. Confirm an empty store plus `makePrimary = false` still makes the first imported novel primary.
+25. Confirm an empty store plus `makePrimary = true` also makes the first imported novel primary.
+26. Confirm a non-empty store plus `makePrimary = true` makes the new novel primary.
+27. Confirm a non-empty store plus `makePrimary = false` preserves the existing primary novel id.
+28. Confirm a non-empty store with `primaryNovelId = null` plus `makePrimary = false` still preserves `null`.
+29. Confirm title outer whitespace is trimmed before writing the prepared novel.
+30. Confirm an empty title returns `invalid-title`.
+31. Confirm an all-whitespace title returns `invalid-title`.
+32. Confirm a title containing NUL returns `invalid-title`.
+33. Confirm a title containing LF returns `invalid-title`.
+34. Confirm a title containing CR returns `invalid-title`.
+35. Confirm `preparedAt` outer whitespace is trimmed before writing the prepared payload.
+36. Confirm an empty `preparedAt` returns `invalid-prepared-at`.
+37. Confirm an invalid `preparedAt` returns `invalid-prepared-at`.
+38. Confirm the import-preparation function does not call current-time APIs internally.
+39. Confirm a non-current Reward Reader store schema returns `unsupported-store-schema`.
+40. Confirm a `primaryNovelId` that points to no existing novel returns `invalid-existing-store`.
+41. Confirm duplicate existing novel ids return `invalid-existing-store`.
+42. Confirm a non-array `novels` field returns `invalid-existing-store`.
+43. Confirm a non-object `progressByNovelId` field returns `invalid-existing-store`.
+44. Confirm non-array history fields return `invalid-existing-store`.
+45. Confirm an existing novel with the same id as the prepared import returns `duplicate-novel-id`.
+46. Confirm a conflicting orphan `progressByNovelId[novelId]` entry returns `conflicting-existing-progress`.
+47. Confirm an existing novel with the same `sourcePath` returns `duplicate-source-path`.
+48. Confirm a different `sourcePath` can still import successfully.
+49. Confirm `sourcePath` comparison stays exact and does not lowercase paths automatically.
+50. Confirm conflict failures do not return a partial payload.
+51. Confirm mismatched `inspection.chapterCount` versus `cache.chapters.length` returns `inconsistent-inspection`.
+52. Confirm mismatched `inspection.sourcePath` versus `cache.sourcePath` returns `inconsistent-inspection`.
+53. Confirm mismatched `sourceMtime` returns `inconsistent-inspection`.
+54. Confirm mismatched `sourceSize` returns `inconsistent-inspection`.
+55. Confirm mismatched `sourceTextLength` returns `inconsistent-inspection`.
+56. Confirm mismatched `sourceKind` versus source-path extension returns `inconsistent-inspection`.
+57. Confirm a cache with no chapters returns `inconsistent-inspection`.
+58. Confirm an invalid cache novel id returns `inconsistent-inspection`.
+59. Confirm an unexpected cache schemaVersion returns `inconsistent-inspection`.
+60. Confirm `ignoredPrefixLength > sourceTextLength` returns `inconsistent-inspection`.
+61. Confirm an invalid `cache.generatedAt` returns `inconsistent-inspection`.
+62. Confirm any other failed inspection self-consistency boundary returns `inconsistent-inspection`.
+63. Confirm `existingStore` is unchanged after import preparation.
+64. Confirm `existingStore.novels` contents are unchanged after import preparation.
+65. Confirm `existingStore.progressByNovelId` is unchanged after import preparation.
+66. Confirm `existingStore.studyRecords` is unchanged after import preparation.
+67. Confirm `existingStore.unlockRecords` is unchanged after import preparation.
+68. Confirm `existingStore.readingRecords` is unchanged after import preparation.
+69. Confirm the inspection object is unchanged after import preparation.
+70. Confirm `inspection.cache` is unchanged after import preparation.
+71. Confirm `inspection.warnings` is unchanged after import preparation.
+72. Confirm chapter entries inside `inspection.cache.chapters` are unchanged after import preparation.
+73. Confirm `payload.cache === inspection.cache`.
+74. Confirm `payload.cache.chapters === inspection.cache.chapters`.
+75. Confirm import preparation does not duplicate chapter entries.
+76. Confirm the prepared payload does not include `sourceText`.
+77. Confirm the prepared novel does not include `sourceText`.
+78. Confirm the prepared progress does not include `sourceText`.
+79. Confirm the prepared payload still does not include chapter body text.
+80. Confirm the output scale does not grow with unavailable novel body text because import preparation never receives `sourceText`.
+81. Confirm success results preserve inspection warnings.
+82. Confirm the original `inspection.warnings` array remains unchanged.
+83. Confirm success results return a distinct warnings array instance.
+84. Confirm exact duplicate warnings can be removed while preserving stable order.
+85. Confirm warnings never include `sourceText`.
+86. Confirm `inspection = null` does not throw and returns `inconsistent-inspection`.
+87. Confirm `inspection = undefined` does not throw and returns `inconsistent-inspection`.
+88. Confirm an empty-object inspection does not throw and returns `inconsistent-inspection`.
+89. Confirm `inspection.ok = false` returns `inconsistent-inspection`.
+90. Confirm missing `inspection.warnings` returns `inconsistent-inspection`.
+91. Confirm non-array `inspection.warnings` returns `inconsistent-inspection`.
+92. Confirm non-string entries inside `inspection.warnings` return `inconsistent-inspection`.
+93. Confirm `makePrimary = true` is accepted.
+94. Confirm `makePrimary = false` is accepted.
+95. Confirm string `makePrimary` values such as `"false"` return `invalid-make-primary`.
+96. Confirm numeric `makePrimary` values such as `0` or `1` return `invalid-make-primary`.
+97. Confirm `makePrimary = null` or `undefined` returns `invalid-make-primary`.
+98. Confirm invalid `makePrimary` does not return a payload.
+99. Confirm the first chapter must use `chapterIndex = 0`.
+100. Confirm the first chapter `startOffset` must equal `ignoredPrefixLength`.
+101. Confirm the first chapter fails when `startOffset` is not a non-negative integer.
+102. Confirm the first chapter fails when `endOffset <= startOffset`.
+103. Confirm the first chapter title must stay non-empty after `trim()`.
+104. Confirm the last chapter must use `chapterIndex = chapters.length - 1`.
+105. Confirm the last chapter `endOffset` must equal `sourceTextLength`.
+106. Confirm the last chapter fails when `endOffset` is not a non-negative integer.
+107. Confirm the last chapter fails when `endOffset <= startOffset`.
+108. Confirm the last chapter title must stay non-empty after `trim()`.
+109. Confirm non-empty chapters plus `sourceTextLength = 0` return `inconsistent-inspection`.
+110. Confirm the hardened large-cache path still succeeds with `5000` chapters.
+111. Confirm the hardened large-cache path still preserves `payload.cache === inspection.cache`.
+112. Confirm the hardened large-cache path still preserves `payload.cache.chapters === inspection.cache.chapters`.
+113. Confirm the hardened large-cache path still does not duplicate chapter entries.
+114. Confirm the hardened large-cache path still does not return `sourceText`.
+115. Confirm the hardened path still does not return a full copied `nextStore`.
+116. Confirm empty-store import still succeeds after the hardening pass.
+117. Confirm duplicate novel id failure still works after the hardening pass.
+118. Confirm duplicate source-path failure still works after the hardening pass.
+119. Confirm conflicting progress failure still works after the hardening pass.
+120. Confirm the first imported novel still becomes primary automatically after the hardening pass.
+121. Confirm existing primary is still preserved when `makePrimary = false`.
+122. Confirm `existingStore` remains unchanged after the hardening pass.
+123. Confirm the inspection object remains unchanged after the hardening pass.
+124. Confirm the original warnings array remains unchanged after the hardening pass.
+125. Confirm success warnings still use a distinct array instance after the hardening pass.
+
 ## Heading Progress Phase 1A status bar MVP
 
 1. Confirm Heading Progress is disabled by default in settings.

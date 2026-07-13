@@ -23,6 +23,7 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/reward-reader/chapter-parser.ts`: Reward Reader Phase 2A detached pure chapter parser for built-in heading detection and UTF-16 chapter-offset generation
 - `src/features/reward-reader/chapter-cache-builder.ts`: Reward Reader Phase 2B1 pure chapter-cache assembly from one in-memory source string plus explicit metadata
 - `src/features/reward-reader/vault-source-reader.ts`: Reward Reader Phase 2B1 detached Vault-local source inspection boundary with single-read assembly flow
+- `src/features/reward-reader/import-assembly.ts`: Reward Reader Phase 2B2 detached pure import-payload preparation from normalized store state plus successful source inspection
 - `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
 - `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
@@ -148,6 +149,17 @@ The current source-inspection boundary is now intentionally split into two detac
 - Source text exists only during the inspection call; the returned inspection result keeps only the assembled cache plus lightweight metadata such as source size, text length, chapter count, ignored-prefix length, and warnings
 - Read failures, no-chapter parse results, and chapter-index assembly failures now stay distinct in the structured inspection result instead of collapsing into one generic read-error bucket
 - Cache persistence, state persistence, and future import UI remain deferred to later Reward Reader phases
+
+The current import-preparation boundary is now intentionally a third detached layer:
+
+- `import-assembly.ts` is a pure function layer that accepts one normalized existing Reward Reader store plus one successful source-inspection result and prepares an import payload without mutating either input
+- The import assembly uses a type-only import of the successful inspection shape and does not depend on Obsidian runtime classes or helpers
+- The import assembly first verifies the inspection runtime shape before reading inspection fields, so malformed `inspection` input becomes a structured failure instead of a thrown exception
+- The import assembly validates title, `preparedAt`, an explicit boolean `makePrimary`, store schema compatibility, basic conflict boundaries, and inspection self-consistency before returning a payload
+- The import assembly keeps its inspection self-consistency checks lightweight by validating only metadata plus O(1) first-chapter and last-chapter boundaries instead of re-normalizing or re-walking the entire cache
+- The import assembly reuses `inspection.cache` directly instead of cloning the cache or duplicating the chapters array
+- The import assembly returns only one new novel object, one initial locked progress object, one recommended `primaryNovelIdAfterImport`, and warnings; it does not return a full copied `nextStore`
+- Import action runtime, persistence, `.nestkit` creation, and later patch application remain deferred to later Reward Reader phases
 
 The chapter-index cache path boundary is also intentionally defensive:
 

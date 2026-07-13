@@ -85,6 +85,22 @@ Confirmed Phase 2B1 Vault source boundary decisions:
 - Leading preface content still only produces warnings and does not become part of the first chapter in this phase
 - MB-scale Vault-local novels should be accepted as long as one explicit read plus one linear parse can complete; no low hard size cap is introduced in this phase
 
+Confirmed Phase 2B2 import-assembly decisions:
+
+- Phase 2B2 adds only a detached pure import-preparation layer and still does not add import action runtime, import modal, file picker, state persistence, or chapter-index persistence
+- Input is a normalized existing Reward Reader store, one successful source-inspection result, an explicit title, an explicit `preparedAt` timestamp, and a `makePrimary` flag
+- Output is only one prepared payload containing one `RewardReaderNovel`, one initial `RewardReaderNovelProgress`, the existing in-memory chapter-cache reference, and `primaryNovelIdAfterImport`
+- Phase 2B2 must not return `sourceText`, must not return chapter body copies, and must not return a full copied `nextStore`
+- The prepared payload reuses `inspection.cache` directly instead of deep-cloning the cache or the chapters array
+- The first imported novel becomes primary automatically even when `makePrimary = false`
+- Import preparation starts every novel with fully locked progress: no free first chapter, no reading history, no unlock history, and no study history
+- Duplicate novel ids, duplicate registered source paths, and orphan conflicting progress entries all block preparation before any payload is returned
+- Phase 2B2 validates that the successful source-inspection result is still self-consistent before trusting it for payload assembly
+- Malformed runtime `inspection` input must return structured `inconsistent-inspection` failure instead of throwing before validation completes
+- `makePrimary` must stay an explicit runtime boolean and must not use truthy coercion such as `Boolean(...)`, `0/1`, or string forms
+- Phase 2B2 keeps inspection consistency lightweight by checking that the first chapter starts at `ignoredPrefixLength` and the last chapter ends exactly at `sourceTextLength`
+- Phase 2B2 does not call `new Date()`, `Date.now()`, Vault APIs, storage adapters, or any runtime UI surface
+
 This follows the current NestKit architecture direction where independent features are lazily created and enabled through the shared `FeatureRegistry` and `FeatureManager`, rather than being always-on during `onload()`.
 
 ## Reading source model
@@ -141,6 +157,20 @@ Phase 2B1 Vault source boundary scope stays intentionally narrower than full imp
 - Do not return `sourceText`
 - Do not create `RewardReaderNovel`
 - Do not persist state or chapter-index cache files
+
+Phase 2B2 pure import-assembly scope stays intentionally narrower than import runtime:
+
+- Prepare one detached payload only after a successful Phase 2B1 source inspection already exists
+- Validate title, `preparedAt`, store schema compatibility, and basic conflict boundaries only
+- Validate malformed inspection shape and explicit boolean `makePrimary` without broadening into a full runtime schema framework
+- Reuse the inspection cache by reference instead of rebuilding or cloning it
+- Keep chapter-boundary validation O(1) by checking only the first and last chapter entries plus lightweight metadata
+- Return one new novel object plus one initial progress object only
+- Return the recommended `primaryNovelIdAfterImport` only, not a fully copied next store
+- Do not read from Vault
+- Do not write state or cache files
+- Do not register imported novels into the real store yet
+- Do not add import modal, file picker, or command wiring
 
 Built-in heading formats now targeted by Phase 2A:
 
@@ -383,6 +413,11 @@ Phase 2B1 status inside Phase 2:
 
 - Implemented now: detached Vault-local source inspection plus pure in-memory chapter-cache assembly
 - Deferred to later Phase 2 work: explicit import UI, novel registration, chapter-index persistence, state persistence, and file-change-based invalidation checks
+
+Phase 2B2 status inside Phase 2:
+
+- Implemented now: detached pure import-payload preparation from normalized existing store plus successful source inspection
+- Deferred to later Phase 2 work: explicit import action runtime, import modal, file picker, novel registration into real state, chapter-index persistence, state persistence, and file-change-based invalidation checks
 
 ### Phase 3: study records and exchange engine
 
