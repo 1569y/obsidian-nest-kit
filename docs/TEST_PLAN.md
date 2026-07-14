@@ -464,6 +464,90 @@
 24. Confirm the runtime module does not directly call `adapter.exists(...)`, `adapter.read(...)`, `adapter.mkdir(...)`, `adapter.write(...)`, `adapter.list(...)`, `remove`, `rename`, `append`, `copy`, or `rmdir`.
 25. Confirm the runtime module stays detached from startup, feature enablement, command registration, import modal, file picker, notices, views, reader UI, sidebar, status bar, and exchange engine.
 
+## Reward Reader Phase 2D2 import command and minimal modal
+
+1. Confirm the import command id is `reward-reader-import-novel`.
+2. Confirm the import command name is localized through the existing i18n dictionaries.
+3. Confirm the command is registered at most once during one plugin session.
+4. Confirm Reward Reader disabled plus desktop returns command unavailable.
+5. Confirm Reward Reader enabled plus mobile returns command unavailable.
+6. Confirm Reward Reader enabled plus desktop plus not busy returns command available.
+7. Confirm command registration performs zero `vault.getFiles(...)`, zero `vault.read(...)`, and zero `DataAdapter` IO.
+8. Confirm command checking performs zero `vault.getFiles(...)`, zero `vault.read(...)`, and zero `DataAdapter` IO.
+9. Confirm command checking does not create an import modal.
+10. Confirm command execution opens at most one active import modal at a time.
+11. Confirm rerunning the command while the modal is already open does not create a second modal.
+12. Confirm closing the modal clears the active-modal guard so the command can open it again later.
+13. Confirm modal open does not read Reward Reader state.
+14. Confirm modal open does not read novel source text.
+15. Confirm modal open does not enumerate Vault files.
+16. Confirm a valid active TXT file prefills the source selection without reading file body text.
+17. Confirm a valid active Markdown file prefills the source selection without reading file body text.
+18. Confirm an invalid active file or no active file still allows the modal to open with no source selected.
+19. Confirm Vault file enumeration happens only after the user clicks `Choose file` or `Change file`.
+20. Confirm the source picker accepts only TXT and Markdown `TFile` candidates.
+21. Confirm extension matching is case-insensitive for TXT and Markdown candidates.
+22. Confirm picker candidates are sorted by Vault-relative path.
+23. Confirm picker enumeration does not call `vault.read(...)`.
+24. Confirm picker enumeration does not call `DataAdapter` IO.
+25. Confirm when no eligible TXT or Markdown files exist, the modal stays open, shows a safe Notice, and does not call the runtime flow.
+26. Confirm the first selected source file prefills the title from `file.basename`.
+27. Confirm reselecting another source while `titleDirty = false` updates the title to the new basename.
+28. Confirm reselecting another source after the user edits the title does not overwrite the manual title.
+29. Confirm clearing the title still counts as a manual title edit.
+30. Confirm submit trims outer whitespace from the title before building the request.
+31. Confirm `makePrimary` defaults to `true`.
+32. Confirm the user can switch `makePrimary` off before submit.
+33. Confirm a fresh valid submit generates `novelId` exactly once and `operationAt` exactly once for that request.
+34. Confirm `novelId` uses one UUID-based safe id and still passes `isSafeRewardReaderId(...)`.
+35. Confirm `operationAt` is one ISO timestamp string created only when a fresh request snapshot is built.
+36. Confirm if identity generation is unavailable or invalid, the modal shows a generic localized Notice, keeps the modal open, and does not call the runtime flow.
+37. Confirm the built request snapshot contains exactly `novelId`, `sourcePath`, trimmed `title`, `operationAt`, and `makePrimary`.
+38. Confirm the modal passes `app.vault` and `app.vault.adapter` into `runRewardReaderImport(...)`.
+39. Confirm the modal does not call adapter IO directly.
+40. Confirm the modal does not call `vault.read(...)` directly.
+41. Confirm while runtime is pending, source selection, title input, primary toggle, and submit are disabled.
+42. Confirm while runtime is pending, the command cannot open another modal.
+43. Confirm double-clicking submit still triggers only one runtime call.
+44. Confirm success Notice shows safe fields only: title, chapter count, and optional warning count.
+45. Confirm success Notice does not show `novelId`, internal paths, raw warnings, raw JSON, or raw persistence details.
+46. Confirm success closes the modal and clears the active-modal guard.
+47. Confirm clear pre-persistence failures keep the modal open and return the form to editable state.
+48. Confirm clear pre-persistence failures clear the previous request snapshot so the next submit generates a fresh `novelId`.
+49. Confirm clear pre-persistence failures also generate a fresh `operationAt` on the next submit.
+50. Confirm partial-persistence or outcome-unknown failures enter exact-retry mode.
+51. Confirm exact-retry mode keeps source selection disabled.
+52. Confirm exact-retry mode keeps title editing disabled.
+53. Confirm exact-retry mode keeps `makePrimary` editing disabled.
+54. Confirm exact-retry mode changes the submit label to `Retry same import`.
+55. Confirm exact retry preserves the exact same `novelId`.
+56. Confirm exact retry preserves the exact same `operationAt`.
+57. Confirm exact retry preserves the exact same `sourcePath`, `title`, and `makePrimary`.
+58. Confirm exact retry does not auto-run; the user must click retry explicitly.
+59. Confirm a later failure during exact retry does not unlock the form unless the modal is closed or a final success occurs.
+60. Confirm a runtime function that unexpectedly throws at the UI boundary does not escape to the caller, shows only a generic localized retry Notice, and enters exact-retry mode.
+61. Confirm UI-boundary unexpected-throw handling does not expose raw error text, stack traces, physical paths, or JSON.
+62. Confirm closing the modal during a pending runtime call does not cancel the underlying promise.
+63. Confirm after close-during-pending, result handling does not try to touch cleared modal DOM.
+64. Confirm after close-during-pending, no extra modal is reopened automatically.
+65. Confirm after close-during-pending, active-modal cleanup still remains correct.
+66. Confirm failure Notice mapping stays localized and sanitized for each structured runtime failure class.
+67. Confirm a large `vault.getFiles()` metadata list, such as roughly `50,000` files, still filters candidates without reading any file body text or performing adapter IO.
+68. Confirm candidate filtering does not mutate the original `vault.getFiles()` array.
+69. Confirm request snapshots remain immutable across exact-retry reuse.
+70. Confirm this phase still does not add reader UI, unlock or exchange logic, sidebar behavior, status-bar behavior, startup scan, or background listeners.
+71. Confirm repeated `Choose file` clicks while one source picker is already open do not create a second picker.
+72. Confirm repeated `Choose file` clicks while one source picker is already open do not trigger another `vault.getFiles()` call.
+73. Confirm closing the source picker clears the modal's active-picker reference.
+74. Confirm after picker close, another explicit `Choose file` click can create a fresh picker and re-enumerate files once.
+75. Confirm choosing a file closes the source picker and clears the active-picker reference.
+76. Confirm closing the import modal also closes any active source picker.
+77. Confirm feature disable through the existing modal-close path also closes any active source picker.
+78. Confirm plugin unload through the existing feature-disable path also closes any active source picker.
+79. Confirm source-picker cleanup performs zero `vault.read(...)` and zero `DataAdapter` IO.
+80. Confirm a late source-picker choose callback after the parent modal has already closed does not mutate selected source, title, failure state, or render closed UI.
+81. Confirm that late source-picker choose callback path stays no-throw and does not call the runtime flow.
+
 ## Heading Progress Phase 1A status bar MVP
 
 1. Confirm Heading Progress is disabled by default in settings.

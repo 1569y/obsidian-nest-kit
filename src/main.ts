@@ -69,7 +69,7 @@ export default class NestKitPlugin extends Plugin {
 		this.featureManager.register({
 			id: REWARD_READER_FEATURE_ID,
 			isEnabled: (settings) => settings.enableRewardReader,
-			create: () => new RewardReaderFeature(),
+			create: () => new RewardReaderFeature(this, () => this.settings),
 			order: 175,
 			nameKey: 'features.rewardReader.name',
 			descriptionKey: 'features.rewardReader.description',

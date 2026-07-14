@@ -19,7 +19,9 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/heading-progress/index.ts`: Heading Progress Phase 1A feature lifecycle, status bar rendering, active-editor binding, debounced updates, and cleanup
 - `src/features/heading-progress/progress.ts`: heading parsing plus top-level section and line-based progress derivation
 - `src/features/heading-progress/types.ts`: Heading Progress settings union types
-- `src/features/reward-reader/index.ts`: Reward Reader Phase 1A foundation feature shell with default-off lifecycle only and no runtime UI or file IO
+- `src/features/reward-reader/index.ts`: Reward Reader feature lifecycle shell that stays default-off, registers the Phase 2D2 command lazily on first enable, and keeps command availability gated by current enabled/mobile/busy state
+- `src/features/reward-reader/import-command.ts`: Reward Reader Phase 2D2 desktop-only import-command registration with single-active-modal coordination and zero startup/checking IO
+- `src/features/reward-reader/import-modal.ts`: Reward Reader Phase 2D2 minimal import modal, TXT/Markdown Vault picker, UI-side identity generation, exact-retry preservation, and sanitized user feedback
 - `src/features/reward-reader/chapter-parser.ts`: Reward Reader Phase 2A detached pure chapter parser for built-in heading detection and UTF-16 chapter-offset generation
 - `src/features/reward-reader/chapter-cache-builder.ts`: Reward Reader Phase 2B1 pure chapter-cache assembly from one in-memory source string plus explicit metadata
 - `src/features/reward-reader/vault-source-reader.ts`: Reward Reader Phase 2B1 detached Vault-local source inspection boundary with single-read assembly flow
@@ -28,7 +30,7 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/reward-reader/read-only-storage-adapter.ts`: Reward Reader Phase 2C1 detached read-only `DataAdapter` boundary for state and one explicit chapter-index cache
 - `src/features/reward-reader/write-only-storage-adapter.ts`: Reward Reader Phase 2C2 detached minimal write-only `DataAdapter` boundary for canonical state and one explicit chapter-index cache
 - `src/features/reward-reader/import-persistence-orchestrator.ts`: Reward Reader Phase 2C3 detached cache-first import persistence orchestration across the existing read, apply, and write boundaries
-- `src/features/reward-reader/import-runtime-flow.ts`: Reward Reader Phase 2D1 detached minimal import runtime flow that chains request validation, initial state read, source inspection, import preparation, and persistence orchestration without registering UI
+- `src/features/reward-reader/import-runtime-flow.ts`: Reward Reader Phase 2D1 detached minimal import runtime flow that chains request validation, initial state read, source inspection, import preparation, and persistence orchestration behind the Phase 2D2 UI entry
 - `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
 - `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
@@ -95,7 +97,17 @@ Phase 1A runtime behavior stays low-impact:
 - Current enable selector: `settings.enableRewardReader`
 - Phase 1A responsibility: add only the default-off module shell, foundational settings, pure data types, and pure store normalization helpers for a future study-to-unlock novel reading module
 
-Reward Reader Phase 1A is intentionally foundation-only. It does not register commands, an `ItemView`, a view type, a status bar item, a ribbon button, a sidebar entry, a timer, a layout-change listener, or a Vault file listener. It does not scan the vault, read any novel source file, or create `.nestkit/reward-reader` during startup or feature enablement.
+Reward Reader startup and feature enablement remain intentionally light. Plugin startup still does not register Reward Reader commands while the feature stays disabled, does not scan the vault, does not read any novel source file, and does not create `.nestkit/reward-reader`.
+
+The current Phase 2D2 command boundary is intentionally narrow:
+
+- The import command is registered lazily only after Reward Reader is enabled the first time
+- Command availability is gated by current `enableRewardReader`, desktop-only runtime, and whether an import call is already in flight
+- Command checking does not create a modal, does not enumerate Vault files, does not read Reward Reader state, and does not call `DataAdapter`
+- The feature keeps at most one active import modal at a time
+- Each import modal owns its own source-picker lifecycle and keeps at most one active source picker at a time
+- Closing the import modal, disabling the feature, or unloading the plugin also closes any active source picker through that same modal-owned cleanup path
+- Closing the modal during a pending import does not cancel the underlying runtime promise
 
 Its current data boundary is split deliberately:
 
@@ -175,7 +187,7 @@ The current store patch application boundary is intentionally a fourth detached 
 - The patch application shallow-copies only the new novel and new progress objects so the resulting store is not directly aliased to those mutable prepared-payload objects
 - The patch application reuses `studyRecords`, `unlockRecords`, `readingRecords`, the chapter-index cache object, and the cache `chapters` array directly instead of cloning long-lived or large data
 - The patch application does not return `sourceText`, does not copy chapter body text, and does not place the cache inside `nextStore`
-- State persistence, cache persistence, runtime import commands, and UI remain deferred to later Reward Reader phases
+- State persistence now exists behind the detached runtime path, but the current UI layer still keeps all direct persistence work delegated to the runtime only
 
 The current read-only storage boundary is intentionally a fifth detached layer:
 
@@ -224,6 +236,11 @@ The current import runtime boundary is intentionally an eighth detached layer:
 - If the Phase 2C3 orchestrator itself unexpectedly throws instead of returning a structured result, the runtime returns `persistence-runtime-failed` with unknown cache and state outcomes because the exact internal stage is not knowable
 - The runtime flow does not retry, read back state or cache, write compensation data, or roll back after an unexpected persistence throw
 - The runtime flow remains detached from startup, feature enablement, commands, modals, file pickers, notices, views, sidebars, status bar items, the reader, and the exchange engine
+- The Phase 2D2 import command and modal form a thin user-entry layer above that runtime flow only:
+  command registration and checking perform no Vault or `DataAdapter` IO, the file picker enumerates only Vault metadata on explicit user click, the modal never calls `vault.read(...)` or adapter IO directly, and every actual import attempt still passes through `runRewardReaderImport(...)`
+- UI-side import identity is now generated only at submit time: one safe `novelId` plus one `operationAt` timestamp per new attempt, both preserved exactly for any later partial-success or outcome-unknown retry
+- Exact retry stays intentionally explicit and user-driven. Once a failure suggests cache or state may already have been written, the modal locks source/title/primary fields and reuses the exact same request snapshot on the next retry instead of generating a new identity
+- The source picker is a modal-owned child surface rather than a shared singleton: repeated picker clicks while it is already open do not create another picker or re-enumerate Vault files, and late picker callbacks become no-ops once the parent import modal has already closed
 
 The chapter-index cache path boundary is also intentionally defensive:
 

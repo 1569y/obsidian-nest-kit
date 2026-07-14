@@ -173,6 +173,28 @@ Confirmed Phase 2D1 detached minimal import runtime decisions:
 - If Phase 2C3 unexpectedly throws, runtime returns `persistence-runtime-failed` instead of pretending the failure is `state-write-blocked`
 - In that unexpected-throw case both cache and state persistence are reported as `write-outcome-unknown`, and callers must reread state before deciding whether to show success, retry, or recovery guidance
 
+Confirmed Phase 2D2 import command and minimal modal decisions:
+
+- Phase 2D2 adds only the first user-triggered desktop import entry above the detached runtime flow and still does not add reader UI, unlock or exchange logic, status bar, sidebar, background listeners, or startup hydration
+- The import command is registered lazily only after Reward Reader is enabled at least once and is still unavailable while Reward Reader is disabled
+- Command availability is gated dynamically by current `enableRewardReader`, desktop-only runtime, and whether an import call is already in flight
+- Command registration and command checking perform zero Vault or `DataAdapter` IO, do not create a modal, and do not read Reward Reader state or novel source text
+- The modal may prefill from `app.workspace.getActiveFile()` only when the active file is a Vault TXT or Markdown `TFile`; that metadata read does not read file body text
+- The modal opens without reading Reward Reader state, without reading novel source text, and without enumerating Vault files
+- Vault file enumeration is allowed only after the user explicitly clicks `Choose file` or `Change file`, and that picker lists only Vault-local TXT and Markdown `TFile` metadata sorted by Vault-relative path
+- The source picker is a child surface owned by one import modal, so one import modal may keep at most one active source picker at a time
+- Repeated picker clicks while that picker is already open must not create another picker and must not trigger another `vault.getFiles()` call
+- Closing the import modal, disabling Reward Reader, or unloading the plugin must also close any active source picker without performing Vault or persistence cleanup work
+- Late picker callbacks after the parent modal has already closed must become no-ops instead of mutating parent state or re-rendering closed UI
+- The UI boundary generates exactly one safe `novelId` plus one `operationAt` timestamp per new submit attempt, validates both before runtime call, and does not use fallback identity strategies such as `Math.random`, path hashing, or user-entered ids
+- The modal keeps at most one active instance at a time, blocks duplicate runtime submissions while busy, and does not queue a second import call
+- Title behavior is basename-prefill plus `titleDirty` protection: reselecting a file updates the title only until the user manually edits or clears it
+- Import execution still delegates only to `runRewardReaderImport(vault, vault.adapter, request)`; the modal does not call `vault.read(...)`, does not call adapter IO directly, and does not bypass the detached runtime boundary
+- Partial-persistence or outcome-unknown failures lock the form into exact-retry mode and preserve the full immutable request snapshot, including the same `novelId`, `operationAt`, `sourcePath`, `title`, and `makePrimary`
+- Clear pre-persistence failures do not keep the old identity; they unlock the form for edits and require the next submit to create a fresh request snapshot
+- Unexpected throws at the UI boundary are sanitized, surface only a generic retry notice, and also enter exact-retry mode without exposing raw errors, paths, JSON, or stack traces
+- Success shows only a localized Notice with safe summary fields such as title, chapter count, and optional warning count, then closes the modal without opening the reader automatically
+
 This follows the current NestKit architecture direction where independent features are lazily created and enabled through the shared `FeatureRegistry` and `FeatureManager`, rather than being always-on during `onload()`.
 
 ## Reading source model
@@ -515,6 +537,12 @@ Phase 2D1 status inside Phase 2:
 
 - Implemented now: detached minimal end-to-end import runtime flow that validates an explicit request, reads an initial state baseline, inspects one Vault source, prepares the import payload, and delegates final latest-state cache-first persistence to Phase 2C3
 - Deferred to later Phase 2 work: command registration, import modal, Vault file picker, novel id generation, user-facing Notices, retry copy, cache rebuild decisions, startup hydration, orphan-cache cleanup, rollback, and stronger concurrency protection
+
+Phase 2D2 status inside Phase 2:
+
+- Implemented now: lazy desktop-only import command, minimal import modal, on-demand Vault TXT or Markdown metadata picker, UI-side `novelId` plus `operationAt` generation, busy duplicate blocking, localized Notices, and exact-same-request retry preservation above the existing detached runtime flow
+- The same Phase 2D2 branch now also hardens source-picker lifecycle ownership so each import modal keeps only one picker, modal close cascades picker close, and late picker callbacks become safe no-ops
+- Deferred to later Phase 2 work: reader auto-open, reader UI, sidebar or status-bar surfaces, richer import management UI, delete or reimport controls, cache rebuild tools, startup hydration, orphan-cache cleanup, rollback, and stronger concurrency protection
 
 ### Phase 3: study records and exchange engine
 

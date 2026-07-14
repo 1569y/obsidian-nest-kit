@@ -377,7 +377,7 @@ export const enDictionary = {
 		rewardReader: {
 			name: 'Reward Reader',
 			description:
-				'Foundation-only study-to-unlock reading feature shell with no reader or import runtime yet.',
+				'Study-to-unlock reading feature shell with a minimal desktop import command and modal, but no reader UI yet.',
 		},
 		spacedReview: {
 			name: 'Spaced Review',
@@ -399,6 +399,11 @@ export const enDictionary = {
 		},
 	},
 	commands: {
+		rewardReader: {
+			importNovel: {
+				name: 'Reward Reader: Import novel',
+			},
+		},
 		spacedReview: {
 			createTask: {
 				name: 'Create spaced review task',
@@ -550,6 +555,82 @@ export const enDictionary = {
 			},
 		},
 	modal: {
+		rewardReader: {
+			import: {
+				title: 'Import Reward Reader novel',
+				source: {
+					name: 'Novel source file',
+					description: 'Select one Vault TXT or Markdown novel file.',
+					noSourceSelected: 'No source file selected.',
+					chooseFile: 'Choose file',
+					changeFile: 'Change file',
+				},
+				novelTitle: {
+					name: 'Novel title',
+					placeholder: 'Use a clear title for this imported novel',
+				},
+				makePrimary: {
+					name: 'Set as primary novel',
+					description:
+						'Use this novel as the current primary Reward Reader target after import.',
+				},
+				status: {
+					heading: 'Status',
+					waitingForSource:
+						'Choose one TXT or Markdown source file to prepare the import.',
+					readyToImport:
+						'Ready to import. The novel file will only be read after you select Import.',
+					importing: 'Importing...',
+					failedCanEdit:
+						'Import failed before persistence completed. You can adjust the file or title and try again.',
+					exactRetryRequired:
+						'The import result could not be fully confirmed. Retry the exact same import request.',
+				},
+				buttons: {
+					import: 'Import',
+					retrySameImport: 'Retry same import',
+					cancel: 'Cancel',
+				},
+				notices: {
+					noEligibleFiles:
+						'No TXT or Markdown files are available for Reward Reader import.',
+					identityGenerationFailed:
+						'Reward Reader could not create a safe import identity. Try again.',
+					success: (title: string, chapterCount: number): string =>
+						`Imported "${title}" with ${chapterCount} chapters.`,
+					successWithWarnings: (
+						title: string,
+						chapterCount: number,
+						warningCount: number,
+					): string =>
+						`Imported "${title}" with ${chapterCount} chapters. ${warningCount} warnings were recorded.`,
+					invalidImportRequest:
+						'Check the selected file and novel title, then try again.',
+					initialStateReadBlocked:
+						'Reward Reader data could not be read safely, so the import did not start.',
+					persistenceStateReadBlocked:
+						'Reward Reader data changed during import. Reconfirm and try again.',
+					sourceInspectionBlocked:
+						'The selected file could not be imported. Make sure it is a TXT or Markdown file with recognizable chapter headings.',
+					importPreparationBlocked:
+						'This novel conflicts with the existing Reward Reader import data.',
+					storeApplicationBlocked:
+						'Reward Reader data changed during import. Reconfirm and try again.',
+					chapterCacheReadBlocked:
+						'The chapter index for this novel could not be checked safely.',
+					chapterCacheConflict:
+						'A different chapter index already exists for this import identity, so the existing data was not overwritten.',
+					chapterCacheWriteBlocked:
+						'Reward Reader could not confirm whether the chapter index was fully written. Retry the same import.',
+					stateWriteBlocked:
+						'Reward Reader could not confirm whether the final import state was fully written. Retry the same import.',
+					persistenceRuntimeFailed:
+						'Reward Reader could not confirm whether this import completed. Retry the same import.',
+					unexpectedRuntimeFailure:
+						'Reward Reader could not confirm whether this import completed. Retry the same import.',
+				},
+			},
+		},
 		spacedReview: {
 			createTitle: 'Create spaced review task',
 			editTitle: 'Edit spaced review task',

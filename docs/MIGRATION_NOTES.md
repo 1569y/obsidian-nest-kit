@@ -1,5 +1,23 @@
 # Migration notes
 
+- `reward-reader-phase2d2-source-picker-lifecycle-hardening` keeps the same Phase 2D2 command and import-modal scope and only hardens source-picker ownership and cleanup inside the existing UI boundary.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys, no new file format, and no migration write.
+- This round does not change import identity generation, exact retry semantics, persistence ordering, or runtime failure classification.
+- This round only ensures one source picker per import modal, closes that picker when the parent modal closes through cancel, feature disable, or plugin unload, and ignores late picker callbacks after the parent modal has already closed.
+
+- `reward-reader-phase2d2-import-command-and-minimal-modal` keeps the Phase 2D1 detached import runtime flow unchanged and adds only the first desktop-only user entry layer above it.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys, no new file format, and no migration write.
+- This round adds one lazily registered desktop-only import command plus one minimal import modal, but they become reachable only when Reward Reader is enabled.
+- Command registration, command checking, and modal open still do not read Reward Reader state, do not read novel source text, do not enumerate Vault files, and do not call `DataAdapter` IO; Vault metadata enumeration happens only after the user explicitly opens the file picker.
+- This round adds UI-side `novelId` and `operationAt` generation, single-active-modal coordination, busy duplicate blocking, localized sanitized Notices, and exact-same-request retry preservation for partial-success or outcome-unknown failures.
+- This round still does not add reader UI, unlock or exchange logic, sidebar behavior, status-bar behavior, startup scan, background listener, rollback, transaction semantics, or orphan-cache cleanup.
+
 - `reward-reader-phase2d1-persistence-throw-hardening` keeps the Phase 2D1 detached import runtime scope and corrects only the classification of unexpected persistence-orchestrator throws.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
 - This round keeps Reward Reader store schema at `1`.
