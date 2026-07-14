@@ -195,6 +195,30 @@ Confirmed Phase 2D2 import command and minimal modal decisions:
 - Unexpected throws at the UI boundary are sanitized, surface only a generic retry notice, and also enter exact-retry mode without exposing raw errors, paths, JSON, or stack traces
 - Success shows only a localized Notice with safe summary fields such as title, chapter count, and optional warning count, then closes the modal without opening the reader automatically
 
+Confirmed Phase 3A pure study-minute exchange decisions:
+
+- Phase 3A adds only one detached pure study-minute exchange engine and still does not add study runtime wiring, reader UI, sidebar, status bar, reading-progress commands, timers, listeners, or startup hydration
+- Imported novels remain fully locked after import: `unlockedThroughChapterIndex = null`, `studyMinuteBalance = 0`, `totalStudyMinutes = 0`, `todayUnlockDate = null`, and `todayUnlockedChapters = 0`
+- The current product-default exchange baseline is now recorded as `DEFAULT_REWARD_READER_MINUTES_PER_CHAPTER = 30`, meaning `30` minutes unlock `1` chapter, but the engine still requires the caller to pass an explicit full policy on every call
+- The pure calculation path accepts only one canonical progress object plus explicit `chapterCount`, `studyMinutes`, `occurredAt`, and policy; it does not read store state, does not create records, and does not generate ids or timestamps
+- Both public engine exports are intended to be no-throw boundaries that future runtime/UI code can call safely even if malformed getters, Proxies, or unexpected internal regressions throw
+- `occurredAt` must already be a canonical UTC ISO instant and the UTC daily boundary comes only from `occurredAt.slice(0, 10)`
+- Study-minute credit is additive: `studyMinuteBalance + studyMinutes` becomes available minutes, and any remainder below the next conversion threshold stays in `studyMinuteBalance`
+- `totalStudyMinutes` is cumulative only; unlocking chapters spends minutes from balance but never subtracts from lifetime total study minutes
+- Per-study cap, UTC daily cap, and the novel-end boundary can reduce unlock count, but they never discard credited minutes; blocked minutes remain available for later explicit study operations
+- If a lowered daily cap is already below the existing same-day unlocked count, the engine treats the remaining daily allowance as `0` for the new operation and does not retroactively reduce old daily counts
+- Stale study operations are rejected if `occurredAt` is earlier than `progress.updatedAt` or if the derived UTC date is earlier than `progress.todayUnlockDate`
+- Unlock indexes are always continuous and begin at the next locked chapter: first unlock starts at chapter `0`, later unlocks continue from `unlockedThroughChapterIndex + 1`, and no skipped indexes are generated
+- Complete novels still accept credited study minutes: successful no-unlock operations keep growing `studyMinuteBalance` and `totalStudyMinutes`
+- The apply path accepts one canonical current-schema Reward Reader store plus explicit `studyRecordId` and `unlockRecordId`, validates those ids across `studyRecords`, `unlockRecords`, and `readingRecords`, and never generates ids itself
+- Successful apply always creates one study record, even when `unlockedChapterCount = 0`
+- Successful apply creates an unlock record only when chapters were actually unlocked; it never appends an empty unlock record
+- Study content is caller-provided text only: the engine normalizes `CRLF/CR` to `LF`, trims outer whitespace, allows an empty final string, and rejects NUL
+- The apply result returns one immutable `nextStore` with shallow structural sharing: `novels` and `readingRecords` keep their references, non-target progress entries keep their references, and history stays append-only
+- Normal structured business errors must stay precise, but a truly unexpected calculate exception falls back only to the stable `invalid-progress` result and a truly unexpected apply exception falls back only to the stable `invalid-store` result
+- Generic unexpected failure must stay sanitized: it must not pretend to be a more specific cap/timestamp/persistence error and must not expose raw exception text
+- Phase 3B should be the first layer that reads the latest Reward Reader state plus one explicit chapter cache, supplies explicit ids and timestamps, applies the pure Phase 3A engine, and persists the result
+
 This follows the current NestKit architecture direction where independent features are lazily created and enabled through the shared `FeatureRegistry` and `FeatureManager`, rather than being always-on during `onload()`.
 
 ## Reading source model

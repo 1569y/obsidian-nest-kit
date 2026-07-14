@@ -31,6 +31,7 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/reward-reader/write-only-storage-adapter.ts`: Reward Reader Phase 2C2 detached minimal write-only `DataAdapter` boundary for canonical state and one explicit chapter-index cache
 - `src/features/reward-reader/import-persistence-orchestrator.ts`: Reward Reader Phase 2C3 detached cache-first import persistence orchestration across the existing read, apply, and write boundaries
 - `src/features/reward-reader/import-runtime-flow.ts`: Reward Reader Phase 2D1 detached minimal import runtime flow that chains request validation, initial state read, source inspection, import preparation, and persistence orchestration behind the Phase 2D2 UI entry
+- `src/features/reward-reader/study-exchange-engine.ts`: Reward Reader Phase 3A detached pure study-minute exchange engine with calculation preview plus immutable store application
 - `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
 - `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
@@ -241,6 +242,22 @@ The current import runtime boundary is intentionally an eighth detached layer:
 - UI-side import identity is now generated only at submit time: one safe `novelId` plus one `operationAt` timestamp per new attempt, both preserved exactly for any later partial-success or outcome-unknown retry
 - Exact retry stays intentionally explicit and user-driven. Once a failure suggests cache or state may already have been written, the modal locks source/title/primary fields and reuses the exact same request snapshot on the next retry instead of generating a new identity
 - The source picker is a modal-owned child surface rather than a shared singleton: repeated picker clicks while it is already open do not create another picker or re-enumerate Vault files, and late picker callbacks become no-ops once the parent import modal has already closed
+
+The current study-exchange boundary is intentionally a ninth detached layer:
+
+- `study-exchange-engine.ts` is a pure synchronous no-IO domain module for future Reward Reader study-minute conversion
+- The module is split into `calculateRewardReaderStudyExchange(...)` and `applyRewardReaderStudyExchange(...)`
+- Both public exports are explicit no-throw API boundaries: each wraps its internal implementation in one catch-all fallback without exposing raw exceptions
+- The calculate path validates one canonical progress object, one explicit `chapterCount`, one explicit minute credit, one explicit UTC ISO timestamp, and one explicit policy, then returns a deterministic preview result without creating records or touching store state
+- The apply path validates one canonical current-schema Reward Reader store, validates explicit study and unlock record ids across all Reward Reader history arrays, normalizes study content only for the new record, reuses the calculate path, and returns one immutable `nextStore`
+- Normal structured business failures remain precise, but an unexpected calculate exception is collapsed to the stable `invalid-progress` result and an unexpected apply exception is collapsed to the stable `invalid-store` result
+- Imported novels still start fully locked; there is no free initial chapter and chapter `0` unlocks only after enough credited study minutes exist
+- Per-study cap, UTC daily cap, and the novel-end boundary can reduce unlock count, but they do not discard credited minutes; blocked unlock minutes remain in `studyMinuteBalance`
+- Daily unlock accounting is keyed strictly by `occurredAt.slice(0, 10)` in UTC and stale study operations cannot overwrite newer progress
+- History stays append-only: successful apply always appends one study record and appends one unlock record only when `unlockedChapterCount > 0`
+- The next store uses shallow structural sharing: root store, target progress, and study history are recreated as needed, while `novels`, `readingRecords`, and non-target progress entries preserve their existing references
+- The generic no-throw fallback does not log, does not rethrow, and does not expose `exception.message`, paths, or other raw internal details
+- This phase adds no Reward Reader runtime registration, no reader UI, no persistence orchestration for study exchanges, no automatic timers, and no Obsidian dependency inside the new engine module
 
 The chapter-index cache path boundary is also intentionally defensive:
 

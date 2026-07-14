@@ -1,5 +1,18 @@
 # Migration notes
 
+- `reward-reader-phase3a-no-throw-boundary-hardening` keeps the same Phase 3A study-minute exchange scope and only hardens the two public pure API boundaries against unexpected throws.
+- This round keeps the plugin settings schema at `1`, Reward Reader store schema at `1`, and Reward Reader chapter-index cache schema at `1`.
+- This round adds no new settings keys, no persisted data fields, no migration write, and no change to normal calculation/apply result semantics; it only guarantees sanitized no-throw fallbacks for unexpected public API exceptions.
+
+- `reward-reader-phase3a-pure-study-exchange-engine` adds the detached pure Reward Reader study-minute exchange engine on top of the existing Phase 2D2 import-entry worktree.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys, no new persisted data fields, no new file format, and no migration write.
+- This round reuses the existing `RewardReaderNovelProgress`, `RewardReaderStudyRecord`, and `RewardReaderUnlockRecord` field set for minute-balance updates plus immutable history creation.
+- This round adds one detached pure domain module that calculates study-minute exchange previews and applies canonical in-memory store transitions only when a future caller provides explicit ids, timestamps, chapter count, and policy.
+- This round does not read the latest Reward Reader state, does not read chapter-index caches, does not write state or cache files, does not create `.nestkit`, and does not register commands, views, status bar behavior, sidebar behavior, timers, listeners, or reader UI.
+
 - `reward-reader-phase2d2-source-picker-lifecycle-hardening` keeps the same Phase 2D2 command and import-modal scope and only hardens source-picker ownership and cleanup inside the existing UI boundary.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
 - This round keeps Reward Reader store schema at `1`.

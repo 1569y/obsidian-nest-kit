@@ -318,6 +318,44 @@
 23. Confirm invalid cache schema, identity fields, text length, generated timestamp, empty chapters, first chapter boundary, or last chapter boundary return `invalid-prepared-import`.
 24. Confirm duplicate current novel id is rechecked and returns `duplicate-novel-id`.
 25. Confirm duplicate current source path is rechecked with exact string comparison and returns `duplicate-source-path`.
+
+## Reward Reader Phase 3A pure study exchange engine
+
+1. Confirm `DEFAULT_REWARD_READER_MINUTES_PER_CHAPTER = 30`.
+2. Confirm the calculation path rejects a missing or malformed policy instead of silently falling back to `30`.
+3. Confirm imported zero-unlock progress plus `29` study minutes unlocks no chapter, keeps `unlockedThroughChapterIndex = null`, and returns `balanceAfter = 29`.
+4. Confirm the next `1` study minute after that carryover unlocks chapter index `0` and returns `balanceAfter = 0`.
+5. Confirm `90` study minutes at `30` minutes per chapter unlock `[0, 1, 2]`.
+6. Confirm existing unlock progress continues from the next locked chapter and does not repeat earlier indexes.
+7. Confirm minute remainders carry forward in `studyMinuteBalance` instead of being discarded.
+8. Confirm `maxChaptersPerStudyRecord` limits unlock count but preserves extra credited minutes in balance.
+9. Confirm `maxChaptersPerStudyRecord = 0` produces a no-unlock calculation while still crediting study minutes.
+10. Confirm same-day UTC daily cap limits unlock count without discarding minutes.
+11. Confirm daily rollover resets the effective daily counter when `occurredAt.slice(0, 10)` moves to a new UTC date.
+12. Confirm a lowered daily cap below the already-recorded same-day unlocked count yields `dailyRemainingAllowanceBefore = 0` instead of invalidating progress.
+13. Confirm the novel-end boundary prevents unlock indexes beyond `chapterCount - 1`.
+14. Confirm a fully unlocked novel still accepts study-minute credit, creates a study record on apply, and does not create an empty unlock record.
+15. Confirm combined minute, per-study, daily, and novel-end caps resolve to the minimum legal unlock count.
+16. Confirm `totalStudyMinutes` grows only by credited study minutes and is not reduced by unlock spending.
+17. Confirm invalid progress, invalid chapter count, invalid study minutes, invalid timestamp, invalid policy, stale operation, chapter-count conflict, and safe-integer overflow each return structured no-throw failures.
+18. Confirm `occurredAt` must already be a canonical UTC ISO string and that leading or trailing whitespace, local-only timestamps, or non-canonical ISO forms are rejected.
+19. Confirm apply requires a canonical current-schema Reward Reader store and rejects invalid roots, normalizable stores, or future-schema stores without silently repairing them.
+20. Confirm apply rejects invalid `novelId`, missing target novel, missing target progress, mismatched `progress.novelId`, invalid explicit record ids, same new ids, and new ids that conflict with any existing study, unlock, or reading record id.
+21. Confirm `unlockRecordId` is still validated even when the current calculation would unlock zero chapters.
+22. Confirm apply normalizes study content with `CRLF/CR -> LF` plus outer trim, allows an empty final string, and rejects NUL.
+23. Confirm successful apply always appends one `RewardReaderStudyRecord`, appends one `RewardReaderUnlockRecord` only when `unlockedChapterCount > 0`, and keeps both `createdAt` values equal to the explicit `occurredAt`.
+24. Confirm `nextStore` preserves `novels`, `readingRecords`, and non-target progress references while returning a new root object, a new `progressByNovelId`, a new target progress object, and a new `studyRecords` array.
+25. Confirm `unlockRecords` reuses its original array reference when no unlock record is created, but returns a new appended array when chapters are unlocked.
+26. Confirm the calculation result reused by apply matches the returned study record, unlock record, and progress-after state exactly.
+27. Confirm long-history apply still performs only one linear cross-history id scan and appends new records without cloning old history objects.
+28. Confirm a very large `chapterCount` with a small unlock result creates only `unlockCount` chapter indexes instead of allocating arrays sized to `chapterCount`.
+29. Confirm `study-exchange-engine.ts` has no `obsidian` import, no `Vault` or `DataAdapter` dependency, no JSON parse/stringify, no random id generation, no `Date.now()`, and no zero-argument `new Date()`.
+30. Confirm a throwing `input.progress` getter does not escape from `calculateRewardReaderStudyExchange(...)` and instead returns the stable `invalid-progress` result.
+31. Confirm a throwing `policy.minutesPerChapter` getter does not escape from `calculateRewardReaderStudyExchange(...)` and still falls back to the stable `invalid-progress` result rather than leaking the raw exception or remapping to `invalid-exchange-policy`.
+32. Confirm a throwing `input.store` getter or a throwing store `Proxy` does not escape from `applyRewardReaderStudyExchange(...)` and instead returns the stable `invalid-store` result.
+33. Confirm a throwing history access or iteration path inside apply does not escape and does not produce a partial `nextStore`.
+34. Confirm unexpected-failure messages never include raw exception text, file paths, or stack fragments.
+35. Confirm normal structured failures such as `invalid-exchange-policy`, `stale-study-operation`, `chapter-count-conflict`, `arithmetic-overflow`, `unsupported-store-schema`, and `duplicate-record-id` still keep their original precise codes after the no-throw hardening pass.
 26. Confirm an orphan current progress entry for the new novel id is rechecked and returns `conflicting-existing-progress`.
 27. Confirm stale or invalid `primaryNovelIdAfterImport` returns `invalid-primary-after-import`.
 28. Confirm the first novel must become primary.
