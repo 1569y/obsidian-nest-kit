@@ -34,6 +34,7 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/reward-reader/study-exchange-engine.ts`: Reward Reader Phase 3A detached pure study-minute exchange engine with calculation preview plus immutable store application
 - `src/features/reward-reader/study-exchange-runtime.ts`: Reward Reader Phase 3B1 detached async study-exchange persistence runtime that validates one explicit request, reads current state plus one target chapter cache, revalidates target identity against a latest state reread, applies the Phase 3A engine, and attempts one state write
 - `src/features/reward-reader/study-exchange-replay-inspector.ts`: Reward Reader Phase 3B2A detached pure replay-inspection engine that classifies persisted evidence after a write-outcome-unknown study exchange
+- `src/features/reward-reader/study-exchange-replay-runtime.ts`: Reward Reader Phase 3B2B detached async read-only replay recovery runtime that rereads state and one target chapter cache, revalidates target identity, and delegates evidence classification to the pure replay inspector
 - `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
 - `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
@@ -289,6 +290,21 @@ The current study-exchange replay inspection boundary is intentionally an eleven
 - Replay confirmation requires exact agreement between the recalculated outcome and the persisted study or unlock pair plus current study-related progress consistency against the full target-novel history
 - Later reading-only drift is tolerated: `readThroughChapterIndex`, `currentChapterIndex`, `currentChapterScrollOffset`, and a later `progress.updatedAt` may move forward after the target study operation as long as study-related progress still matches the persisted history
 - The inspector returns only sanitized structured results, never returns raw store/history internals or synthetic progress, performs no automatic recovery, and keeps time and memory linear in history size plus total unlock indexes rather than in `chapterCount`
+
+The current study-exchange replay recovery boundary is intentionally a twelfth detached layer:
+
+- `study-exchange-replay-runtime.ts` is an async read-only orchestration layer that accepts only one explicit `DataAdapter` plus one caller-preserved Phase 3B1 study request, and still does not add startup wiring, commands, modals, notices, reader UI, sidebar UI, status-bar UI, timers, or listeners
+- The public export validates one plain-object request root before any IO, creates one detached request-plus-policy snapshot, and then reads only that snapshot for the rest of the async flow
+- A successful recovery path reads Reward Reader state exactly twice and reads exactly one canonical chapter-index cache exactly once; the first state read exists only to lock target cache identity, while the second state read is the only store passed into `inspectRewardReaderStudyExchangeReplay(...)`
+- Chapter-cache validation stays lightweight: the runtime trusts the existing canonical read-only adapter, then only confirms the requested novel id, persisted identity tuple, and positive chapter-count boundary before using `cache.chapters.length`
+- If the target novel disappears, duplicates, or changes cache identity between the first and second state reads, the runtime aborts with `replay-target-changed`, does not reread cache, and does not call the pure inspector
+- The recovery runtime does not trust runtime inspector result shape implicitly: only explicit `ok = true` plus `status = replay-confirmed` with non-null object payload fields maps to `replay-confirmed`, and only explicit `ok = true` plus `status = not-observed` maps to `not-observed`
+- Unknown success status, missing confirmed fields, invalid discriminants, unknown structured-failure codes, invalid failure messages, or throwing result getters are all sanitized to `replay-inspection-runtime-failed` at stage `replay-inspection` instead of falling through as success
+- `replay-confirmed` forwards only the pure inspector's calculation, progress, study record, and unlock record, while `not-observed` remains evidence classification only for the latest canonical store snapshot and does not prove that the original state write failed
+- Structured read failures stay distinct from invocation throws: adapter-owned state or cache read failures keep their original `causeCode`, while invocation throws for those reads keep dedicated runtime-failed codes
+- Any later unclassifiable getter, warning, target-identity, or result-assembly exception is sanitized by the public no-throw boundary into `replay-inspection-runtime-failed` at the most recent stage without exposing raw exception text
+- Warning aggregation is first-seen-order only across initial state read, chapter-cache read, and latest state read; the recovery runtime never appends raw exceptions or inspector messages into warnings
+- This phase still does not write state, does not write cache, does not call Phase 3B1 automatically, does not retry, does not read back persistence, does not roll back, does not add locking or CAS, and does not claim any atomic or cross-device consistency beyond one latest-read evidence snapshot
 
 The chapter-index cache path boundary is also intentionally defensive:
 

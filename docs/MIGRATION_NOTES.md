@@ -1,5 +1,14 @@
 # Migration notes
 
+- `reward-reader-phase3b2b-detached-replay-recovery-runtime` adds the detached Reward Reader study-exchange replay recovery runtime above the existing Phase 3B2A pure inspector.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys, no new persisted data fields, no new file format, and no migration write.
+- This round adds one detached async read-only module that validates and snapshots the exact original Phase 3B1 request before IO, reads current state once to lock target cache identity, reads one canonical chapter-index cache, rereads the latest state, revalidates target identity, and then delegates evidence classification to the existing Phase 3B2A pure inspector.
+- This round reuses the existing Phase 3B1 request shape, the existing Reward Reader read-only adapter APIs, the existing Reward Reader novel source identity fields, and the existing Phase 3B2A replay result codes as-is.
+- This round does not add replay metadata, request fingerprints, new history fields, migration rewrites, state or cache writes, retry, read-back verification, rollback, lock files, CAS, commands, views, status bar behavior, sidebar behavior, timers, listeners, or reader UI.
+
 - `reward-reader-phase3b2a-pure-replay-inspection-engine` adds the detached Reward Reader study-exchange replay inspection engine on top of the existing Phase 3B1 write runtime.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
 - This round keeps Reward Reader store schema at `1`.

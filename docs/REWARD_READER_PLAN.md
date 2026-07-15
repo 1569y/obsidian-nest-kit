@@ -259,6 +259,25 @@ Confirmed Phase 3B2A pure replay-inspection decisions:
 - Phase 3B2A performs no state read, no cache read, no state write, no retry, no read-back verification, no rollback, no id generation, and no current-time read
 - Phase 3B2B will be the next layer that rereads latest state and cache after a Phase 3B1 write-outcome-unknown result and delegates replay evidence classification to the pure Phase 3B2A inspector
 
+Confirmed Phase 3B2B detached replay-recovery-runtime decisions:
+
+- Phase 3B2B adds only one detached async read-only replay recovery runtime above the existing Phase 3B2A pure inspector and still does not add study-record command or modal wiring, reader UI, sidebar UI, status-bar UI, timers, listeners, or startup hydration
+- Input is exactly the original caller-preserved Phase 3B1 study request; the runtime must not generate new ids, must not generate time values, and must not create a second public request schema
+- The public runtime export must validate one plain-object request root before any IO, build one detached request snapshot plus one detached policy snapshot, and then read only those snapshots for the rest of the async flow
+- Successful recovery orchestration performs exactly two state reads and exactly one chapter-cache read: initial state fixes target cache identity, one cache read provides `chapterCount`, latest state becomes the only store passed into the Phase 3B2A inspector
+- The runtime reads at most one explicit chapter-index cache, never rereads cache after target changes, never reads source TXT or Markdown text, and never clones or maps the `chapters` array
+- Initial target lookup is strict: missing target novel returns `target-novel-not-found`, duplicate or malformed target identity returns `target-novel-conflict`, and there is no fallback to `primaryNovelId`, title matching, or cache-directory scanning
+- Cache validation is identity-first: the canonical cache must match `novelId`, `sourcePath`, `sourceMtime`, and `sourceSize` from the first state read, and `cache.chapters.length` must be a positive safe integer
+- Latest target revalidation is also strict: if the target disappears, duplicates, or changes identity between reads, the runtime aborts with `replay-target-changed`, does not reread cache, and does not call the pure inspector
+- Replay inspection always uses the second state read plus cache-derived `chapterCount`; the runtime keeps `replay-confirmed`, `not-observed`, and all structured Phase 3B2A failure codes and messages intact instead of collapsing them into one generic recovery failure
+- `replay-confirmed` must come only from an explicit inspector `ok = true`, `status = replay-confirmed` variant whose `calculation`, `progress`, and `studyRecord` fields are all readable non-null objects and whose `unlockRecord` is either `null` or a readable non-null object
+- `not-observed` must come only from an explicit inspector `ok = true`, `status = not-observed` variant; unknown success statuses, invalid discriminants, missing confirmed payload fields, unknown failure codes, invalid failure messages, and throwing result getters do not count as any success evidence
+- Unknown or malformed inspector results are sanitized to `replay-inspection-runtime-failed`; they do not propagate raw values upward, do not become fallback `replay-confirmed`, and do not authorize automatic retry or a fresh Phase 3B1 call
+- `not-observed` means only that the latest canonical store snapshot still does not show the exact supplied request identity; it does not prove that the original write failed and does not authorize automatic retry, new ids, cleanup, or a replacement write
+- Structured read failures keep adapter `causeCode`, invocation throws around the state or cache readers keep dedicated runtime-failed codes, and any later getter or result-assembly exception is sanitized by the public no-throw boundary into `replay-inspection-runtime-failed`
+- Warning aggregation must keep first-seen order, trim outer whitespace, remove duplicates, and never surface raw exception text, raw JSON, physical paths, stack traces, or inspector messages
+- Phase 3B2B performs no state write, no cache write, no Phase 3B1 call, no retry, no read-back verification, no rollback, no id generation, and no current-time read
+
 This follows the current NestKit architecture direction where independent features are lazily created and enabled through the shared `FeatureRegistry` and `FeatureManager`, rather than being always-on during `onload()`.
 
 ## Reading source model
@@ -630,6 +649,11 @@ Phase 3B2A status inside Phase 3:
 
 - Implemented now: detached pure replay-inspection engine that validates and snapshots an explicit request, requires a canonical current-schema store, classifies replay evidence, reconstructs target study/unlock history, recalculates expected outcome through Phase 3A, and checks current study-related progress consistency
 - Deferred to later Phase 3 work: latest-state plus cache reread orchestration for recovery, caller-owned retry UX, read-back verification, rollback, locking or CAS, study-record command or modal entry, reader UI, sidebar/status-bar surfaces, timers, and reading-progress interactions
+
+Phase 3B2B status inside Phase 3:
+
+- Implemented now: detached read-only replay recovery runtime that validates and snapshots the exact original request before IO, reads current state once to lock target cache identity, reads one canonical chapter-index cache, rereads the latest state, revalidates target identity, and delegates final evidence classification to the Phase 3B2A pure inspector
+- Deferred to later Phase 3 work: caller-owned retry UX, any explicit user-facing replay-recovery copy above `not-observed`, read-back verification, rollback, locking or CAS, study-record command or modal entry, reader UI, sidebar/status-bar surfaces, timers, and reading-progress interactions
 
 ### Phase 4: novel reader view and unlock boundary
 

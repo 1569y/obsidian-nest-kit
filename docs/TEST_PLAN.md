@@ -460,6 +460,45 @@
 24. Confirm very large `chapterCount` values such as `1_000_000` do not trigger `chapterCount`-sized allocation and still replay correctly when actual unlock history is small.
 25. Confirm `study-exchange-replay-inspector.ts` has no `obsidian`, `Vault`, `DataAdapter`, `App`, `Plugin`, `Modal`, `Notice`, `fs`, `path`, current-time, random-id, JSON parse/stringify, retry, or runtime-registration dependency.
 
+## Reward Reader Phase 3B2B detached replay recovery runtime
+
+1. Confirm `runRewardReaderStudyReplayRecovery(...)` stays detached from startup, commands, modals, reader UI, sidebar UI, status-bar UI, timers, listeners, state writes, cache writes, source reads, and direct `DataAdapter` IO.
+2. Confirm invalid replay-runtime request roots such as `null`, arrays, malformed plain objects, unreadable request getters, invalid ids, same requested record ids, NUL content, invalid study minutes, invalid timestamps, and malformed policy objects return `invalid-study-replay-runtime-request` at stage `request-validation` with zero IO.
+3. Confirm the runtime creates a detached request snapshot and a detached policy snapshot before any IO, then uses only those snapshots even if the original request object is mutated while the async flow is awaiting reads.
+4. Confirm initial state read invocation throws map to `state-read-runtime-failed` at stage `initial-state-read`.
+5. Confirm structured initial state read failures preserve adapter `causeCode`, map to `state-read-blocked` at stage `initial-state-read`, and stop before cache read.
+6. Confirm missing target novel after the first state read returns `target-novel-not-found`.
+7. Confirm duplicate or malformed target novel identity after the first state read returns `target-novel-conflict`.
+8. Confirm structured chapter-cache read failures preserve adapter `causeCode`, map to `chapter-cache-read-blocked` at stage `chapter-cache-read`, and stop before the latest state read.
+9. Confirm chapter-cache read invocation throws map to `chapter-cache-runtime-failed` at stage `chapter-cache-read`.
+10. Confirm cache identity mismatch on `novelId`, `sourcePath`, `sourceMtime`, `sourceSize`, or non-positive-safe `cache.chapters.length` returns `chapter-cache-identity-conflict` and does not call the inspector.
+11. Confirm the runtime derives `chapterCount` only from `cache.chapters.length`, does not map or clone the `chapters` array, and does not allocate arrays sized to `chapterCount`.
+12. Confirm structured latest state read failures preserve adapter `causeCode`, map to `state-read-blocked` at stage `latest-state-read`, and stop before target revalidation and replay inspection.
+13. Confirm latest state read invocation throws map to `state-read-runtime-failed` at stage `latest-state-read`.
+14. Confirm when the target novel disappears, duplicates, or changes any identity field between the first and second state reads, the runtime returns `replay-target-changed`, does not reread cache, and does not call the inspector.
+15. Confirm replay inspection always receives the second state-read store, never the first one, and always receives the cache-derived `chapterCount` plus the detached request snapshot.
+16. Confirm inspector `replay-confirmed` maps through calculation, progress, study record, unlock record, warnings, and `read-confirmed` statuses only.
+17. Confirm inspector `not-observed` maps to `ok = true` plus `status = not-observed` with warnings and `read-confirmed` statuses only, and does not return calculation, progress, study record, unlock record, retry advice, or any write-failure claim.
+18. Confirm structured inspector failures such as `replay-partial-observed`, `replay-identity-conflict`, `replay-history-conflict`, `replay-outcome-conflict`, `invalid-store`, and `unsupported-store-schema` preserve their original code and message at stage `replay-inspection`.
+19. Confirm unexpected getter or result-assembly failures after reader invocation are sanitized by the public no-throw boundary into `replay-inspection-runtime-failed` without exposing raw exception text.
+20. Confirm warning aggregation keeps first-seen order across initial state read, chapter-cache read, and latest state read, trims outer whitespace, removes duplicates, ignores empty strings, and never injects inspector messages or raw exceptions.
+21. Confirm successful recovery paths perform exactly `state reads = 2`, `cache reads = 1`, `state writes = 0`, `cache writes = 0`, and `source reads = 0`.
+22. Confirm invalid-request paths perform `state reads = 0`, `cache reads = 0`, `state writes = 0`, `cache writes = 0`, and `source reads = 0`.
+23. Confirm target-changed paths perform `state reads = 2`, `cache reads = 1`, and `inspector calls = 0`.
+24. Confirm very large caches such as `chapterCount = 1_000_000` still pass only the numeric count to the inspector without chapter-array cloning.
+25. Confirm long stores with tens of thousands of history records are passed through to the pure inspector directly without extra history scanning, store cloning, stack overflow, or retry loops in the recovery runtime.
+26. Confirm `study-exchange-replay-runtime.ts` has no write-only adapter import, no Phase 3B1 invocation, no `applyRewardReaderStudyExchange(...)`, no direct adapter `exists/read/write/mkdir`, no `Vault`, `App`, `Plugin`, `Modal`, `Notice`, `fs`, `path`, current-time, random-id, `JSON.parse`, `JSON.stringify`, retry, polling, read-back, rollback, or runtime-registration dependency.
+27. Confirm inspector `ok = true` plus `status = unexpected-status` does not map to `replay-confirmed` and instead returns `replay-inspection-runtime-failed` at stage `replay-inspection`.
+28. Confirm malformed inspector `replay-confirmed` results with missing `calculation`, missing `progress`, missing `studyRecord`, `calculation = null`, primitive `progress`, array `studyRecord`, `unlockRecord = undefined`, or primitive `unlockRecord` all sanitize to `replay-inspection-runtime-failed`.
+29. Confirm malformed inspector `not-observed` discriminants such as missing `status`, `status = null`, `ok = 'true'`, or `ok = 1` do not map to `not-observed` and instead sanitize to `replay-inspection-runtime-failed`.
+30. Confirm inspector `ok = false` plus an unknown `code` does not propagate that code and instead sanitizes to `replay-inspection-runtime-failed`.
+31. Confirm inspector `ok = false` plus missing, `null`, numeric, or empty-string `message` does not propagate that malformed failure and instead sanitizes to `replay-inspection-runtime-failed`.
+32. Confirm throwing inspector result getters on `ok`, `status`, `code`, `message`, `calculation`, `progress`, `studyRecord`, or `unlockRecord` stay no-throw and sanitize to `replay-inspection-runtime-failed`.
+33. Confirm a valid inspector `replay-confirmed` result still maps through unchanged after result-classification hardening.
+34. Confirm a valid inspector `replay-confirmed` result with `unlockRecord = null` still maps through unchanged after result-classification hardening.
+35. Confirm a valid inspector `not-observed` result still maps through unchanged after result-classification hardening.
+36. Confirm each known inspector structured failure code plus its stable string message still propagates unchanged after result-classification hardening.
+
 ## Reward Reader Phase 2C1 read-only storage adapter
 
 1. Confirm missing state returns `ok = true`, `status = missing`, a fresh default store, `shouldPersist = false`, and no warnings.
