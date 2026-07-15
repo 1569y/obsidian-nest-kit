@@ -219,6 +219,28 @@ Confirmed Phase 3A pure study-minute exchange decisions:
 - Generic unexpected failure must stay sanitized: it must not pretend to be a more specific cap/timestamp/persistence error and must not expose raw exception text
 - Phase 3B should be the first layer that reads the latest Reward Reader state plus one explicit chapter cache, supplies explicit ids and timestamps, applies the pure Phase 3A engine, and persists the result
 
+Confirmed Phase 3B1 study-exchange persistence runtime decisions:
+
+- Phase 3B1 adds only one detached async study-exchange runtime and still does not add a study-record command or modal, reader UI, sidebar, status bar, timers, listeners, or startup hydration
+- The runtime request must explicitly provide `novelId`, `studyRecordId`, `unlockRecordId`, `content`, `studyMinutes`, `occurredAt`, and the full study-exchange policy; the runtime does not generate ids, infer target novels, coerce policy values, or read the current time
+- Request validation must finish before any adapter IO, must reject malformed roots, unsafe ids, same new ids, NUL content, non-positive study minutes, non-canonical UTC timestamps, and malformed policy objects, and must build one detached request snapshot plus one detached policy snapshot before the first await
+- Once that zero-IO snapshot exists, later caller-side mutations to the original request or policy must not affect cache reads, target revalidation, engine input, or persistence for the in-flight operation
+- The first state read is used only to find the exact target novel and its persisted cache identity tuple from the real current store fields: `novel.id`, `novel.sourcePath`, `novel.sourceMtime`, and `novel.sourceSize`
+- Chapter-cache reads stay explicit and narrow: Phase 3B1 reads exactly one cache through the existing Phase 2C1 read adapter and does not read source TXT or Markdown text, does not rebuild cache data, and does not write cache files
+- Cache validation stays lightweight on top of the existing canonical read-only adapter: Phase 3B1 only confirms the requested novel id, the persisted identity tuple, and a positive safe-integer `cache.chapters.length` before using that length as `chapterCount`
+- The runtime then rereads the latest Reward Reader state exactly once more, refinds the same target novel, and aborts with `study-target-changed` if that target disappears or if its persisted cache identity differs from the first read
+- The second state read is the only store passed into `applyRewardReaderStudyExchange(...)`; Phase 3B1 must never apply against the first-read baseline store
+- Successful study exchange attempts write state exactly once through the existing Phase 2C2 writer and do not read back state after writing
+- Structured read failures remain `state-read-blocked` or `chapter-cache-read-blocked`, preserve the lower-layer `causeCode`, and stop the flow before later steps
+- Structured Phase 3A failures remain precise at stage `study-exchange`: the runtime preserves their original codes and stable Phase 3A messages instead of collapsing them into one generic runtime error
+- Structured writer failures remain distinct from unexpected throws: writer `state-invalid-data`, `state-unsupported-version`, `state-serialization-failed`, and `state-directory-create-failed` map to `state-write-blocked` plus `statePersistence = write-blocked`, while `state-write-failed` maps to `state-write-blocked` plus `statePersistence = write-outcome-unknown`
+- Unexpected throws around state reads map to `state-read-runtime-failed`, unexpected throws around chapter-cache reads map to `chapter-cache-runtime-failed`, unexpected throws around engine application map to `study-exchange-runtime-failed`, and unexpected throws around the writer map to `state-persistence-runtime-failed`
+- The public runtime export must be a full no-throw boundary even for malformed getters or result-object processing failures, and once writer invocation has started any later unclassifiable exception must stay conservatively classified as `statePersistence = write-outcome-unknown`
+- Warning aggregation must keep first-seen order, trim outer whitespace, remove duplicates, and never surface raw exception text, raw JSON, physical paths, or stack traces
+- The runtime result must return only future UI-relevant fields: calculation, `progressAfter`, `studyRecord`, `unlockRecord`, warnings, stage, status, and sanitized `causeCode`
+- The runtime must not return raw state, raw cache, `nextStore`, write plans, adapter instances, or exception objects
+- Phase 3B1 does not add automatic retry, idempotent replay recovery, read-back verification, rollback, lock files, CAS, transactions, or cross-device conflict resolution; a concurrency window still remains between the latest reread and the final state write
+
 This follows the current NestKit architecture direction where independent features are lazily created and enabled through the shared `FeatureRegistry` and `FeatureManager`, rather than being always-on during `onload()`.
 
 ## Reading source model
@@ -575,6 +597,16 @@ Phase 2D2 status inside Phase 2:
 - Implement carryover balance handling
 - Enforce daily unlock caps
 - Separate unlock progress from reading progress in persistence and UI
+
+Phase 3A status inside Phase 3:
+
+- Implemented now: detached pure study-minute exchange engine with calculation preview plus immutable store application only
+- Deferred to later Phase 3 work: latest-state reads, chapter-cache reads, persistence orchestration for study exchange, study-record UI, reader UI, sidebar/status-bar surfaces, timers, and reading-progress interactions
+
+Phase 3B1 status inside Phase 3:
+
+- Implemented now: detached study-exchange persistence runtime that validates explicit study requests before IO, reads current state once to resolve target cache identity, reads one explicit chapter cache, rereads the latest state, aborts on target changes, applies the Phase 3A engine against that latest store, and attempts one state write
+- Deferred to later Phase 3 work: study-record command or modal entry, caller-owned retry UX for outcome-unknown writes, read-back verification, rollback, locking or CAS, reader UI, sidebar/status-bar surfaces, timers, and reading-progress interactions
 
 ### Phase 4: novel reader view and unlock boundary
 

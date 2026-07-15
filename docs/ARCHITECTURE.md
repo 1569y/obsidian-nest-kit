@@ -32,6 +32,7 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/reward-reader/import-persistence-orchestrator.ts`: Reward Reader Phase 2C3 detached cache-first import persistence orchestration across the existing read, apply, and write boundaries
 - `src/features/reward-reader/import-runtime-flow.ts`: Reward Reader Phase 2D1 detached minimal import runtime flow that chains request validation, initial state read, source inspection, import preparation, and persistence orchestration behind the Phase 2D2 UI entry
 - `src/features/reward-reader/study-exchange-engine.ts`: Reward Reader Phase 3A detached pure study-minute exchange engine with calculation preview plus immutable store application
+- `src/features/reward-reader/study-exchange-runtime.ts`: Reward Reader Phase 3B1 detached async study-exchange persistence runtime that validates one explicit request, reads current state plus one target chapter cache, revalidates target identity against a latest state reread, applies the Phase 3A engine, and attempts one state write
 - `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
 - `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
@@ -258,6 +259,22 @@ The current study-exchange boundary is intentionally a ninth detached layer:
 - The next store uses shallow structural sharing: root store, target progress, and study history are recreated as needed, while `novels`, `readingRecords`, and non-target progress entries preserve their existing references
 - The generic no-throw fallback does not log, does not rethrow, and does not expose `exception.message`, paths, or other raw internal details
 - This phase adds no Reward Reader runtime registration, no reader UI, no persistence orchestration for study exchanges, no automatic timers, and no Obsidian dependency inside the new engine module
+
+The current study-exchange persistence runtime is intentionally a tenth detached layer:
+
+- `study-exchange-runtime.ts` is an async application-layer callable that orchestrates one explicit study exchange without introducing startup work, command wiring, or UI surfaces
+- The runtime request must explicitly provide `novelId`, `studyRecordId`, `unlockRecordId`, `content`, `studyMinutes`, `occurredAt`, and the full exchange policy; this layer does not generate ids, does not read the current time, and does not rewrite caller input
+- Request validation runs before any `DataAdapter` work, rejects malformed roots, unsafe ids, same new ids, NUL content, non-positive study minutes, non-canonical timestamps, and malformed policies with one stable sanitized failure result, and builds one detached request-plus-policy snapshot before the first await
+- After that zero-IO snapshot step, the async runtime flow reads only the validated snapshot and never rereads mutable caller-owned `request` or `request.policy` references
+- The runtime uses only the existing Phase 2C1 and Phase 2C2 adapter boundaries plus the Phase 3A pure engine; it does not call `adapter.exists(...)`, `adapter.read(...)`, `adapter.mkdir(...)`, or `adapter.write(...)` directly
+- Success performs exactly two state reads, exactly one target chapter-cache read, exactly one Phase 3A apply call against the latest reread store, and exactly one state-write attempt
+- The first state read is used only to resolve the target novel and its persisted cache identity; the latest state reread is the only store passed into `applyRewardReaderStudyExchange(...)`
+- Chapter-cache validation stays lightweight: the runtime trusts the existing canonical read-only adapter, then only confirms the requested novel id, persisted identity tuple, and positive chapter-count boundary before using `cache.chapters.length`
+- If the target novel disappears or its persisted cache identity changes between the first and second state reads, the runtime aborts with `study-target-changed` and does not reread cache, does not apply the engine, and does not write state
+- Normal Phase 3A structured failures keep their original codes and messages at stage `study-exchange`, while the public runtime entry remains a complete no-throw boundary that sanitizes unexpected internal throws into runtime-owned failure codes
+- Structured state-write failures remain distinct from unexpected writer throws: the runtime keeps the original writer `causeCode`, reports `write-blocked` for pre-write blocking failures, reports `write-outcome-unknown` for `state-write-failed`, and once writer invocation has started it preserves the more conservative `write-outcome-unknown` outcome for any later unclassifiable exception instead of downgrading back to `write-blocked` or `not-attempted`
+- Warning aggregation is first-seen-order only across initial state read, chapter-cache read, latest state read, and state write; no raw store, cache, path, exception, or next-store payload is returned
+- This phase still does not read source TXT or Markdown content, does not write chapter caches, does not retry, does not read back state after write, does not roll back, does not add locking or CAS, and does not register commands, modals, reader UI, sidebar UI, status-bar UI, timers, listeners, or startup hydration
 
 The chapter-index cache path boundary is also intentionally defensive:
 

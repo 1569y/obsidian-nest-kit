@@ -356,6 +356,70 @@
 33. Confirm a throwing history access or iteration path inside apply does not escape and does not produce a partial `nextStore`.
 34. Confirm unexpected-failure messages never include raw exception text, file paths, or stack fragments.
 35. Confirm normal structured failures such as `invalid-exchange-policy`, `stale-study-operation`, `chapter-count-conflict`, `arithmetic-overflow`, `unsupported-store-schema`, and `duplicate-record-id` still keep their original precise codes after the no-throw hardening pass.
+
+## Reward Reader Phase 3B1 study exchange persistence runtime
+
+1. Confirm `runRewardReaderStudyExchange(adapter, request)` stays detached from startup, commands, modals, reader UI, sidebar UI, status-bar UI, timers, and listeners.
+2. Confirm the runtime accepts only explicit `novelId`, `studyRecordId`, `unlockRecordId`, `content`, `studyMinutes`, `occurredAt`, and `policy` fields and does not generate ids or timestamps.
+3. Confirm invalid request roots such as `null`, arrays, class instances, malformed plain objects, and throwing `Proxy` getters return `invalid-study-exchange-runtime-request` with zero state reads, zero cache reads, and zero state writes.
+4. Confirm invalid `novelId`, invalid `studyRecordId`, invalid `unlockRecordId`, equal new ids, NUL content, non-positive `studyMinutes`, non-canonical `occurredAt`, and malformed policies all fail before IO with the same stable invalid-request message.
+5. Confirm invalid-request failures return `initialStateRead = not-attempted`, `chapterCacheRead = not-attempted`, `latestStateRead = not-attempted`, and `statePersistence = not-attempted`.
+6. Confirm the first successful step is always `readRewardReaderStateStore(adapter)` and that it is called exactly once before any cache read.
+7. Confirm a structured first state-read failure maps to `state-read-blocked` at stage `initial-state-read`, preserves the adapter `causeCode`, aggregates only state-read warnings, and performs zero cache reads plus zero writes.
+8. Confirm an unexpected throw around the first state-read call maps to `state-read-runtime-failed` at stage `initial-state-read`, uses no raw error text, and performs zero cache reads plus zero writes.
+9. Confirm the runtime resolves the target novel only by exact `request.novelId` match and does not fall back to `primaryNovelId` or another novel.
+10. Confirm a missing target novel after the first state read returns `target-novel-not-found`, does not read cache, and does not write state.
+11. Confirm the runtime derives persisted cache identity only from real current novel fields: `id`, `sourcePath`, `sourceMtime`, and `sourceSize`.
+12. Confirm the chapter cache is read exactly once through `readRewardReaderChapterIndexCache(adapter, request.novelId)`.
+13. Confirm a structured chapter-cache read failure maps to `chapter-cache-read-blocked` at stage `chapter-cache-read`, preserves the adapter `causeCode`, and performs zero latest-state reads plus zero writes.
+14. Confirm an unexpected throw around the chapter-cache read maps to `chapter-cache-runtime-failed` at stage `chapter-cache-read` and does not expose raw errors.
+15. Confirm the runtime never reads source TXT or Markdown content during study exchange.
+16. Confirm the runtime never rebuilds or writes chapter-index cache files during study exchange.
+17. Confirm cache validation rejects a mismatched `cache.novelId`, `sourcePath`, `sourceMtime`, or `sourceSize` with `chapter-cache-identity-conflict`.
+18. Confirm cache validation rejects a non-positive or non-safe-integer `cache.chapters.length` with `chapter-cache-identity-conflict`.
+19. Confirm the runtime uses only `cache.chapters.length` for `chapterCount` and does not clone, map, or reslice the full chapter list.
+20. Confirm the second and final state read occurs only after a successful chapter-cache read.
+21. Confirm a structured latest state-read failure maps to `state-read-blocked` at stage `latest-state-read`, preserves the adapter `causeCode`, and performs zero writes.
+22. Confirm an unexpected throw around the latest state-read call maps to `state-read-runtime-failed` at stage `latest-state-read` without exposing raw errors.
+23. Confirm the runtime rereads the target novel from the latest store and does not reuse the first-read novel object for apply.
+24. Confirm if the target novel disappears between the first and second state reads, the runtime returns `study-target-changed`, does not reread cache, does not call the Phase 3A engine, and does not write state.
+25. Confirm if the target novel's persisted cache identity changes between the first and second state reads, the runtime returns `study-target-changed`, does not reread cache, does not call the Phase 3A engine, and does not write state.
+26. Confirm successful engine application always receives the latest reread store rather than the first-read store.
+27. Confirm successful engine application receives `chapterCount` directly from the confirmed cache length.
+28. Confirm successful engine application receives the original explicit `novelId`, `studyRecordId`, `unlockRecordId`, `content`, `studyMinutes`, `occurredAt`, and `policy` fields unchanged.
+29. Confirm normal Phase 3A structured failures such as `duplicate-record-id`, `stale-study-operation`, `invalid-exchange-policy`, `arithmetic-overflow`, and `unsupported-store-schema` keep their original codes and messages at stage `study-exchange`.
+30. Confirm Phase 3A structured failures use `causeCode = null`, do not write state, and keep read statuses as confirmed up to the point of engine execution.
+31. Confirm an unexpected throw around `applyRewardReaderStudyExchange(...)` maps to `study-exchange-runtime-failed` at stage `study-exchange`, does not expose raw errors, and does not write state.
+32. Confirm successful persistence attempts call `writeRewardReaderStateStore(adapter, applyResult.nextStore)` exactly once.
+33. Confirm the runtime never mutates the first-read store, latest store, cache object, request object, request policy, or the Phase 3A result object before passing `nextStore` to the writer.
+34. Confirm a successful runtime result returns `status = persisted`, `statePersistence = write-confirmed`, the engine calculation, `progressAfter`, the appended `studyRecord`, the optional `unlockRecord`, and warnings only.
+35. Confirm success results do not return raw state, raw cache, `nextStore`, physical paths, adapter instances, or exception objects.
+36. Confirm structured writer failures map to `state-write-blocked` at stage `state-persistence` and preserve the writer `causeCode`.
+37. Confirm `state-invalid-data`, `state-unsupported-version`, `state-serialization-failed`, and `state-directory-create-failed` each map to `statePersistence = write-blocked`.
+38. Confirm `state-write-failed` maps to `state-write-blocked` with `statePersistence = write-outcome-unknown`.
+39. Confirm unexpected throws around the writer map to `state-persistence-runtime-failed` with `statePersistence = write-outcome-unknown`.
+40. Confirm both structured and unexpected writer failures perform zero automatic retry, zero read-back, and zero rollback.
+41. Confirm warning aggregation preserves first-seen order across initial state read, chapter-cache read, latest state read, and state write.
+42. Confirm warning aggregation trims outer whitespace, removes exact duplicates, and keeps the first occurrence.
+43. Confirm warning aggregation never appends raw exception text or stack traces.
+44. Confirm invalid-request failures keep warning aggregation empty.
+45. Confirm a full success path performs exactly two state reads, exactly one chapter-cache read, and exactly one state write.
+46. Confirm a target-changed path performs exactly two state reads, exactly one chapter-cache read, and zero state writes.
+47. Confirm an invalid-request path performs zero state reads, zero chapter-cache reads, and zero state writes.
+48. Confirm a large cache still keeps runtime work outside the engine O(1) with respect to chapter bodies by using only `chapters.length`.
+49. Confirm a long latest store with large history arrays does not trigger extra runtime scans beyond the existing target-novel lookup plus the Phase 3A engine call.
+50. Confirm the runtime module has no `App`, `Plugin`, `Modal`, `Notice`, `Setting`, `TFile`, `Vault`, `i18n`, or `settings` import.
+51. Confirm successful validation returns a fresh request snapshot object rather than the original request reference.
+52. Confirm successful validation also returns a fresh nested policy snapshot rather than the original `request.policy` reference.
+53. Confirm mutating the original request during the first pending state-read await does not change the cache-read novel id, target revalidation novel id, or the Phase 3A input fields used by the in-flight runtime call.
+54. Confirm post-validation mutations that turn original request or policy getters into throws do not affect the in-flight runtime call because later async stages read only the detached snapshot.
+55. Confirm an unexpected throw while processing the first read result object, such as throwing `ok`, `store`, or `warnings` getters, is sanitized by the public no-throw boundary and performs zero cache reads plus zero writes.
+56. Confirm an unexpected throw while processing the chapter-cache result object, cache identity, or `cache.chapters.length` is sanitized by the public no-throw boundary and performs zero latest-state reads plus zero writes.
+57. Confirm an unexpected throw while processing the latest state-read result object or latest target identity is sanitized by the public no-throw boundary and performs zero writes.
+58. Confirm an unexpected throw while processing the writer result object, including throwing `ok`, `code`, or `warnings` getters after writer invocation started, maps to `state-persistence-runtime-failed` with `statePersistence = write-outcome-unknown`.
+59. Confirm once writer invocation has started, no later unexpected exception can be downgraded to `write-blocked` or `not-attempted`.
+60. Confirm the earlier success-path IO counts, warning order, structured Phase 3A errors, and structured writer mappings remain unchanged after the request-snapshot and no-throw hardening pass.
+51. Confirm the runtime module has no direct `adapter.exists(...)`, `adapter.read(...)`, `adapter.mkdir(...)`, `adapter.write(...)`, `vault.read(...)`, `vault.getFiles(...)`, `JSON.parse(...)`, `JSON.stringify(...)`, `Math.random(...)`, `Date.now()`, or zero-argument `new Date()` call.
 26. Confirm an orphan current progress entry for the new novel id is rechecked and returns `conflicting-existing-progress`.
 27. Confirm stale or invalid `primaryNovelIdAfterImport` returns `invalid-primary-after-import`.
 28. Confirm the first novel must become primary.

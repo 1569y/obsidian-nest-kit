@@ -1,5 +1,17 @@
 # Migration notes
 
+- `reward-reader-phase3b1-study-exchange-persistence-runtime` adds the detached Reward Reader study-exchange persistence runtime on top of the existing Phase 3A pure engine.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys, no new persisted data fields, no new file format, and no migration write.
+- This round adds one detached async runtime module that validates an explicit study request before IO, builds one detached request and policy snapshot before the first await, reads current state once to resolve the target novel and its persisted chapter-cache identity, reads exactly one target chapter cache, rereads the latest state, revalidates the same target identity, applies the existing Phase 3A engine against that latest state, and attempts one state write through the existing writer.
+- This round reuses the existing `RewardReaderNovel`, `RewardReaderNovelProgress`, `RewardReaderStudyRecord`, `RewardReaderUnlockRecord`, store path, chapter-cache path, and read or write adapter contracts as-is.
+- This round does not change the existing study-record, unlock-record, or progress field set; it only persists those existing shapes through the new detached runtime when an explicit caller invokes it.
+- This round still does not change persistence format or normal success semantics; it only hardens the runtime so caller-side request mutation no longer affects an in-flight operation and late writer-stage unknown exceptions stay conservatively classified as outcome unknown.
+- This round does not read novel source TXT or Markdown content, does not rebuild or write chapter caches, does not create a new persistence file type, and does not widen import/runtime startup behavior.
+- This round does not generate ids, does not read the current time, does not retry writes, does not read back state after write, does not roll back, does not add lock files or CAS, and does not register commands, views, status bar behavior, sidebar behavior, timers, listeners, or reader UI.
+
 - `reward-reader-phase3a-no-throw-boundary-hardening` keeps the same Phase 3A study-minute exchange scope and only hardens the two public pure API boundaries against unexpected throws.
 - This round keeps the plugin settings schema at `1`, Reward Reader store schema at `1`, and Reward Reader chapter-index cache schema at `1`.
 - This round adds no new settings keys, no persisted data fields, no migration write, and no change to normal calculation/apply result semantics; it only guarantees sanitized no-throw fallbacks for unexpected public API exceptions.
