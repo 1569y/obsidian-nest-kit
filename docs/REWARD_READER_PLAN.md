@@ -653,7 +653,20 @@ Phase 3B2A status inside Phase 3:
 Phase 3B2B status inside Phase 3:
 
 - Implemented now: detached read-only replay recovery runtime that validates and snapshots the exact original request before IO, reads current state once to lock target cache identity, reads one canonical chapter-index cache, rereads the latest state, revalidates target identity, and delegates final evidence classification to the Phase 3B2A pure inspector
-- Deferred to later Phase 3 work: caller-owned retry UX, any explicit user-facing replay-recovery copy above `not-observed`, read-back verification, rollback, locking or CAS, study-record command or modal entry, reader UI, sidebar/status-bar surfaces, timers, and reading-progress interactions
+- Deferred to later Phase 3 work: read-back verification, rollback, locking or CAS, reader UI, sidebar/status-bar surfaces, timers, and reading-progress interactions
+
+Phase 3C1 status inside Phase 3:
+
+- Implemented now: a lazily reachable desktop `reward-reader-record-study` command and a minimal study-record modal above the existing detached Phase 3B1 and Phase 3B2B runtime layers
+- Implemented now: on-demand imported-novel dropdown loading through the existing read-only adapter, strict positive-minute validation, optional note input, fixed local `30 / null / null` policy display, and one-time UI-side study id plus unlock id plus timestamp generation on the first valid submit only
+- Implemented now: one in-memory pending same-request recovery snapshot per enabled feature session, one active study modal at a time, explicit Phase 3B2B saved-result checks, evidence-only `not-observed`, explicit exact-request retry only after `not-observed`, blocked replay states for conflicting evidence, and two-step local discard of pending recovery state
+- Implemented now: UI-side strict runtime-result classification so only a fully valid persisted or replay-confirmed payload can clear pending state, malformed study results stay unresolved as `needs-check`, malformed replay results stay blocked, and success summaries are extracted before pending is cleared
+- Implemented now: unified async `finally` release for submit, replay check, and exact retry so busy state is always released even if runtime invocation, result getters, success-summary construction, notice creation, pending replacement, or late render paths throw unexpectedly
+- Implemented now: the exact same request identity must be acknowledged into memory-only pending storage before the first Phase 3B1 submit begins; if local pending preservation fails, no study write is attempted
+- Implemented now: exact retry pre-transitions the stored request back to `needs-check` and waits for that local transition to be acknowledged before Phase 3B1 is invoked again, while preserving the same request identity, timestamp, policy, minutes, content, and novel id
+- Implemented now: successful persistence does not imply that local pending clear also succeeded; if local clear or state-update acknowledgement fails, the modal stays on a conservative recovery surface instead of pretending a fresh form or discard transition already happened
+- Implemented now: feature-disable and plugin-unload cleanup that closes the modal, invalidates the current UI session, and clears the in-memory pending recovery snapshot without persisting it
+- Deferred to later Phase 3 work: configurable exchange settings, quick-duration shortcuts, persistent pending recovery across reload, richer study history inspection UI, reader UI, sidebar/status-bar surfaces, timers, and reading-progress interactions
 
 ### Phase 4: novel reader view and unlock boundary
 

@@ -1,5 +1,15 @@
 # Migration notes
 
+- `reward-reader-phase3c1-study-record-command-and-minimal-modal` adds the first Reward Reader study-record command and minimal modal above the existing detached Phase 3B1 and Phase 3B2B runtime layers.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys, no new persisted data fields, no new file format, and no migration write.
+- This round adds one lazily reachable desktop study command plus one minimal modal that reads imported novels only after the user opens it, submits explicit study requests through the existing Phase 3B1 runtime, checks uncertain writes through the existing Phase 3B2B runtime, and keeps at most one pending same-request recovery snapshot in feature memory only.
+- This round reuses the existing Phase 3B1 request shape, the existing fixed `30 / null / null` exchange policy field set, the existing read-only adapter API for loading imported novels, and the existing Phase 3B2B replay result semantics as-is.
+- This round only hardens the modal-side runtime-result and no-throw boundary: strict UI-side result classification, summary-before-clear ordering, acknowledged pending preservation and clear-or-update handling, exact-retry pre-transition back to `needs-check`, and unified busy release through `finally` all stay memory-only and do not alter persistence format.
+- This round does not persist pending recovery metadata, does not add configurable exchange settings, does not change study/unlock/progress field sets, does not add schema rewrites, does not add reader UI, sidebar behavior, status bar behavior, timers, listeners, automatic retry, polling, read-back verification, rollback, lock files, CAS, or startup IO.
+
 - `reward-reader-phase3b2b-detached-replay-recovery-runtime` adds the detached Reward Reader study-exchange replay recovery runtime above the existing Phase 3B2A pure inspector.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
 - This round keeps Reward Reader store schema at `1`.

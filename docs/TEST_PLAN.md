@@ -499,6 +499,86 @@
 35. Confirm a valid inspector `not-observed` result still maps through unchanged after result-classification hardening.
 36. Confirm each known inspector structured failure code plus its stable string message still propagates unchanged after result-classification hardening.
 
+## Reward Reader Phase 3C1 study-record command and minimal modal
+
+1. Confirm enabling Reward Reader registers the `reward-reader-record-study` command lazily and still performs zero Reward Reader startup IO.
+2. Confirm the study command is unavailable while Reward Reader is disabled.
+3. Confirm the study command is unavailable on mobile.
+4. Confirm the study command opens at most one active study modal at a time.
+5. Confirm re-running the study command while the modal is already open does not create a second study modal.
+6. Confirm disabling Reward Reader closes the active study modal.
+7. Confirm disabling Reward Reader clears any in-memory pending study recovery snapshot.
+8. Confirm reopening Reward Reader after disable does not restore the previous pending recovery snapshot.
+9. Confirm the existing import command and import modal lifecycle still behave unchanged after Phase 3C1 wiring.
+10. Confirm opening the study modal with no pending request calls `readRewardReaderStateStore(...)` exactly once.
+11. Confirm that initial study-modal load does not read chapter cache, does not read source text, and does not write state or cache files.
+12. Confirm a failed initial novel-list read shows only the stable sanitized load failure message and a close action.
+13. Confirm an empty imported-novel list shows `No imported novels are available yet.` and does not auto-open the import modal.
+14. Confirm the novel dropdown preserves store order and does not sort or mutate `store.novels`.
+15. Confirm the dropdown uses `novel.id` as the selected value and `novel.title` as the visible label.
+16. Confirm the dropdown never shows `sourcePath`, cache path, or raw ids.
+17. Confirm a unique valid canonical `primaryNovelId` becomes the default dropdown selection.
+18. Confirm the first imported novel becomes the fallback dropdown selection when `primaryNovelId` is null, missing, or duplicated.
+19. Confirm opening the study modal while a pending recovery snapshot exists skips the initial novel-list read entirely.
+20. Confirm the recovery panel never generates fresh ids or a fresh timestamp when it first opens.
+21. Confirm the recovery panel does not auto-run replay recovery on open.
+22. Confirm the form requires an imported novel selection.
+23. Confirm the form rejects empty, zero, negative, decimal, exponent, whitespace-only, and unsafe-integer minute inputs before any id or timestamp generation.
+24. Confirm the form rejects note text containing NUL before any id or timestamp generation.
+25. Confirm invalid form submission performs zero Phase 3B1 calls, zero Phase 3B2B calls, zero pending-state writes, zero new ids, and zero new timestamps.
+26. Confirm the fixed Phase 3C1 policy shown in the modal is exactly `30 study minutes unlock 1 chapter.`.
+27. Confirm the first valid submit generates one study record id and one unlock record id only once.
+28. Confirm the generated study and unlock ids are distinct and both pass the existing safe-id rule.
+29. Confirm the first valid submit generates `occurredAt` exactly once.
+30. Confirm the initial request snapshot stores a detached `policy` object with `minutesPerChapter = 30`, `maxChaptersPerStudyRecord = null`, and `maxChaptersPerUtcDate = null`.
+31. Confirm the pending recovery snapshot is written before the first Phase 3B1 invocation begins.
+32. Confirm the pending recovery snapshot does not store raw runtime results, store objects, cache objects, paths, or thrown exceptions.
+33. Confirm a normal Phase 3B1 persisted success clears the pending snapshot, shows a stable success notice, and closes the modal.
+34. Confirm a Phase 3B1 `write-outcome-unknown` result keeps the exact same pending request with `state = needs-check`, switches the UI to recovery mode, and does not auto-run replay recovery.
+35. Confirm an unexpected Phase 3B1 throw also keeps the exact same pending request with `state = needs-check` and switches to recovery mode.
+36. Confirm duplicate-id style Phase 3B1 failures keep the exact same pending request with `state = needs-check` and do not create new ids.
+37. Confirm non-unknown initial Phase 3B1 failures clear the pending snapshot, return to the editable form, preserve current form inputs, and do not auto-create a replacement request.
+38. Confirm the `needs-check` recovery panel exposes `Check saved result`, `Close`, and local pending discard only.
+39. Confirm the `not-observed` recovery panel exposes `Check again`, `Retry exact request`, `Close`, and local pending discard.
+40. Confirm the `blocked` recovery panel exposes `Check again`, `Close`, and local pending discard only.
+41. Confirm `Check saved result` and `Check again` both call Phase 3B2B with the exact stored request snapshot and do not create new ids or timestamps.
+42. Confirm replay-confirmed results clear the pending snapshot, show a stable success notice, and close the modal.
+43. Confirm replay `not-observed` keeps the same pending request, changes only the pending state to `not-observed`, and does not claim that the original write failed.
+44. Confirm replay conflict or invalid-store style failures change the pending state to `blocked` and do not expose raw codes or raw cache identity.
+45. Confirm exact retry is available only after an explicit replay `not-observed` result.
+46. Confirm exact retry reuses the same `novelId`, `studyRecordId`, `unlockRecordId`, `content`, `studyMinutes`, `occurredAt`, and policy values as the stored pending request.
+47. Confirm exact retry success clears the pending snapshot, shows a stable success notice, and closes the modal.
+48. Confirm exact retry `write-outcome-unknown` returns to `state = needs-check` without creating a new request identity.
+49. Confirm exact retry duplicate-id results return to `state = needs-check` without creating a new request identity.
+50. Confirm exact retry non-unknown failures move to `state = blocked` and do not auto-generate a fresh request.
+51. Confirm local discard requires a second confirmation click before the pending snapshot is cleared.
+52. Confirm local discard clears only the in-memory pending recovery snapshot, closes the modal, and does not delete persisted Reward Reader data.
+53. Confirm closing the modal keeps any pending recovery snapshot intact for a later reopen while the feature stays enabled.
+54. Confirm closing the modal during an in-flight submit, replay check, or exact retry does not access closed DOM nodes after the async result resolves.
+55. Confirm in-flight operations still update or clear the feature-owned pending snapshot correctly when the modal closes but the feature session remains current.
+56. Confirm command availability stays blocked while a submit, replay check, or exact retry is in flight, even if the modal is manually closed during that operation.
+57. Confirm submit, replay check, exact retry, and discard all use a one-operation guard and do not run concurrently.
+58. Confirm the Phase 3C1 code path does not call direct adapter `exists/read/write/mkdir`, does not call source readers, does not call writers directly, does not add timers or listeners, and does not add reader/sidebar/status/timer UI.
+59. Confirm malformed Phase 3B1 success results such as unknown success status, missing `studyRecord`, missing `calculation`, invalid warnings, invalid integer fields, or throwing result getters do not count as success, keep the exact pending request at `needs-check`, switch to recovery mode, and release busy state.
+60. Confirm malformed Phase 3B1 failure results such as unknown persistence status, non-string failure message, or throwing `code` / `statePersistence` getters also stay in `needs-check`, do not return to the editable form, and release busy state.
+61. Confirm success-summary extraction happens before pending is cleared, so a throwing persisted payload getter or notice-summary construction failure does not clear pending and instead falls back to recovery semantics.
+62. Confirm malformed Phase 3B2B success or failure results such as unknown success status, missing confirmed payload fields, invalid warnings, invalid failure message, or throwing result getters keep the same pending request, move recovery state to `blocked`, do not enable exact retry, and release busy state.
+63. Confirm exact retry flips the stored request from `not-observed` back to `needs-check` before Phase 3B1 is invoked again while preserving `novelId`, both record ids, `occurredAt`, policy, minutes, and content.
+64. Confirm unexpected throws from runtime invocation, result classification, success-summary building, pending replacement, notice callbacks, or final render paths still leave `operationInProgress = false`, release command-level busy state, and do not produce an unhandled rejection.
+65. Confirm malformed getter access while processing the imported-novel read result, including `ok`, `store`, `novels`, novel `title`, or `primaryNovelId`, stays no-throw, switches the modal to `load-failed`, and performs no cache, source, or write IO.
+66. Confirm the first valid submit does not call Phase 3B1 at all when local pending replacement to `needs-check` throws or returns without acknowledgement.
+67. Confirm that same initial pending-preservation failure keeps the modal on the editable form, preserves the current input values, releases busy state, and shows the stable recovery-preservation error instead of claiming a save attempt happened.
+68. Confirm a throwing `isSessionCurrent(...)` callback before the first submit also prevents any Phase 3B1 call, keeps pending unchanged, and still releases busy state.
+69. Confirm replay `not-observed` does not enable `Retry exact request` unless the local pending transition to `not-observed` is acknowledged successfully.
+70. Confirm replay blocked or malformed outcomes do not enable `Retry exact request` when the local pending transition to `blocked` fails and the UI falls back to the conservative local-state warning.
+71. Confirm exact retry does not call Phase 3B1 unless the same pending request is first acknowledged back to `needs-check`.
+72. Confirm a failed exact-retry pre-transition keeps the original pending request identity, preserves the recovery panel, creates no new ids or timestamps, and performs zero Phase 3B1 calls.
+73. Confirm a persisted or replay-confirmed success whose local pending clear fails keeps the modal open, keeps recovery available, suppresses discard-success semantics, and reports `saved but local recovery state could not be cleared` instead of pretending the local clear succeeded.
+74. Confirm a definite-failure initial submit whose local pending clear fails does not return to a fresh form and instead stays on a conservative recovery surface.
+75. Confirm second-click discard closes the modal only after local pending clear is acknowledged, and otherwise keeps the modal open with no discarded-success notice.
+76. Confirm `getPendingStudyExchange()` throws are no-throw in `onOpen()`, `renderRecovery()`, `Check saved result`, and `Retry exact request`, with no runtime calls and no unhandled rejection.
+77. Confirm a throwing modal-close callback still allows `onClose()` cleanup to finish without rethrowing or reopening the modal.
+
 ## Reward Reader Phase 2C1 read-only storage adapter
 
 1. Confirm missing state returns `ok = true`, `status = missing`, a fresh default store, `shouldPersist = false`, and no warnings.

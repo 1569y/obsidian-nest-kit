@@ -19,9 +19,10 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/heading-progress/index.ts`: Heading Progress Phase 1A feature lifecycle, status bar rendering, active-editor binding, debounced updates, and cleanup
 - `src/features/heading-progress/progress.ts`: heading parsing plus top-level section and line-based progress derivation
 - `src/features/heading-progress/types.ts`: Heading Progress settings union types
-- `src/features/reward-reader/index.ts`: Reward Reader feature lifecycle shell that stays default-off, registers the Phase 2D2 command lazily on first enable, and keeps command availability gated by current enabled/mobile/busy state
+- `src/features/reward-reader/index.ts`: Reward Reader feature lifecycle shell that stays default-off, registers the Phase 2D2 import command and Phase 3C1 study-record command lazily on first enable, keeps both command surfaces gated by current enabled/mobile/busy state, and owns the single in-memory pending study-recovery snapshot
 - `src/features/reward-reader/import-command.ts`: Reward Reader Phase 2D2 desktop-only import-command registration with single-active-modal coordination and zero startup/checking IO
 - `src/features/reward-reader/import-modal.ts`: Reward Reader Phase 2D2 minimal import modal, TXT/Markdown Vault picker, UI-side identity generation, exact-retry preservation, and sanitized user feedback
+- `src/features/reward-reader/study-exchange-modal.ts`: Reward Reader Phase 3C1 desktop study-record command registration, minimal study modal, one-active-modal coordination, memory-only pending recovery state, and explicit Phase 3B1 / 3B2B UI wiring
 - `src/features/reward-reader/chapter-parser.ts`: Reward Reader Phase 2A detached pure chapter parser for built-in heading detection and UTF-16 chapter-offset generation
 - `src/features/reward-reader/chapter-cache-builder.ts`: Reward Reader Phase 2B1 pure chapter-cache assembly from one in-memory source string plus explicit metadata
 - `src/features/reward-reader/vault-source-reader.ts`: Reward Reader Phase 2B1 detached Vault-local source inspection boundary with single-read assembly flow
@@ -305,6 +306,24 @@ The current study-exchange replay recovery boundary is intentionally a twelfth d
 - Any later unclassifiable getter, warning, target-identity, or result-assembly exception is sanitized by the public no-throw boundary into `replay-inspection-runtime-failed` at the most recent stage without exposing raw exception text
 - Warning aggregation is first-seen-order only across initial state read, chapter-cache read, and latest state read; the recovery runtime never appends raw exceptions or inspector messages into warnings
 - This phase still does not write state, does not write cache, does not call Phase 3B1 automatically, does not retry, does not read back persistence, does not roll back, does not add locking or CAS, and does not claim any atomic or cross-device consistency beyond one latest-read evidence snapshot
+
+The current study-record UI boundary is intentionally a thirteenth layer:
+
+- `study-exchange-modal.ts` is the first user-triggered study-entry layer above the detached Phase 3B1 and Phase 3B2B runtimes, but it still stays outside startup and does not add reader UI, sidebar UI, status-bar UI, timers, listeners, background retry, or settings-page exchange controls
+- The Reward Reader feature keeps at most one active study modal at a time and at most one in-memory pending same-request recovery snapshot at a time; disabling the feature or unloading the plugin closes that modal and clears that pending memory state
+- Opening the study modal with no pending request performs one read-only state load only to populate the imported novel dropdown, preserves canonical novel order, prefers the canonical `primaryNovelId` when it is uniquely valid, and otherwise falls back to the first imported novel
+- Opening the study modal with a pending request skips the novel-list read entirely, shows only a recovery panel, and requires the user to click explicit `Check saved result`, `Check again`, or `Retry exact request` actions instead of auto-running Phase 3B2B or Phase 3B1
+- The modal generates one study record id, one unlock record id, and one `occurredAt` timestamp only after the first valid submit passes local validation; exact retry and replay check always reuse the original request snapshot and never create new ids or timestamps
+- Submit and exact retry delegate only to `runRewardReaderStudyExchange(...)`, while saved-result checks delegate only to `runRewardReaderStudyReplayRecovery(...)`; the UI layer never calls direct `DataAdapter` IO, direct writers, or the pure Phase 3A / 3B2A engines on its own
+- A pending request is now an acknowledged precondition before the first Phase 3B1 call: if the modal cannot confirm the local `needs-check` snapshot write, it aborts before any study-exchange runtime or persistence work begins
+- The modal does not trust raw Phase 3B1 or Phase 3B2B result objects directly: the UI first classifies runtime output into a small local summary, treats malformed study results as unresolved writes that stay `needs-check`, and treats malformed replay results as blocked evidence
+- Success summaries are extracted from strict primitive payloads before pending recovery state is cleared, so the UI never clears pending first and then rereads a possibly malformed runtime result shape
+- Submit, replay check, and exact retry each run behind one unified `try` / `finally` lifecycle so modal-local `operationInProgress` and command-level busy state are released even when runtime invocation, result getters, summary building, notice creation, pending replacement, or final render paths misbehave
+- `not-observed` remains evidence-only in the UI as well: it does not prove write failure and only unlocks an explicit exact-request retry path; conflicting or incomplete replay evidence blocks retry and leaves only `Check again`, `Close`, or local pending discard available
+- Exact retry first flips the stored request back to `needs-check` and now requires that local transition to be acknowledged before calling Phase 3B1 again, so once retry begins the feature no longer advertises that pending request as a settled `not-observed` state
+- Pending clear or pending state-update failure is no longer treated as a successful local state transition: confirmed persisted success and failed local clear are reported separately, failed `not-observed` or `blocked` updates keep the UI on a conservative recovery path, and discard closes only after the local clear is acknowledged
+- Host-owned `getPendingStudyExchange()`, `isSessionCurrent(...)`, `replacePendingStudyExchange(...)`, and modal-close callbacks are all guarded by the modal boundary so unexpected callback throws stay no-throw and do not escape as unhandled rejections
+- The pending recovery snapshot is intentionally memory-only for this phase: closing the modal keeps it, but disabling the feature, unloading the plugin, or restarting Obsidian forgets it without touching persisted Reward Reader state
 
 The chapter-index cache path boundary is also intentionally defensive:
 
