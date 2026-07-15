@@ -432,6 +432,34 @@
 35. Confirm the `nextStore` does not include the chapter-index cache.
 36. Confirm store patch application does not create `.nestkit`, write state or cache files, register runtime surfaces, or enter startup.
 
+## Reward Reader Phase 3B2A pure replay inspection engine
+
+1. Confirm `inspectRewardReaderStudyExchangeReplay(...)` stays detached from startup, commands, modals, reader UI, sidebar UI, status-bar UI, timers, listeners, and adapter IO.
+2. Confirm invalid replay input roots such as `null`, arrays, malformed plain objects, unreadable request getters, invalid ids, same requested new ids, NUL content, invalid study minutes, invalid timestamps, and malformed policy objects return structured sanitized failures without throwing.
+3. Confirm `chapterCount <= 0`, non-integer `chapterCount`, and unsafe-integer `chapterCount` return `invalid-chapter-count`.
+4. Confirm the replay inspector calls `normalizeRewardReaderStore(...)` once, rejects future schemas as `unsupported-store-schema`, and rejects raw stores that normalization would repair as `invalid-store`.
+5. Confirm a canonical store with no requested study id, no requested unlock id, and no unlock record referencing the requested study id returns `ok = true` plus `status = not-observed`.
+6. Confirm `not-observed` does not return `studyRecord`, `unlockRecord`, or `calculation`.
+7. Confirm an exact no-unlock replay returns `replay-confirmed`, `unlockRecord = null`, and a calculation whose `unlockedChapterCount = 0`.
+8. Confirm an exact unlocking replay returns `replay-confirmed`, the requested unlock record, and the exact persisted unlock indexes.
+9. Confirm a carryover replay reconstructs the prior balance correctly, keeps `totalStudyMinutesBefore` exact, and confirms the target unlock from reconstructed pre-target history rather than from current progress alone.
+10. Confirm later target-novel study and unlock records after the requested study do not prevent replay of the earlier target when persisted history remains coherent.
+11. Confirm later reading-only progress changes to `readThroughChapterIndex`, `currentChapterIndex`, `currentChapterScrollOffset`, and a later `progress.updatedAt` still allow `replay-confirmed` when study-related progress remains consistent.
+12. Confirm a canonical study-only partial case where the requested study record exists, unlocked chapters were expected, and the matching unlock record is missing returns `replay-partial-observed`.
+13. Confirm an orphan unlock-only raw store is blocked safely by the canonical-store guard instead of being replay-confirmed.
+14. Confirm requested study or unlock ids appearing in the wrong history array, duplicate requested ids, requested-study field mismatch, requested unlock pointing to another study, or another unlock pointing to the requested study each return `replay-identity-conflict`.
+15. Confirm policy-incompatible replay evidence such as mismatched `minutesPerChapter`, mismatched `balanceBefore`, mismatched `balanceAfter`, mismatched `unlockedChapterCount`, or mismatched unlock indexes returns `replay-outcome-conflict`.
+16. Confirm broken study balance chains, out-of-order study timestamps, invalid unlock linkage, skipped or duplicated unlock chapter indexes, current progress total-minute mismatch, current progress balance mismatch, current unlock-boundary mismatch, current today-counter mismatch, and `progress.updatedAt` earlier than the latest study all return `replay-history-conflict`.
+17. Confirm chapter-boundary conflicts where persisted unlock indexes exceed the supplied `chapterCount - 1` return `replay-history-conflict` and are not clamped.
+18. Confirm the synthetic pre-target progress used for recalculation is internal only and is not returned from the public result.
+19. Confirm the replay inspector uses the existing Phase 3A calculate path only and does not call `applyRewardReaderStudyExchange(...)`.
+20. Confirm calculation failures during replay inspection are mapped to `replay-outcome-conflict` instead of being exposed as fresh business-operation results.
+21. Confirm the replay result never returns raw store data, raw history arrays, history maps, request fingerprints, raw exceptions, file paths, or stack traces.
+22. Confirm a throwing store getter, progress getter, history getter, or unlocked-index access path does not escape the public API and instead returns `replay-inspection-runtime-failed` with the stable sanitized message.
+23. Confirm long-history replay on tens of thousands of study, unlock, and reading records still confirms the target in linear time without stack overflow or history-object cloning.
+24. Confirm very large `chapterCount` values such as `1_000_000` do not trigger `chapterCount`-sized allocation and still replay correctly when actual unlock history is small.
+25. Confirm `study-exchange-replay-inspector.ts` has no `obsidian`, `Vault`, `DataAdapter`, `App`, `Plugin`, `Modal`, `Notice`, `fs`, `path`, current-time, random-id, JSON parse/stringify, retry, or runtime-registration dependency.
+
 ## Reward Reader Phase 2C1 read-only storage adapter
 
 1. Confirm missing state returns `ok = true`, `status = missing`, a fresh default store, `shouldPersist = false`, and no warnings.

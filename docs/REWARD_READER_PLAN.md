@@ -241,6 +241,24 @@ Confirmed Phase 3B1 study-exchange persistence runtime decisions:
 - The runtime must not return raw state, raw cache, `nextStore`, write plans, adapter instances, or exception objects
 - Phase 3B1 does not add automatic retry, idempotent replay recovery, read-back verification, rollback, lock files, CAS, transactions, or cross-device conflict resolution; a concurrency window still remains between the latest reread and the final state write
 
+Confirmed Phase 3B2A pure replay-inspection decisions:
+
+- Phase 3B2A adds only one detached pure replay-inspection engine and still does not add recovery runtime wiring, study-record command or modal, reader UI, sidebar, status bar, timers, listeners, or startup hydration
+- Input is only one supplied store, one supplied positive `chapterCount`, and the exact same explicit study request preserved from an earlier Phase 3B1 write attempt
+- The public replay export must validate one plain-object request root, build one detached request snapshot plus one detached policy snapshot, and then read only those snapshots
+- The replay inspector is canonical-only: it calls `normalizeRewardReaderStore(...)` once, rejects future schemas, and rejects raw stores that normalization would repair instead of continuing with repaired history
+- Replay classification is evidence-only: `replay-confirmed` requires one unique request identity, one complete record pair, reconstructable target history, exact Phase 3A recalculation agreement, and current study-related progress consistency
+- `not-observed` means only that the supplied store does not currently show the requested identity; it does not prove write failure and does not authorize automatic retry with a new identity
+- Partial or conflict results must block automatic success and automatic retry; later runtime code may decide how to present or recover from them, but Phase 3B2A itself performs no recovery action
+- Identity inspection scans `studyRecords`, `unlockRecords`, and `readingRecords` once under one global id namespace, blocks wrong-history requested ids, and keeps unrelated duplicate ids as history conflict
+- Requested study content must be normalized with the same `CRLF/CR -> LF` plus outer-trim rule as Phase 3A before exact comparison
+- When the target study unlocked no chapters, no unlock record may exist anywhere for that study; when the target study unlocked chapters, exactly one matching unlock record must exist and no second unlock may reference the same study id
+- The inspector reconstructs target-novel study balance, accumulated minutes, same-day unlocked count, and unlock boundaries in append order without allocating arrays sized to `chapterCount`
+- The synthetic pre-target progress object is internal only, uses the reconstructed study-related fields plus `updatedAt = occurredAt`, and exists only to drive the existing Phase 3A calculate path safely
+- Current progress validation is intentionally study-focused: it requires the final total study minutes, minute balance, unlock boundary, and today counter to match full target history, while later reading-position changes remain allowed
+- Phase 3B2A performs no state read, no cache read, no state write, no retry, no read-back verification, no rollback, no id generation, and no current-time read
+- Phase 3B2B will be the next layer that rereads latest state and cache after a Phase 3B1 write-outcome-unknown result and delegates replay evidence classification to the pure Phase 3B2A inspector
+
 This follows the current NestKit architecture direction where independent features are lazily created and enabled through the shared `FeatureRegistry` and `FeatureManager`, rather than being always-on during `onload()`.
 
 ## Reading source model
@@ -607,6 +625,11 @@ Phase 3B1 status inside Phase 3:
 
 - Implemented now: detached study-exchange persistence runtime that validates explicit study requests before IO, reads current state once to resolve target cache identity, reads one explicit chapter cache, rereads the latest state, aborts on target changes, applies the Phase 3A engine against that latest store, and attempts one state write
 - Deferred to later Phase 3 work: study-record command or modal entry, caller-owned retry UX for outcome-unknown writes, read-back verification, rollback, locking or CAS, reader UI, sidebar/status-bar surfaces, timers, and reading-progress interactions
+
+Phase 3B2A status inside Phase 3:
+
+- Implemented now: detached pure replay-inspection engine that validates and snapshots an explicit request, requires a canonical current-schema store, classifies replay evidence, reconstructs target study/unlock history, recalculates expected outcome through Phase 3A, and checks current study-related progress consistency
+- Deferred to later Phase 3 work: latest-state plus cache reread orchestration for recovery, caller-owned retry UX, read-back verification, rollback, locking or CAS, study-record command or modal entry, reader UI, sidebar/status-bar surfaces, timers, and reading-progress interactions
 
 ### Phase 4: novel reader view and unlock boundary
 

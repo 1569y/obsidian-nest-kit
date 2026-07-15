@@ -33,6 +33,7 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/reward-reader/import-runtime-flow.ts`: Reward Reader Phase 2D1 detached minimal import runtime flow that chains request validation, initial state read, source inspection, import preparation, and persistence orchestration behind the Phase 2D2 UI entry
 - `src/features/reward-reader/study-exchange-engine.ts`: Reward Reader Phase 3A detached pure study-minute exchange engine with calculation preview plus immutable store application
 - `src/features/reward-reader/study-exchange-runtime.ts`: Reward Reader Phase 3B1 detached async study-exchange persistence runtime that validates one explicit request, reads current state plus one target chapter cache, revalidates target identity against a latest state reread, applies the Phase 3A engine, and attempts one state write
+- `src/features/reward-reader/study-exchange-replay-inspector.ts`: Reward Reader Phase 3B2A detached pure replay-inspection engine that classifies persisted evidence after a write-outcome-unknown study exchange
 - `src/features/reward-reader/types.ts`: Reward Reader foundational data types for novels, progress, history, store schema, and chapter-index cache schema
 - `src/features/reward-reader/store.ts`: Reward Reader pure store normalization helpers, planned store paths, and future-schema write-protection boundary
 - `src/features/spaced-review/types.ts`: Spaced Review Phase 1 core data model and store schema types
@@ -275,6 +276,19 @@ The current study-exchange persistence runtime is intentionally a tenth detached
 - Structured state-write failures remain distinct from unexpected writer throws: the runtime keeps the original writer `causeCode`, reports `write-blocked` for pre-write blocking failures, reports `write-outcome-unknown` for `state-write-failed`, and once writer invocation has started it preserves the more conservative `write-outcome-unknown` outcome for any later unclassifiable exception instead of downgrading back to `write-blocked` or `not-attempted`
 - Warning aggregation is first-seen-order only across initial state read, chapter-cache read, latest state read, and state write; no raw store, cache, path, exception, or next-store payload is returned
 - This phase still does not read source TXT or Markdown content, does not write chapter caches, does not retry, does not read back state after write, does not roll back, does not add locking or CAS, and does not register commands, modals, reader UI, sidebar UI, status-bar UI, timers, listeners, or startup hydration
+
+The current study-exchange replay inspection boundary is intentionally an eleventh detached layer:
+
+- `study-exchange-replay-inspector.ts` is a synchronous pure no-IO evidence layer that accepts only one supplied store, one supplied `chapterCount`, and one caller-preserved study request
+- The public export validates one plain-object request root, builds one detached request-plus-policy snapshot, requires a positive safe-integer `chapterCount`, and then reads only that snapshot
+- The inspector requires a canonical current-schema Reward Reader store, calls `normalizeRewardReaderStore(...)` once, rejects future schemas, and rejects any raw store that normalization would repair instead of silently inspecting the repaired copy
+- Replay evidence classification is identity-first: the inspector scans the global `studyRecords`, `unlockRecords`, and `readingRecords` id namespace once, blocks wrong-history usage or duplicate requested ids as identity conflict, and keeps unrelated duplicate history ids as history conflict
+- A request becomes `not-observed` only when the requested study id is absent from all history, the requested unlock id is absent from all history, and no unlock record references the requested study id; `not-observed` does not prove write failure
+- A requested study record still requires exact field matching after the same content normalization rule as Phase 3A, while unlock presence rules stay strict: no-unlock operations must have no unlock record and unlocking operations must keep exactly one matching unlock record
+- Once identity evidence is complete, the inspector reconstructs target-novel study history in append order, reconstructs unlock boundaries without chapter-sized allocation, creates one synthetic pre-target progress object, and recalculates the expected outcome through `calculateRewardReaderStudyExchange(...)`
+- Replay confirmation requires exact agreement between the recalculated outcome and the persisted study or unlock pair plus current study-related progress consistency against the full target-novel history
+- Later reading-only drift is tolerated: `readThroughChapterIndex`, `currentChapterIndex`, `currentChapterScrollOffset`, and a later `progress.updatedAt` may move forward after the target study operation as long as study-related progress still matches the persisted history
+- The inspector returns only sanitized structured results, never returns raw store/history internals or synthetic progress, performs no automatic recovery, and keeps time and memory linear in history size plus total unlock indexes rather than in `chapterCount`
 
 The chapter-index cache path boundary is also intentionally defensive:
 
