@@ -560,10 +560,66 @@ export const enDictionary = {
 				title: 'Import Reward Reader novel',
 				source: {
 					name: 'Novel source file',
-					description: 'Select one Vault TXT or Markdown novel file.',
+					description:
+						'Choose one Vault TXT or Markdown file, or import one external TXT or Markdown file from your computer.',
 					noSourceSelected: 'No source file selected.',
-					chooseFile: 'Choose file',
-					changeFile: 'Change file',
+					fromVault: 'Choose from Vault',
+					changeVault: 'Change Vault file',
+					fromComputer: 'Choose from computer',
+					changeComputer: 'Change external file',
+					currentVault: (path: string): string => `Vault: ${path}`,
+					currentExternal: (fileName: string): string =>
+						`Computer: ${fileName}`,
+				},
+				encoding: {
+					name: 'Text encoding',
+					description:
+						'Re-decode the same external file bytes without reopening the file picker.',
+					auto: 'Auto detect',
+					utf8: 'UTF-8',
+					gb18030: 'GB18030 / GBK',
+					utf16Le: 'UTF-16 LE',
+					utf16Be: 'UTF-16 BE',
+				},
+				preview: {
+					heading: 'Source preview',
+					fileName: 'File name',
+					detectedEncoding: 'Detected encoding',
+					chapterFormat: 'Chapter format',
+					chapterCount: (count: number): string =>
+						`${count} chapters detected`,
+					firstChapters: 'First detected chapters',
+					warningsHeading: 'Warnings',
+					ambiguityHeading: 'Ambiguous duplicate chapter numbers',
+					ambiguityDescription:
+						'Duplicate chapter numbers were detected, and Reward Reader cannot reliably determine which line is the real chapter heading.',
+					ambiguityChapterNumber: (chapterNumber: number): string =>
+						`Chapter number: ${chapterNumber}`,
+					ambiguityCandidateCount: (candidateCount: number): string =>
+						`Candidates found: ${candidateCount}`,
+					ambiguityBlocked:
+						'Import is blocked to prevent incorrect chapter boundaries. Review the candidates or adjust the source file.',
+					ambiguityCandidateLine: (lineNumber: number): string =>
+						`line ${lineNumber}`,
+					emptyPreview: 'Select one TXT or Markdown source file to preview it here.',
+					willCreateCopy:
+						'A UTF-8 Markdown copy will be created inside Reward Reader/Imported when you import.',
+					willNotModifyOriginal:
+						'The original external file will not be modified.',
+					formatLabels: {
+						none: 'No recognized chapter format',
+						markdownHeading: 'Markdown heading',
+						plainChapterHeading: 'Built-in chapter heading',
+						numericColon: 'Number + colon',
+					},
+					warningLabels: {
+						chapterNumberGaps:
+							'Chapter-number gaps were detected. Check the chapter preview before importing.',
+						ignoredLeadingPreface:
+							'Leading text before the first detected chapter will be ignored.',
+						duplicateNumberAmbiguity:
+							'Duplicate chapter numbers could not be resolved safely. Fix the ambiguous headings before importing.',
+					},
 				},
 				novelTitle: {
 					name: 'Novel title',
@@ -579,12 +635,21 @@ export const enDictionary = {
 					waitingForSource:
 						'Choose one TXT or Markdown source file to prepare the import.',
 					readyToImport:
-						'Ready to import. The novel file will only be read after you select Import.',
+						'Ready to import. Vault files are inspected on import, while external files will first be copied into the Vault as UTF-8 Markdown.',
+					inspectingVaultSource:
+						'Inspecting the selected Vault source file...',
 					importing: 'Importing...',
+					writingVaultCopy: 'Creating the UTF-8 Markdown copy inside the Vault...',
+					readingExternalFile: 'Reading the selected external file...',
+					decodingExternalFile: 'Detecting text encoding and chapter structure...',
 					failedCanEdit:
-						'Import failed before persistence completed. You can adjust the file or title and try again.',
+						'Import failed before persistence completed. You can adjust the source, encoding, or title and try again.',
 					exactRetryRequired:
 						'The import result could not be fully confirmed. Retry the exact same import request.',
+					noChaptersDetected:
+						'No supported chapter headings were detected. Adjust the selected encoding or choose another file.',
+					chapterHeadingAmbiguity:
+						'Duplicate chapter-number headings are ambiguous. Fix the source file or choose another file before importing.',
 				},
 				buttons: {
 					import: 'Import',
@@ -596,6 +661,14 @@ export const enDictionary = {
 						'No TXT or Markdown files are available for Reward Reader import.',
 					identityGenerationFailed:
 						'Reward Reader could not create a safe import identity. Try again.',
+					externalFileReadFailed:
+						'Reward Reader could not read the selected external file.',
+					externalSourceInvalid:
+						'Reward Reader needs one decoded external TXT or Markdown file before it can create the Vault copy.',
+					externalVaultCopyFailed:
+						'Reward Reader could not create the UTF-8 Markdown copy inside the Vault.',
+					externalVaultCopyCreatedButImportIncomplete:
+						'The UTF-8 Markdown copy was created in the Vault, but Reward Reader import did not finish. You can retry from the same copy later.',
 					success: (title: string, chapterCount: number): string =>
 						`Imported "${title}" with ${chapterCount} chapters.`,
 					successWithWarnings: (

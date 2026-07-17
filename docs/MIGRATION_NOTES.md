@@ -1,5 +1,22 @@
 # Migration notes
 
+- `reward-reader-phase3c2b-real-world-txt-import` keeps the existing Phase 2D2 import command and modal entry plus the existing detached import persistence pipeline, and extends only the import-side source boundary for real-world external TXT/Markdown files.
+- The current correctness-hardening follow-up keeps the same branch scope and only tightens parser coherence, warning localization, prepared-copy reuse, and import-side no-throw behavior.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds no new Reward Reader settings keys, no new persisted data fields, no new file format version, and no migration write.
+- This round adds one pure external text-decoder module plus one external source import boundary, widens the parser with non-persisted detection metadata plus stronger real-world plain TXT heading support, and extends the existing import modal with one external file picker, encoding override, preview, and Vault-copy preparation path.
+- The parser still keeps the existing persisted detection modes only, but now prioritizes whole-file strategy selection more strictly: Markdown headings first, stronger plain chapter headings second, and numeric-colon last.
+- Stronger plain chapter detection now covers combined `卷 + 章` forms, stronger English `Chapter N` forms, and constrained standalone special headings without adding new schema fields or new persisted detection-mode values.
+- Numeric-colon TXT detection now also requires coherent body-text evidence, ignores intermediate chat/year noise instead of promoting it to chapters, keeps gap warnings localized at preview time only, and preserves direct-title plain headings without promoting sentence-like body lines.
+- When duplicate numeric chapter headings remain structurally ambiguous, the parser now blocks import at parse time and the modal surfaces that ambiguity before persistence starts.
+- The new ambiguity metadata is preview-only runtime data: Reward Reader state schema, cache schema, settings schema, and migration/version numbers all remain unchanged in this round.
+- Once an external Vault copy is created successfully, the modal now reuses that same prepared copy across identity failures, definite import failures, and exact same-file retries instead of creating repeated `-2`, `-3`, and later copies.
+- External imports read bytes through browser `File.arrayBuffer()`, decode into normalized Unicode text before any Vault write, create a UTF-8 Markdown copy only inside `Reward Reader/Imported`, and then re-enter the existing Vault-local import runtime using the new Vault-relative copy path.
+- This round does not persist external absolute paths, does not add raw encoding metadata to Reward Reader state, does not add detection-mode fields to the chapter-index cache schema, does not create a second state/cache writer, and does not change the existing import/store/cache schema contracts.
+- This round does not add reader UI, reading-progress UI, sidebar behavior, status bar behavior, timers, study runtime changes, automatic retry, rollback, external file overwrite, Node `fs`/`path` access, Electron remote usage, or startup IO.
+
 - `reward-reader-phase3c1-study-record-command-and-minimal-modal` adds the first Reward Reader study-record command and minimal modal above the existing detached Phase 3B1 and Phase 3B2B runtime layers.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
 - This round keeps Reward Reader store schema at `1`.

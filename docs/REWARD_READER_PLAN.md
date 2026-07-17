@@ -259,6 +259,44 @@ Confirmed Phase 3B2A pure replay-inspection decisions:
 - Phase 3B2A performs no state read, no cache read, no state write, no retry, no read-back verification, no rollback, no id generation, and no current-time read
 - Phase 3B2B will be the next layer that rereads latest state and cache after a Phase 3B1 write-outcome-unknown result and delegates replay evidence classification to the pure Phase 3B2A inspector
 
+Confirmed Phase 3C2B real-world TXT import decisions:
+
+- The existing Vault TXT/Markdown import path remains supported and unchanged as the primary canonical runtime path
+- The import modal now exposes two user-triggered source entries: choose one Vault file or choose one external TXT/Markdown file from the computer
+- External file selection must stay modal-owned and use standard browser `input[type="file"]` plus `File.arrayBuffer()`; do not add Node `fs`, Node `path`, Electron remote APIs, or persisted absolute OS paths
+- External file reads are byte-first only; do not treat `File.text()` as the single canonical read path because non-UTF-8 TXT input must stay decodable
+- `external-text-decoder.ts` is the pure decode boundary: it accepts raw `Uint8Array` bytes plus an optional explicit encoding override, performs no IO, mutates no input, and exposes only stable no-throw success or failure results
+- Supported external decode labels are `utf-8`, `utf-8-bom`, `utf-16le`, `utf-16be`, and `gb18030`
+- Decode order in auto mode is BOM-backed decode first, then strict UTF-8, then no-BOM UTF-16 zero-pattern detection, then GB18030 fallback
+- BOM must never survive into the returned normalized text, and newline normalization must collapse `CRLF` plus bare `CR` into `LF`
+- Binary-like decoded output must be rejected after decoding instead of being passed into parser/import preparation
+- The import modal must allow an explicit re-decode of the same in-memory bytes through `auto`, `UTF-8`, `GB18030 / GBK`, `UTF-16 LE`, and `UTF-16 BE` without reopening the external file picker
+- External TXT conversion is a text normalization step only; do not rewrite chapter lines into Markdown headings and do not pretend extension rename alone is an encoding conversion
+- Parser priority for imported external text is whole-file and non-mixed: Markdown headings first, built-in plain chapter headings second, numeric-colon TXT headings last
+- `plain-chapter-heading` remains the persisted umbrella for stronger plain-text chapter detection: strong Chinese headings, English `Chapter N` headings, combined `卷 + 章` headings, and constrained special headings still reuse the existing `plain-chapter-heading` mode instead of introducing new schema values
+- Allowed mixing stays narrow: coherent strong numbered headings may include constrained special headings such as `序章`, `番外`, `尾声`, `Prologue`, `Extra Chapter`, or `Afterword`, but Markdown headings still win over plain headings and weak numeric-colon lines still must not backfill a Markdown or strong-heading file
+- Direct-title Chinese headings such as `第3章外挂上线` remain supported, but sentence-like body lines such as `第一章正文……` should be rejected so the parser does not promote normal prose to chapter headings
+- Numeric-colon TXT detection is intentionally weak-mode only and must require repeated ordered evidence rather than a single matching line
+- Numeric-colon detection must require at least three ordered unique numeric candidates, coherent body-text evidence between headings, reject duplicate or decreasing numbers, allow reasonable gaps with warnings, and skip intermediate noise such as chat numbering, short numbered lists, or isolated/extreme outlier lines like `2026: ...`
+- Same-style numeric-colon body noise such as `100: ...` between real `001 / 002 / 003 / 004` headings must remain inside chapter body text and must not win solely because it can form a longer but gap-heavy alternate run
+- Titled special headings such as `序章：`, `尾声：`, `Prologue: ...`, and `Afterword - ...` must stay supported inside the existing constrained special-heading rules
+- If duplicate numeric candidates still remain near-tied after structural comparison, the parser must return a blocking ambiguity and the import modal must disable import instead of guessing
+- Duplicate ambiguity detection must also cover duplicate chapter numbers that the initial DP run skipped; an unresolved duplicate inside the selected numeric span cannot be downgraded to a normal gap
+- Automatic duplicate resolution must not use title wording as decisive evidence. Shared prefixes or similar chapter names may help diagnostics, but safe automatic import still requires observable structural margins
+- Numeric-colon body evidence should be precomputed once per parse so transition checks stay O(source lines + candidates * bounded lookback) instead of rebuilding candidate lookup state per transition
+- Automatic import now prioritizes correctness over forced chapter selection: structurally indistinguishable duplicate headings stay blocked for user review, and a future UX may optionally allow manual candidate selection without modifying the original source or prepared Vault copy
+- The public parser boundary must stay no-throw and return a sanitized `none` result for invalid input or unexpected failures
+- Chapter offsets for external imports must still refer to the normalized Unicode text that becomes the UTF-8 Vault Markdown copy, not to original byte offsets
+- Preview for external files stays lightweight and safe: basename, detected encoding, chapter format, chapter count, first chapter titles, and sanitized warnings or failure text only
+- External import cannot proceed when decode fails or when no supported chapter structure is detected, but the user must still be able to change encoding and retry preview
+- `prepareRewardReaderExternalSource(...)` is the only Vault-write boundary for external imports: it ensures `Reward Reader/Imported`, creates one unique `.md` target name, writes the normalized UTF-8 text, and returns only the created Vault-relative source identity
+- Filename conflict resolution for external imports is deterministic and bounded: keep the sanitized basename, then append `-2`, `-3`, and so on until a free Vault path is found or the safe attempt cap is reached
+- External import must never overwrite the original external file and must never silently overwrite an existing Vault import copy
+- Once the modal has one prepared Vault copy for the current external file, later identity failures, definite import failures, and exact retries must reuse that same copy instead of creating another suffixed duplicate
+- After the UTF-8 Vault Markdown copy exists, external import must rejoin the existing import runtime and persistence boundaries instead of creating a second state/cache write pipeline
+- If the Vault copy succeeds but later Reward Reader persistence fails, the copy is intentionally left in the Vault for later manual retry; there is no automatic rollback or cleanup of that copy
+- This round still does not add new state fields, new cache fields, configurable import destination, arbitrary legacy-encoding support beyond the explicit decoder set, reader UI, reading-progress UI, sidebar/status surfaces, or study runtime changes
+
 Confirmed Phase 3B2B detached replay-recovery-runtime decisions:
 
 - Phase 3B2B adds only one detached async read-only replay recovery runtime above the existing Phase 3B2A pure inspector and still does not add study-record command or modal wiring, reader UI, sidebar UI, status-bar UI, timers, listeners, or startup hydration
@@ -306,6 +344,22 @@ Planned offset semantics:
 - `sourceTextLength` is the corresponding `sourceText.length` upper-bound field stored beside the cache
 
 Initial chapter-title matching should support common formats such as:
+
+Current stronger real-world examples include:
+
+- `第一章`
+- `第1章`
+- `第 1 章`
+- `第001章`
+- `第3章外挂上线`
+- `第一卷 第3章 外挂上线`
+- `VIP卷 第3章 外挂上线`
+- `作品相关 第3章 说明`
+- `Chapter 1`
+- `CHAPTER 013`
+- `Chapter XIII The Beginning`
+- `序章`
+- `番外：某人的故事`
 
 - `第一章`
 - `第1章`

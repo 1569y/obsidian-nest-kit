@@ -579,6 +579,78 @@
 76. Confirm `getPendingStudyExchange()` throws are no-throw in `onOpen()`, `renderRecovery()`, `Check saved result`, and `Retry exact request`, with no runtime calls and no unhandled rejection.
 77. Confirm a throwing modal-close callback still allows `onClose()` cleanup to finish without rethrowing or reopening the modal.
 
+## Reward Reader Phase 3C2B real-world TXT import
+
+1. Confirm the existing Vault import entry still accepts Vault TXT and Markdown `TFile` sources.
+2. Confirm the import modal now also exposes a user-triggered external TXT/Markdown file entry from the computer.
+3. Confirm external file selection uses a modal-owned `input[type="file"]` and accepts `.txt`, `.md`, `text/plain`, and `text/markdown`.
+4. Confirm cancelling the external picker produces no Notice, no Vault write, and no runtime import call.
+5. Confirm unsupported external extensions are rejected before preview or import and do not write a Vault copy.
+6. Confirm external reads use `File.arrayBuffer()` instead of treating `File.text()` as the canonical read path.
+7. Confirm external read failures return one sanitized stable Notice and do not expose raw path or exception text.
+8. Confirm the pure external decoder accepts non-empty `Uint8Array` only and rejects empty or invalid input safely.
+9. Confirm BOM-backed UTF-8 bytes decode successfully and do not keep `\uFEFF` in output text.
+10. Confirm BOM-backed UTF-16 LE bytes decode successfully.
+11. Confirm BOM-backed UTF-16 BE bytes decode successfully.
+12. Confirm BOM-free valid UTF-8 Chinese text decodes through strict UTF-8 without falling through to GB18030.
+13. Confirm BOM-free UTF-16 bytes with strong zero-byte evidence decode through the UTF-16 heuristic path.
+14. Confirm invalid UTF-8 Chinese TXT bytes can still decode through GB18030 fallback when the runtime supports that label.
+15. Confirm unsupported `gb18030` decoder availability returns `unsupported-text-encoding` instead of silently using another fallback.
+16. Confirm explicit encoding override can re-decode the same raw bytes as `auto`, `utf-8`, `gb18030`, `utf-16le`, or `utf-16be` without reopening the picker.
+17. Confirm decoder output normalizes `CRLF` and bare `CR` into `LF`.
+18. Confirm binary-like decoded output is rejected after decoding instead of entering parser or import preparation.
+19. Confirm parser detection metadata now reports `none`, `markdown-heading`, `plain-chapter-heading`, or `numeric-colon`.
+20. Confirm Markdown headings still win over plain TXT headings and numeric-colon TXT lines when they coexist in one file.
+21. Confirm built-in plain Chinese or English chapter headings still parse as chapters without converting the text into Markdown.
+22. Confirm numeric-colon TXT headings such as `001: ...` or `001：...` parse only when at least three ordered unique numeric candidates exist.
+23. Confirm numeric-colon detection rejects duplicate numbers or descending numbers instead of producing chapters.
+24. Confirm numeric-colon detection may keep reasonable number gaps but records a warning when it does.
+25. Confirm isolated year-like lines such as `2026: ...` do not activate numeric-colon chapter mode by themselves.
+26. Confirm a coherent `001 / 002 / 003` numeric-colon run still parses when a later extreme outlier line such as `2026: ...` appears after real chapter body text.
+27. Confirm adjacent short numbered-list lines such as `1: 鑻规灉`, `2: 棣欒晧`, and `3: 姗欏瓙` do not activate numeric-colon chapter mode.
+28. Confirm short chat-like numbering inside body text does not activate numeric-colon chapter mode.
+29. Confirm external preview shows only safe summary fields: basename, detected encoding, chapter format, chapter count, first chapter titles, and sanitized warnings or failure text.
+30. Confirm preview warnings are localized, de-duplicated, hidden when none exist, and never show raw internal warning strings.
+31. Confirm no-chapter external preview keeps import disabled while still allowing the user to change encoding and retry preview.
+32. Confirm external imports create a UTF-8 Markdown copy only inside `Reward Reader/Imported`.
+33. Confirm the Vault copy preserves normalized decoded text, does not inject Markdown chapter markers, and does not overwrite the original external file.
+34. Confirm repeated filename conflicts produce deterministic `-2`, `-3`, and later suffixes without using timestamps or random names.
+35. Confirm the import modal reuses the created Vault-relative copy path when it calls the existing import runtime.
+36. Confirm a prepared external Vault copy is reused after identity generation failure instead of creating a new suffixed copy.
+37. Confirm a prepared external Vault copy is reused after a definite import failure instead of creating a new suffixed copy.
+38. Confirm exact same-file retry reuses the same prepared Vault copy and does not call external prepare again.
+39. Confirm switching to a different external file clears the prepared-copy state and may create a new Vault copy for that new file only.
+40. Confirm switching back to a Vault source clears the prepared external-copy state.
+41. Confirm external absolute OS paths are not persisted into Reward Reader state, cache, or request history.
+42. Confirm a Vault-copy success followed by later import persistence failure leaves the created Vault copy in place and shows the follow-up retry guidance Notice.
+43. Confirm external import reuses the existing import, store, and cache persistence boundaries rather than creating a second state/cache writer path.
+44. Confirm public external decode, inspect, prepare, and modal-side preview handlers stay no-throw and sanitize unexpected failures.
+45. Confirm busy import state disables source reselection, encoding changes, and duplicate submit.
+46. Confirm closing the modal during late external read or decode completion does not try to update closed DOM state.
+47. Confirm this round still does not add schema changes, reader UI, reading-progress UI, sidebar behavior, status bar behavior, timer work, or study runtime changes.
+
+Additional parser hardening checks for the same Phase 3C2B scope:
+
+- Confirm combined strong plain headings such as `第一卷 第3章 外挂上线`, `VIP卷 第3章 外挂上线`, and `作品相关 第3章 说明` stay inside `plain-chapter-heading` instead of creating a new detection mode.
+- Confirm English strong headings still include Roman-numeral forms such as `Chapter XIII The Beginning`.
+- Confirm constrained standalone special headings such as `序章`, `番外：某人的故事`, `Extra Chapter`, and `Afterword` participate only under the documented whole-file structure rules and are not matched by broad substring scans.
+- Confirm direct-title headings such as `第3章外挂上线` still parse, while sentence-like body lines such as `第一章正文……` do not become chapter headings.
+- Confirm a coherent `001 / 002 / 003 / 004` numeric-colon run survives intermediate chat-noise lines such as `1: ...` and extreme outliers such as `2026: ...`.
+- Confirm a valid `001 / 002 / 004 / 005` numeric-colon sequence still parses and keeps the existing gap warning.
+
+- Confirm titled special headings such as `序章：`, `尾声：`, `Prologue: ...`, and `Afterword - ...` still parse through `plain-chapter-heading` without widening into free-form substring matches.
+- Confirm same-style numeric-colon body noise such as `001 / 100 / 002 / 101 / 003 / 102 / 004 / 103` resolves to the dense real-chapter run `001 / 002 / 003 / 004` and keeps the skipped `100 / 101 / 102 / 103` lines inside chapter body text.
+- Confirm when the initial DP run skips a duplicate-number group that still falls inside the selected numeric span, the parser returns a blocking ambiguity instead of silently turning that duplicate into a normal gap.
+- Confirm duplicate groups outside the selected numeric span do not block import when the retained run itself stays structurally coherent.
+- Confirm when duplicate numeric candidates remain structurally tied, the parser returns a blocking ambiguity, the modal disables import, and no guess is persisted through the normal import path.
+- Confirm duplicate-before, duplicate-after, and symmetric duplicate fixtures split into two groups: structurally resolvable groups must import safely with exact heading identity, while intrinsically ambiguous groups must stay blocked with candidate previews and zero persistence calls.
+- Confirm first-chapter and last-chapter duplicate fixtures do not borrow another competing duplicate's body text as decisive support and stay blocked when only one-sided evidence remains.
+- Confirm shared title-prefix bias, reverse shared title-prefix bias, and neutral exact-tie duplicate fixtures still remain blocking ambiguity so title wording does not decide a winner by itself.
+- Confirm structurally resolvable duplicate fixtures use neutral titles plus spacing or anchor evidence only, and verify exact heading identity rather than chapter count alone.
+- Confirm numeric-colon evidence indexing is built once per parse and transition evaluation does not recreate `new Set(candidates.map(...))` or rescan source lines per transition.
+- Confirm short-body candidate-scaling benchmarks at 500, 1000, 2000, 4000, and 8000 chapters preserve exact heading identity and do not show obvious quadratic growth when duplicate-group handling is enabled.
+- Confirm invalid parser input or unexpected parser failures collapse into a sanitized `detectionMode = none` result instead of throwing across the public boundary.
+
 ## Reward Reader Phase 2C1 read-only storage adapter
 
 1. Confirm missing state returns `ok = true`, `status = missing`, a fresh default store, `shouldPersist = false`, and no warnings.

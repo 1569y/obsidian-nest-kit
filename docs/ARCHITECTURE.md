@@ -21,11 +21,13 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/heading-progress/types.ts`: Heading Progress settings union types
 - `src/features/reward-reader/index.ts`: Reward Reader feature lifecycle shell that stays default-off, registers the Phase 2D2 import command and Phase 3C1 study-record command lazily on first enable, keeps both command surfaces gated by current enabled/mobile/busy state, and owns the single in-memory pending study-recovery snapshot
 - `src/features/reward-reader/import-command.ts`: Reward Reader Phase 2D2 desktop-only import-command registration with single-active-modal coordination and zero startup/checking IO
-- `src/features/reward-reader/import-modal.ts`: Reward Reader Phase 2D2 minimal import modal, TXT/Markdown Vault picker, UI-side identity generation, exact-retry preservation, and sanitized user feedback
+- `src/features/reward-reader/import-modal.ts`: Reward Reader import modal with the Phase 2D2 Vault picker path plus the current external TXT/Markdown picker, encoding override, preview, Vault-copy boundary wiring, UI-side identity generation, exact-retry preservation, and sanitized user feedback
 - `src/features/reward-reader/study-exchange-modal.ts`: Reward Reader Phase 3C1 desktop study-record command registration, minimal study modal, one-active-modal coordination, memory-only pending recovery state, and explicit Phase 3B1 / 3B2B UI wiring
-- `src/features/reward-reader/chapter-parser.ts`: Reward Reader Phase 2A detached pure chapter parser for built-in heading detection and UTF-16 chapter-offset generation
+- `src/features/reward-reader/chapter-parser.ts`: Reward Reader detached pure chapter parser for Markdown headings, built-in plain chapter headings, ordered numeric-colon TXT headings, detection metadata, and UTF-16 chapter-offset generation
 - `src/features/reward-reader/chapter-cache-builder.ts`: Reward Reader Phase 2B1 pure chapter-cache assembly from one in-memory source string plus explicit metadata
 - `src/features/reward-reader/vault-source-reader.ts`: Reward Reader Phase 2B1 detached Vault-local source inspection boundary with single-read assembly flow
+- `src/features/reward-reader/external-text-decoder.ts`: Reward Reader detached pure external text-decoding boundary with BOM handling, strict UTF-8 first, UTF-16 detection, GB18030 fallback, newline normalization, and binary-like text rejection
+- `src/features/reward-reader/external-source-import.ts`: Reward Reader detached external file boundary for browser `File` byte reads, decoded preview assembly, and UTF-8 Markdown Vault-copy preparation without persisting external OS paths
 - `src/features/reward-reader/import-assembly.ts`: Reward Reader Phase 2B2 detached pure import-payload preparation from normalized store state plus successful source inspection
 - `src/features/reward-reader/store-patch-application.ts`: Reward Reader Phase 2B3 detached pure in-memory store application from a prepared import payload
 - `src/features/reward-reader/read-only-storage-adapter.ts`: Reward Reader Phase 2C1 detached read-only `DataAdapter` boundary for state and one explicit chapter-index cache
@@ -159,7 +161,27 @@ The current chapter-parser boundary is intentionally detached:
 - The parser does not enter the feature startup path and is not imported by `src/features/reward-reader/index.ts`
 - The parser does not access Vault, does not read files, does not write cache files, and does not keep chapter body copies in its result
 - The parser emits offsets in the original UTF-16 string coordinate space, so later code can slice raw chapter text directly from the same source string
+- The parser chooses one whole-file detection strategy at a time instead of mixing unrelated heading modes across the same source
+- Current built-in detection priority is `markdown-heading` first, `plain-chapter-heading` second, and `numeric-colon` last
+- `plain-chapter-heading` covers strong Chinese and English numbered headings plus constrained standalone special headings such as `序章`, `番外`, `Prologue`, and `Afterword`
+- Special headings may merge only in limited positions around a coherent strong-heading sequence; they do not introduce a new persisted detection mode or free-form substring matching
 - The parser currently supports only built-in chapter-heading formats; custom per-book regex settings remain deferred
+
+Additional parser hardening notes for the current Phase 3C2B boundary:
+
+- Titled special headings such as `序章：`, `尾声：`, `Prologue: ...`, and `Afterword - ...` stay under the same constrained `plain-chapter-heading` umbrella instead of creating a new detection mode
+- Numeric-colon validation now ranks structural continuity ahead of raw run length so a denser low-gap sequence can beat a longer run that is inflated by same-style body noise or extreme number jumps
+- Numeric-colon body evidence is precomputed once as a line-prefix index, so transition and trailing evidence checks stay O(1) per query instead of rebuilding candidate lookups inside each transition
+- If duplicate chapter numbers still remain structurally tied after canonical scoring, the parser now returns a blocking ambiguity result instead of silently picking one candidate
+- Duplicate-number resolution now prefers robust global spacing evidence plus two-sided local anchors; it does not use arbitrary earlier-line or later-line tie-breakers when the text structure stays effectively indistinguishable
+- Duplicate groups are indexed once by chapter number and only line-bounded group slices are rescanned during canonicalization; the parser no longer performs `allCandidates.filter(...)` inside the selected-heading loop
+- Duplicate-group local body evidence is bounded by the nearest competing heading on each side, so one duplicate candidate cannot borrow another candidate's body text as decisive support
+- Single-sided duplicate groups such as first-chapter or last-chapter conflicts stay conservative: unsupported body-evidence differences alone do not turn a near-tie into a forced winner
+- Canonicalization now inspects every duplicate-number group inside the selected numeric run span, including chapter numbers omitted by the initial DP run; an unresolved in-span duplicate cannot be silently downgraded into an ordinary gap warning
+- Title similarity is diagnostic only for numeric-colon duplicates. Shared prefixes or near-matching chapter wording do not count as decisive structural evidence, and structurally tied candidates remain blocking ambiguity until a future manual-resolution UX exists
+- Duplicate numbers omitted by the initial DP run require a stronger structural insertion margin before they can be added back automatically, so weak one-sided evidence cannot quietly reintroduce an unsafe heading
+- Blocking ambiguity metadata is preview-only parser output: it is not written into Reward Reader state, chapter caches, settings, or schema versions, and ambiguous results must not enter import persistence
+- The public parser export is a no-throw boundary: invalid input or unexpected parser failures must collapse into a sanitized `detectionMode = none` result instead of leaking exceptions across the feature boundary
 
 The current source-inspection boundary is now intentionally split into two detached layers:
 
@@ -246,6 +268,21 @@ The current import runtime boundary is intentionally an eighth detached layer:
 - UI-side import identity is now generated only at submit time: one safe `novelId` plus one `operationAt` timestamp per new attempt, both preserved exactly for any later partial-success or outcome-unknown retry
 - Exact retry stays intentionally explicit and user-driven. Once a failure suggests cache or state may already have been written, the modal locks source/title/primary fields and reuses the exact same request snapshot on the next retry instead of generating a new identity
 - The source picker is a modal-owned child surface rather than a shared singleton: repeated picker clicks while it is already open do not create another picker or re-enumerate Vault files, and late picker callbacks become no-ops once the parent import modal has already closed
+
+The current real-world TXT import extension adds one more narrow boundary above that same runtime:
+
+- External file selection is user-triggered only and uses a modal-owned DOM `input[type="file"]` instead of Node `fs`, Electron remote APIs, or persisted absolute paths
+- External file reads use `File.arrayBuffer()` exactly once per chosen file and keep the raw bytes only in modal memory long enough to support preview and encoding override
+- `external-text-decoder.ts` is pure and synchronous: it strips BOM from output text, normalizes `CRLF` and `CR` to `LF`, tries explicit or BOM-backed decoding first, then strict UTF-8, then UTF-16 zero-pattern detection, then GB18030, and rejects empty or binary-like decoded output with stable sanitized failures
+- `chapter-parser.ts` now reports `detectionMode` and prioritizes one whole-file strategy at a time: Markdown headings first, built-in plain chapter headings second, and numeric-colon TXT headings last
+- Built-in plain chapter headings now include stronger Chinese and English real-world formats such as combined `卷 + 章`, Roman-numeral `Chapter XIII`, and constrained special headings like `番外：某人的故事` or `Extra Chapter`
+- Direct-title Chinese headings such as `第3章外挂上线` stay supported, but sentence-like body lines such as `第一章正文……` are intentionally rejected so plain-heading matching does not consume ordinary prose
+- Numeric-colon TXT detection is intentionally weak-mode only: it requires at least three ordered unique numeric candidates, requires body-text evidence between headings, keeps reasonable gaps as warnings, rejects reversals or duplicates, and skips intermediate noise such as chat numbering or stray year-like lines instead of turning them into chapters
+- External-file preview keeps only safe summary fields for UI: basename, detected encoding, detection mode, chapter count, first chapter titles, and sanitized warnings or failure text
+- External import never rewrites the original external file and never persists its raw OS path; the only persisted source identity remains the created Vault-relative Markdown copy path
+- `prepareRewardReaderExternalSource(...)` is the only Vault-write boundary for external imports: it ensures `Reward Reader/Imported`, derives one unique `.md` target name, writes normalized UTF-8 text, re-reads the created `TFile` metadata through Vault, and returns only the Vault-relative source identity required by the existing runtime
+- External import converges back into the same existing import runtime after the Vault copy is created, so it does not introduce a second state writer, a second cache writer, or a schema branch
+- If the Vault copy succeeds but later Reward Reader persistence does not complete, the copy is intentionally left in place for later manual retry through the same modal-owned prepared-copy path or the existing Vault import entry
 
 The current study-exchange boundary is intentionally a ninth detached layer:
 

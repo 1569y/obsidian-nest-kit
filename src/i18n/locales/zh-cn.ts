@@ -588,10 +588,66 @@ export const zhCnDictionary = {
 				source: {
 					name: '\u5c0f\u8bf4\u6e90\u6587\u4ef6',
 					description:
-						'\u9009\u62e9\u4e00\u4e2a Vault \u5185\u7684 TXT \u6216 Markdown \u5c0f\u8bf4\u6587\u4ef6\u3002',
+						'\u53ef\u4ee5\u9009\u62e9 Vault \u5185\u7684 TXT / Markdown \u6587\u4ef6\uff0c\u4e5f\u53ef\u4ee5\u4ece\u7535\u8111\u9009\u62e9\u5916\u90e8 TXT / Markdown \u6587\u4ef6\u3002',
 					noSourceSelected: '\u5c1a\u672a\u9009\u62e9\u6e90\u6587\u4ef6\u3002',
-					chooseFile: '\u9009\u62e9\u6587\u4ef6',
-					changeFile: '\u66f4\u6362\u6587\u4ef6',
+					fromVault: '\u4ece Vault \u9009\u62e9',
+					changeVault: '\u66f4\u6362 Vault \u6587\u4ef6',
+					fromComputer: '\u4ece\u7535\u8111\u9009\u62e9',
+					changeComputer: '\u66f4\u6362\u5916\u90e8\u6587\u4ef6',
+					currentVault: (path: string): string => `Vault\uff1a${path}`,
+					currentExternal: (fileName: string): string =>
+						`\u7535\u8111\uff1a${fileName}`,
+				},
+				encoding: {
+					name: '\u6587\u672c\u7f16\u7801',
+					description:
+						'\u4f7f\u7528\u540c\u4e00\u4efd\u5916\u90e8\u6587\u4ef6\u539f\u59cb bytes \u91cd\u65b0\u89e3\u7801\uff0c\u65e0\u9700\u91cd\u65b0\u6253\u5f00\u6587\u4ef6\u9009\u62e9\u5668\u3002',
+					auto: '\u81ea\u52a8\u68c0\u6d4b',
+					utf8: 'UTF-8',
+					gb18030: 'GB18030 / GBK',
+					utf16Le: 'UTF-16 LE',
+					utf16Be: 'UTF-16 BE',
+				},
+				preview: {
+					heading: '\u6e90\u6587\u4ef6\u9884\u89c8',
+					fileName: '\u6587\u4ef6\u540d',
+					detectedEncoding: '\u68c0\u6d4b\u7f16\u7801',
+					chapterFormat: '\u7ae0\u8282\u683c\u5f0f',
+					chapterCount: (count: number): string =>
+						`\u68c0\u6d4b\u5230 ${count} \u4e2a\u7ae0\u8282`,
+					firstChapters: '\u524d\u51e0\u4e2a\u7ae0\u8282',
+					warningsHeading: '\u63d0\u793a',
+					ambiguityHeading: '\u91cd\u590d\u7ae0\u8282\u7f16\u53f7\u5b58\u5728\u6b67\u4e49',
+					ambiguityDescription:
+						'\u68c0\u6d4b\u5230\u91cd\u590d\u7684\u7ae0\u8282\u7f16\u53f7\uff0cReward Reader \u65e0\u6cd5\u53ef\u9760\u5224\u65ad\u54ea\u4e00\u884c\u624d\u662f\u771f\u6b63\u7684\u7ae0\u8282\u6807\u9898\u3002',
+					ambiguityChapterNumber: (chapterNumber: number): string =>
+						`\u7ae0\u8282\u7f16\u53f7\uff1a\u7b2c ${chapterNumber} \u7ae0`,
+					ambiguityCandidateCount: (candidateCount: number): string =>
+						`\u53d1\u73b0 ${candidateCount} \u4e2a\u5019\u9009\u6807\u9898`,
+					ambiguityBlocked:
+						'\u4e3a\u907f\u514d\u7ae0\u8282\u6b63\u6587\u9519\u4f4d\uff0c\u672c\u6b21\u4e0d\u4f1a\u81ea\u52a8\u5bfc\u5165\u3002\u8bf7\u68c0\u67e5\u4e0b\u9762\u7684\u5019\u9009\u6807\u9898\uff0c\u6216\u8c03\u6574\u6e90\u6587\u4ef6\u3002',
+					ambiguityCandidateLine: (lineNumber: number): string =>
+						`\u7b2c ${lineNumber} \u884c`,
+					emptyPreview:
+						'\u9009\u62e9\u4e00\u4e2a TXT \u6216 Markdown \u6e90\u6587\u4ef6\u540e\uff0c\u4f1a\u5728\u8fd9\u91cc\u663e\u793a\u9884\u89c8\u3002',
+					willCreateCopy:
+						'\u5bfc\u5165\u65f6\u4f1a\u5728 Reward Reader/Imported \u5185\u521b\u5efa UTF-8 Markdown \u526f\u672c\u3002',
+					willNotModifyOriginal:
+						'\u4e0d\u4f1a\u4fee\u6539\u539f\u59cb\u5916\u90e8\u6587\u4ef6\u3002',
+					formatLabels: {
+						none: '\u672a\u8bc6\u522b\u5230\u53ef\u7528\u7ae0\u8282\u683c\u5f0f',
+						markdownHeading: 'Markdown \u6807\u9898',
+						plainChapterHeading: '\u5185\u7f6e\u7ae0\u8282\u6807\u9898',
+						numericColon: '\u6570\u5b57 + \u5192\u53f7',
+					},
+					warningLabels: {
+						chapterNumberGaps:
+							'\u68c0\u6d4b\u5230\u7ae0\u8282\u7f16\u53f7\u8df3\u53f7\uff0c\u8bf7\u5148\u786e\u8ba4\u9884\u89c8\u7684\u7ae0\u8282\u987a\u5e8f\u662f\u5426\u6b63\u786e\u3002',
+						ignoredLeadingPreface:
+							'\u9996\u4e2a\u7ae0\u8282\u6807\u9898\u4e4b\u524d\u7684\u5f15\u5b50\u5185\u5bb9\u4f1a\u88ab\u5ffd\u7565\u3002',
+						duplicateNumberAmbiguity:
+							'\u5b58\u5728\u65e0\u6cd5\u5b89\u5168\u89e3\u51b3\u7684\u91cd\u590d\u7ae0\u8282\u7f16\u53f7\uff0c\u8bf7\u5148\u4fee\u6b63\u6b67\u4e49\u6807\u9898\u518d\u5bfc\u5165\u3002',
+					},
 				},
 				novelTitle: {
 					name: '\u5c0f\u8bf4\u6807\u9898',
@@ -607,12 +663,24 @@ export const zhCnDictionary = {
 					waitingForSource:
 						'\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a TXT \u6216 Markdown \u6e90\u6587\u4ef6\u4ee5\u51c6\u5907\u5bfc\u5165\u3002',
 					readyToImport:
-						'\u5df2\u51c6\u5907\u5bfc\u5165\u3002\u53ea\u6709\u5728\u4f60\u70b9\u51fb\u201c\u5bfc\u5165\u201d\u540e\u624d\u4f1a\u8bfb\u53d6\u5c0f\u8bf4\u6587\u4ef6\u3002',
+						'\u5df2\u51c6\u5907\u5bfc\u5165\u3002Vault \u6587\u4ef6\u4f1a\u5728\u5bfc\u5165\u65f6\u68c0\u67e5\uff0c\u5916\u90e8\u6587\u4ef6\u5219\u4f1a\u5148\u8f6c\u4e3a Vault \u5185\u7684 UTF-8 Markdown \u526f\u672c\u3002',
+					inspectingVaultSource:
+						'\u6b63\u5728\u68c0\u67e5\u6240\u9009 Vault \u6e90\u6587\u4ef6...',
 					importing: '\u6b63\u5728\u5bfc\u5165...',
+					writingVaultCopy:
+						'\u6b63\u5728\u5728 Vault \u5185\u521b\u5efa UTF-8 Markdown \u526f\u672c...',
+					readingExternalFile:
+						'\u6b63\u5728\u8bfb\u53d6\u9009\u4e2d\u7684\u5916\u90e8\u6587\u4ef6...',
+					decodingExternalFile:
+						'\u6b63\u5728\u68c0\u6d4b\u6587\u672c\u7f16\u7801\u4e0e\u7ae0\u8282\u7ed3\u6784...',
 					failedCanEdit:
-						'\u5bfc\u5165\u5728\u6301\u4e45\u5316\u5b8c\u6210\u524d\u5931\u8d25\u4e86\u3002\u4f60\u53ef\u4ee5\u4fee\u6539\u6587\u4ef6\u6216\u6807\u9898\u540e\u518d\u8bd5\u3002',
+						'\u5bfc\u5165\u5728\u6301\u4e45\u5316\u5b8c\u6210\u524d\u5931\u8d25\u4e86\u3002\u4f60\u53ef\u4ee5\u8c03\u6574\u6587\u4ef6\u3001\u7f16\u7801\u6216\u6807\u9898\u540e\u518d\u8bd5\u3002',
 					exactRetryRequired:
 						'\u672c\u6b21\u5bfc\u5165\u7ed3\u679c\u672a\u80fd\u5b8c\u5168\u786e\u8ba4\u3002\u8bf7\u91cd\u8bd5\u76f8\u540c\u5bfc\u5165\u3002',
+					noChaptersDetected:
+						'\u672a\u68c0\u6d4b\u5230\u53ef\u8bc6\u522b\u7684\u7ae0\u8282\u6807\u9898\u3002\u8bf7\u8bd5\u8bd5\u5176\u4ed6\u7f16\u7801\uff0c\u6216\u66f4\u6362\u6587\u4ef6\u3002',
+					chapterHeadingAmbiguity:
+						'\u91cd\u590d\u7ae0\u8282\u7f16\u53f7\u5b58\u5728\u6b67\u4e49\u3002\u8bf7\u5148\u4fee\u6b63\u6e90\u6587\u4ef6\uff0c\u6216\u66f4\u6362\u5176\u4ed6\u6587\u4ef6\u518d\u5bfc\u5165\u3002',
 				},
 				buttons: {
 					import: '\u5bfc\u5165',
@@ -624,6 +692,14 @@ export const zhCnDictionary = {
 						'\u5f53\u524d\u6ca1\u6709\u53ef\u7528\u4e8e Reward Reader \u5bfc\u5165\u7684 TXT \u6216 Markdown \u6587\u4ef6\u3002',
 					identityGenerationFailed:
 						'Reward Reader \u65e0\u6cd5\u521b\u5efa\u5b89\u5168\u7684\u5bfc\u5165 identity\uff0c\u8bf7\u518d\u8bd5\u4e00\u6b21\u3002',
+					externalFileReadFailed:
+						'\u65e0\u6cd5\u8bfb\u53d6\u9009\u4e2d\u7684\u5916\u90e8\u6587\u4ef6\u3002',
+					externalSourceInvalid:
+						'\u5728\u521b\u5efa Vault \u526f\u672c\u4e4b\u524d\uff0cReward Reader \u9700\u8981\u5148\u83b7\u5f97\u4e00\u4efd\u5df2\u6b63\u5e38\u89e3\u7801\u7684\u5916\u90e8 TXT / Markdown \u6587\u4ef6\u3002',
+					externalVaultCopyFailed:
+						'\u65e0\u6cd5\u5728 Vault \u5185\u521b\u5efa UTF-8 Markdown \u526f\u672c\u3002',
+					externalVaultCopyCreatedButImportIncomplete:
+						'UTF-8 Markdown \u526f\u672c\u5df2\u521b\u5efa\u5230 Vault\uff0c\u4f46 Reward Reader \u5bfc\u5165\u8fd8\u672a\u5b8c\u6210\u3002\u4e4b\u540e\u53ef\u4ee5\u76f4\u63a5\u4ece\u8fd9\u4e2a Vault \u526f\u672c\u91cd\u8bd5\u3002',
 					success: (title: string, chapterCount: number): string =>
 						`\u5df2\u5bfc\u5165\u300a${title}\u300b\uff0c\u5171 ${chapterCount} \u7ae0\u3002`,
 					successWithWarnings: (
