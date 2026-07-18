@@ -249,6 +249,50 @@
 82. Confirm the original `inspection.warnings` array remains unchanged.
 83. Confirm success results return a distinct warnings array instance.
 84. Confirm exact duplicate warnings can be removed while preserving stable order.
+
+## Reward Reader Phase 3C3A import completion pure foundation
+
+1. Confirm `createRewardReaderImportProgressPlan(...)` returns `invalid-chapter-count` for a non-object root.
+2. Confirm `createRewardReaderImportProgressPlan(...)` returns `invalid-chapter-count` for `chapterCount = 0`.
+3. Confirm `createRewardReaderImportProgressPlan(...)` returns `invalid-chapter-count` for negative, fractional, or unsafe `chapterCount`.
+4. Confirm a valid no-history input returns `ok = true`, `historicalReadChapterCount = 0`, and `nextUnreadIndex = 0`.
+5. Confirm a valid no-history input keeps `readThroughChapterIndex = -1`, `unlockedThroughChapterIndex = -1`, `currentChapterIndex = 0`, and `currentChapterScrollOffset = 0`.
+6. Confirm a valid no-history input keeps all study-side deltas at `0` and `createsStudyRecord = false`.
+7. Confirm a valid historical input such as `chapterCount = 10`, `readThroughChapterIndex = 3` returns `historicalReadChapterCount = 4` and `nextUnreadIndex = 4`.
+8. Confirm a valid historical input aligns `readThroughChapterIndex` and `unlockedThroughChapterIndex` to the supplied already-read chapter, while `currentChapterIndex` advances to the next unread chapter.
+9. Confirm a full-read input such as `chapterCount = 10`, `readThroughChapterIndex = 9` returns `historicalReadChapterCount = 10` and `nextUnreadIndex = null`.
+10. Confirm `readThroughChapterIndex = chapterCount` returns `invalid-read-through-index`.
+11. Confirm negative, fractional, unsafe, or non-numeric non-null `readThroughChapterIndex` returns `invalid-read-through-index`.
+12. Confirm omitting `readThroughChapterIndex` or passing `readThroughChapterIndex = undefined` returns `invalid-read-through-index`, while explicit `readThroughChapterIndex = null` still succeeds as the no-history case.
+13. Confirm the progress initializer does not mutate the caller-owned input object.
+14. Confirm the progress initializer does not call current-time APIs, does not generate ids, and does not create records.
+15. Confirm `inspectRewardReaderMarkdownRisks(...)` returns `invalid-source-text` for a non-object root or non-string `sourceText`.
+16. Confirm balanced delimiter pairs such as `**bold**`, `__underline__`, `~~strike~~`, and `` `code` `` produce `hasRisks = false`.
+17. Confirm an odd unescaped `**` occurrence produces one `unbalanced-strong-asterisk` sampled risk event with line-aware metadata.
+18. Confirm an odd unescaped `__` occurrence produces one `unbalanced-strong-underscore` sampled risk event with line-aware metadata.
+19. Confirm an odd unescaped `~~` occurrence produces one `unbalanced-strikethrough` sampled risk event with line-aware metadata.
+20. Confirm an odd unescaped inline backtick occurrence produces one `unclosed-inline-code` sampled risk event with line-aware metadata, while an unclosed fenced block uses `unclosed-fenced-code-block`.
+21. Confirm escaped delimiters such as `\\**`, `\\__`, `\\~~`, and `` \\` `` do not count toward unmatched-risk detection.
+22. Confirm multiple simultaneous unmatched delimiter families are reported in stable rule order: `unbalanced-strong-asterisk`, `unbalanced-strong-underscore`, `unbalanced-strikethrough`, `unclosed-inline-code`, then `unclosed-fenced-code-block`.
+23. Confirm the Markdown risk inspector does not mutate the caller-owned input object.
+24. Confirm the Markdown risk inspector does not rewrite, delete, or auto-escape source characters.
+25. Confirm fenced code content does not emit `**` / `__` / `~~` risk events, and confirm fenced-code and inline-code warnings use distinct stable codes.
+26. Confirm LF and CRLF inputs both produce numeric `lineNumber` metadata for each emitted sampled risk event.
+27. Confirm the success result exposes `samples`, `maxSamples`, `sampleLimitReached`, `maxExcerptLength`, and per-code issue counts, but does not expose any complete `risks` event array.
+28. Confirm `options.maxSamples = 0` returns `samples = []` while leaving total issue counts intact.
+29. Confirm `options.maxSamples = 3` keeps `samples.length <= 3`.
+30. Confirm `options.maxExcerptLength = 5` keeps every sampled `excerpt.length <= 5`.
+31. Confirm invalid, primitive, throwing-getter, or Proxy-based options fall back to default `maxSamples = 20` and `maxExcerptLength = 120` without changing scan results.
+32. Confirm a 100000-event dense-risk input with `maxSamples = 5` reports full counts, `samples.length = 5`, `sampleLimitReached = true`, no `risks` array, and bounded serialized output growth.
+33. Confirm `~~ first, then ** second` with `maxSamples = 1` retains only the earliest source event, so `samples[0]` stays `unbalanced-strikethrough` at column `1` while `warningCodes` still follow taxonomy order.
+34. Confirm `** first, then \` second` with `maxSamples = 1` retains only the earliest source event and does not replace it with the later `unclosed-inline-code`.
+35. Confirm a same-line `~~ __ ** \`` sequence keeps `samples` ordered by actual column position while `warningCodes` remain in stable taxonomy order and each `countsByCode` entry remains `1`.
+36. Confirm same-line sample caps retain earliest source events: `maxSamples = 0` keeps `samples = []`, `maxSamples = 1` keeps the first source event only, and `maxSamples = 2` keeps the first two source events without changing `issueCount` or `countsByCode`.
+37. Confirm multi-line sampled events remain ordered by `lineNumber` first and `columnNumber` second, so a later-line event cannot appear before an earlier-line event in `samples`.
+38. Confirm a revoked progress-input Proxy does not throw and returns stable `{ ok: false, errorCode: 'invalid-chapter-count' }`.
+39. Confirm a revoked Markdown source-input Proxy still returns `{ ok: false, errorCode: 'invalid-source-text' }` and is not confused with options fallback behavior.
+40. Confirm a revoked Markdown options Proxy does not throw, falls back to default `maxSamples = 20` and `maxExcerptLength = 120`, and still performs the valid source-text scan normally.
+41. Confirm invalid or revoked Markdown options are not misclassified as `invalid-source-text` when `sourceText` itself is valid.
 85. Confirm warnings never include `sourceText`.
 86. Confirm `inspection = null` does not throw and returns `inconsistent-inspection`.
 87. Confirm `inspection = undefined` does not throw and returns `inconsistent-inspection`.

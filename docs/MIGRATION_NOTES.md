@@ -1,5 +1,17 @@
 # Migration notes
 
+- `reward-reader-phase3c3a-import-completion-pure-foundation` keeps the existing Phase 2D2 import command and modal entry plus the existing detached import runtime and persistence boundaries, and adds only two detached pure modules for later import-completion wiring.
+- This round adds no new Reward Reader settings keys, no new persisted data fields, no schema bump, and no migration write.
+- This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.
+- This round keeps Reward Reader store schema at `1`.
+- This round keeps Reward Reader chapter-index cache schema at `1`.
+- This round adds one pure import-progress initializer plus one pure Markdown risk inspector, but does not yet wire either module into the import modal, import runtime, persistence orchestration, or reader UI.
+- Historical read-through planning remains zero-side-effect only in this round: it does not create study records, unlock records, reading records, or state/cache writes.
+- Historical read-through planning now uses the detached UI-facing sentinel contract `-1 / next chapter to open` inside the new pure plan result only; it still does not rewrite the current persisted Reward Reader store schema.
+- Markdown risk inspection remains warning-only in this round: it does not escape, delete, or rewrite special characters in imported text or Vault novel files, but it now reports bounded configurable samples plus stable per-code preview counts for later UI review without returning any persistent full-event payload.
+- This round does not change parser/import behavior, does not change external decoding, does not change chapter-index assembly, does not change settings/store/cache schema contracts, and does not add Reader UI or persistence.
+- The new warning codes stay non-persistent preview metadata only, so this round still requires no schema migration and no stored-data backfill.
+
 - `reward-reader-phase3c2b-real-world-txt-import` keeps the existing Phase 2D2 import command and modal entry plus the existing detached import persistence pipeline, and extends only the import-side source boundary for real-world external TXT/Markdown files.
 - The current correctness-hardening follow-up keeps the same branch scope and only tightens parser coherence, warning localization, prepared-copy reuse, and import-side no-throw behavior.
 - This round keeps the plugin settings schema at `1`; it does not bump `schemaVersion`.

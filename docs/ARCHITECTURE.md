@@ -29,6 +29,8 @@ NestKit is evolving from a single-purpose right sidebar customization into a mod
 - `src/features/reward-reader/external-text-decoder.ts`: Reward Reader detached pure external text-decoding boundary with BOM handling, strict UTF-8 first, UTF-16 detection, GB18030 fallback, newline normalization, and binary-like text rejection
 - `src/features/reward-reader/external-source-import.ts`: Reward Reader detached external file boundary for browser `File` byte reads, decoded preview assembly, and UTF-8 Markdown Vault-copy preparation without persisting external OS paths
 - `src/features/reward-reader/import-assembly.ts`: Reward Reader Phase 2B2 detached pure import-payload preparation from normalized store state plus successful source inspection
+- `src/features/reward-reader/import-progress-initializer.ts`: Reward Reader Phase 3C3A detached pure initial-progress planner for optional historical read-through state without persistence or study side effects
+- `src/features/reward-reader/markdown-risk-inspector.ts`: Reward Reader Phase 3C3A detached pure Markdown render-risk inspector for unbalanced delimiter warnings without mutating source text
 - `src/features/reward-reader/store-patch-application.ts`: Reward Reader Phase 2B3 detached pure in-memory store application from a prepared import payload
 - `src/features/reward-reader/read-only-storage-adapter.ts`: Reward Reader Phase 2C1 detached read-only `DataAdapter` boundary for state and one explicit chapter-index cache
 - `src/features/reward-reader/write-only-storage-adapter.ts`: Reward Reader Phase 2C2 detached minimal write-only `DataAdapter` boundary for canonical state and one explicit chapter-index cache
@@ -283,6 +285,20 @@ The current real-world TXT import extension adds one more narrow boundary above 
 - `prepareRewardReaderExternalSource(...)` is the only Vault-write boundary for external imports: it ensures `Reward Reader/Imported`, derives one unique `.md` target name, writes normalized UTF-8 text, re-reads the created `TFile` metadata through Vault, and returns only the Vault-relative source identity required by the existing runtime
 - External import converges back into the same existing import runtime after the Vault copy is created, so it does not introduce a second state writer, a second cache writer, or a schema branch
 - If the Vault copy succeeds but later Reward Reader persistence does not complete, the copy is intentionally left in place for later manual retry through the same modal-owned prepared-copy path or the existing Vault import entry
+
+The current import-completion follow-up adds two detached pure foundations without changing the existing modal or runtime wiring:
+
+- `import-progress-initializer.ts` accepts only one explicit `chapterCount` plus one explicit historical `readThroughChapterIndex` selection, where only literal `null` means no history, validates both as safe bounded values, and returns one deterministic initial progress plan with zero study-minute, unlock-daily, or study-record side effects
+- Historical read-through initialization uses a detached navigation contract rather than persisted Reward Reader progress nullability: no-history is represented as `readThroughChapterIndex = -1` and `unlockedThroughChapterIndex = -1`, while `currentChapterIndex` points to the next chapter the later UI should open
+- A no-history plan therefore opens at chapter `0`, a partial-history plan opens at `readThroughChapterIndex + 1`, and a fully read novel clamps `currentChapterIndex` to the last real chapter while `nextUnreadIndex = null`
+- Missing or `undefined` historical selections are rejected as `invalid-read-through-index` so later modal wiring cannot silently reinterpret an omitted field as no-history
+- `markdown-risk-inspector.ts` accepts one normalized source string plus bounded preview options, scans it deterministically in one forward pass for five stable risk codes, and returns line-aware warning metadata without rewriting, escaping, or deleting source characters
+- Fenced code blocks are treated as isolated Markdown regions: their inner content is ignored for `**` / `__` / `~~` risk detection, unclosed inline backticks use `unclosed-inline-code`, and an EOF-open fenced block uses `unclosed-fenced-code-block` at the opening fence line
+- Markdown risk metadata stays bounded and UI-oriented: it includes only per-code counts, stable warning-code order, first-N sampled events in source order, configurable sample and excerpt caps, and sample-cap status without returning a complete risk-event array or persisting any extra schema fields
+- `warningCodes` keep the fixed taxonomy order, while `samples` preserve source order by `lineNumber` then `columnNumber`; within one line the implementation sorts only one fixed-size per-line pending-event array before recording retained samples
+- The inspector keeps extra memory bounded to `O(maxSamples + fixed code count)` by counting every event, sorting only a fixed-size per-line pending set, and constructing excerpt-bearing sample objects only for retained samples
+- Markdown risk inspection is warning-only preparation data for future UI surfaces; it does not alter parser detection, does not alter chapter offsets, does not persist extra schema fields, and does not authorize automatic source cleanup
+- This Phase 3C3A foundation still does not change the existing import modal, does not change import persistence orchestration, does not write Reward Reader state or cache, does not mutate Vault novel files, and does not enter any reader UI path
 
 The current study-exchange boundary is intentionally a ninth detached layer:
 

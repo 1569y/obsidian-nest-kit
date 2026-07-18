@@ -219,6 +219,21 @@ Confirmed Phase 3A pure study-minute exchange decisions:
 - Generic unexpected failure must stay sanitized: it must not pretend to be a more specific cap/timestamp/persistence error and must not expose raw exception text
 - Phase 3B should be the first layer that reads the latest Reward Reader state plus one explicit chapter cache, supplies explicit ids and timestamps, applies the pure Phase 3A engine, and persists the result
 
+Confirmed Phase 3C3A import-completion pure foundation decisions:
+
+- Phase 3C3A adds only two detached pure no-IO modules and still does not modify the existing import modal, import runtime, persistence orchestration, reader UI, or any schema
+- `import-progress-initializer.ts` accepts exactly one positive safe-integer `chapterCount` plus one explicit `readThroughChapterIndex` selection and returns one deterministic initialization plan instead of mutating store state directly
+- Invalid `chapterCount` must return `invalid-chapter-count`; missing, `undefined`, negative, non-integer, unsafe, or `>= chapterCount` read-through values must return `invalid-read-through-index`, while only literal `null` means no historical reading progress
+- A no-history plan uses the detached navigation sentinel contract `unlockedThroughChapterIndex = -1` plus `readThroughChapterIndex = -1`, starts at `currentChapterIndex = 0`, keeps `currentChapterScrollOffset = 0`, and derives `historicalReadChapterCount = 0` plus `nextUnreadIndex = 0`
+- A valid historical read-through plan keeps `unlockedThroughChapterIndex` and `readThroughChapterIndex` aligned to the last already-read chapter, derives `historicalReadChapterCount = readThroughChapterIndex + 1`, and points `currentChapterIndex` to the next unread chapter or clamps it to the final chapter when the novel is already fully read
+- Historical progress initialization is intentionally zero-side-effect in this phase: it must not generate ids, must not read the current time, must not create study records, unlock records, or reading records, and must not change study-minute totals or daily unlock counters
+- `markdown-risk-inspector.ts` accepts only one normalized source string plus optional bounded preview options and returns five stable warning codes for per-event unbalanced unescaped `**`, `__`, `~~`, inline backticks, and fenced-code openings together with deterministic line-aware sampled metadata and per-code counts
+- Markdown risk inspection is warning-only foundation data: it must not auto-escape source text, must not delete characters, must not rewrite imported Markdown or TXT content, and must not alter parser detection or chapter offsets
+- Fenced code blocks must isolate their inner content from `**` / `__` / `~~` warning detection, but unclosed inline code and unclosed fenced code blocks must surface as distinct stable warning codes
+- Warning metadata must stay capped: issue counts and per-code counts track all detected events, but retained samples and excerpts are bounded by configurable `maxSamples` and `maxExcerptLength`, the original source string always remains unchanged, and preview samples follow first-N source order rather than warning-taxonomy order
+- The public inspection result must not expose an unbounded complete risk-event array; the implementation should keep extra memory bounded to retained samples plus fixed code-count bookkeeping
+- Both public exports must remain complete no-throw boundaries that sanitize malformed roots, throwing getters, Proxies, or other unexpected runtime failures into stable structured results instead of leaking exceptions
+
 Confirmed Phase 3B1 study-exchange persistence runtime decisions:
 
 - Phase 3B1 adds only one detached async study-exchange runtime and still does not add a study-record command or modal, reader UI, sidebar, status bar, timers, listeners, or startup hydration
